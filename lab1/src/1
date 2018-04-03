@@ -49,9 +49,9 @@ function main() {
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
- 
+
   // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT); 
+  gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
 var g_points = []; // The array for the position of a mouse press
@@ -90,6 +90,10 @@ function move(ev, gl, canvas, a_Position) {
     previousX, previousY, x, y 
   ]); 
   // Create a buffer object
-  console.log(vertices)
+  var vertexBuffer = gl.createBuffer();
+  if (!vertexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  } 
 }
 
