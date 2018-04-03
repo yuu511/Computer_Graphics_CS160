@@ -17,9 +17,10 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-var previousX 
+var vertices
+var previousX
 var previousY
-
+ 
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
@@ -46,7 +47,7 @@ function main() {
 
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
-  canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
+  //canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
@@ -69,7 +70,6 @@ function click(ev, gl, canvas, a_Position) {
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-
   var len = g_points.length;
   for(var i = 0; i < len; i += 2) {
     // Pass the position of a point to a_Position variable
@@ -86,10 +86,39 @@ function move(ev, gl, canvas, a_Position) {
   var rect = ev.target.getBoundingClientRect() ;
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
- var vertices = new Float32Array([
+  if ( isNaN(previousX) || isNaN(previousY)) 
+    return 
+  vertices = new Float32Array([
     previousX, previousY, x, y 
   ]); 
+  var n =2 //the number of vertices    
   // Create a buffer object
-  console.log(vertices)
+  var vertexBuffer = gl.createBuffer();
+  if (!vertexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+
+  // Bind the buffer object to target
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  // Write date into the buffer object
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  if (a_Position < 0) {
+    console.log('Failed to get the storage location of a_Position');
+    return -1;
+  }
+
+  // Assign the buffer object to a_Position variable
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+
+  // Enable the assignment to a_Position variable
+  gl.enableVertexAttribArray(a_Position);
+
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.LINE_STRIP, 0, n)
 }
 
