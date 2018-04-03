@@ -17,6 +17,9 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
+var previousX 
+var previousY
+
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
@@ -27,8 +30,6 @@ function main() {
     console.log('Failed to get the rendering context for WebGL');
     return;
   }
-  else
-    console.log ('THIS IS A NICE BOI')
 
   // Initialize shaders
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
@@ -45,7 +46,7 @@ function main() {
 
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
-
+  canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -61,6 +62,8 @@ function click(ev, gl, canvas, a_Position) {
 
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  previousX = x
+  previousY = y
   // Store the coordinates to g_points array
   g_points.push(x); g_points.push(y);
 
@@ -75,5 +78,17 @@ function click(ev, gl, canvas, a_Position) {
     // Draw
     gl.drawArrays(gl.POINTS, 0, 1);
   }
+}
+
+function move(ev, gl, canvas, a_Position) {
+  var x = ev.clientX; // x coordinate of a mouse pointer
+  var y = ev.clientY; // y coordinate of a mouse pointer
+  var rect = ev.target.getBoundingClientRect() ;
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+ var vertices = new Float32Array([
+    previousX, previousY, x, y 
+  ]);
+  
 }
 
