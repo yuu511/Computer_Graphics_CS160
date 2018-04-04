@@ -71,11 +71,13 @@ function click(ev, gl, canvas, a_Position) {
    
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-  
-  if (oldlines.length > 0)
-   console.log ("Greater than 0")
-  else
-   console.log ("kenny did nothing wrong")
+ 
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i])
+    } 
+  }
 
  var vertices = new Float32Array(g_points)
  if (g_points.length < 4){
@@ -97,6 +99,14 @@ function move(ev, gl, canvas, a_Position) {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
   
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i])
+    } 
+  }
+ 
+ //draw currently working line
  var vertices = new Float32Array(g_points)
  draw (gl,canvas,a_Position,vertices)
   vertices = new Float32Array([
@@ -134,7 +144,8 @@ function move(ev, gl, canvas, a_Position) {
 function rightclick(ev, gl, canvas, a_Position) { 
   previousX = null 
   previousY = null
-  oldlines.push (g_points)
+  var archive = new Float32Array(g_points)
+  oldlines.push (archive)
   g_points = []
   console.log(oldlines)
 }
@@ -142,6 +153,7 @@ function rightclick(ev, gl, canvas, a_Position) {
 // generic drawing function, will draw line with all vertices specified below.
 function draw (gl,canvas,a_Position,vertices){   
  var len = vertices.length;
+ // case where vertices is just one point 
  if (vertices <= 2){
   for(var i = 0; i < len; i += 2) {
     // Pass the position of a point to a_Position variable
