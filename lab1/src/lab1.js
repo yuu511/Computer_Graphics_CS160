@@ -47,9 +47,9 @@ function main() {
   }
 
   // Register function (event handler) to be called on a mouse press
+  canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
-  canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
@@ -57,13 +57,14 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT); 
 }
 
-function click(ev, gl, canvas, a_Position) {
+function click(ev, gl, canvas, a_Position) { 
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
 
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  console.log(x + " " + y + " left click\n")
   previousX = x
   previousY = y
   // Store the coordinates to g_points array
@@ -143,8 +144,13 @@ function rightclick(ev, gl, canvas, a_Position) {
   previousY = null
   var archive = new Float32Array(g_points)
   oldlines.push (archive)
+  console.log ("You have finished drawing \n") 
+  console.log ("Your finished polyline :")
+  for(var i = 0; i < g_points.length; i += 2) {
+    console.log ("("+ g_points[i] + "," + g_points[i+1] + ")")
+  }
+  console.log ("\n")
   g_points = []
-  console.log(oldlines)
 }
 
 // generic drawing function, will draw line with all vertices specified below.
