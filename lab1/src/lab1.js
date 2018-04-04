@@ -17,10 +17,11 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-var vertices
-var previousX
-var previousY
- 
+var previousX = null
+var previousY = null 
+var g_points = []; // The array for the position of a mouse press
+var oldlines = [];
+
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
@@ -48,6 +49,7 @@ function main() {
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
+  canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
@@ -55,7 +57,6 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT); 
 }
 
-var g_points = []; // The array for the position of a mouse press
 function click(ev, gl, canvas, a_Position) {
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
@@ -70,10 +71,16 @@ function click(ev, gl, canvas, a_Position) {
    
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-  
-  var vertices = new Float32Array(g_points)
+ 
+
+   
+//  if (oldlines.length > 0)
+//   console.log ("Greater than 0")
+//  else
+//   console.log ("kenny did nothing wrong")
+
+ var vertices = new Float32Array(g_points)
  if (g_points.length < 4){
-  console.log ("a")
   return 
  }
  var vertexBuffer = gl.createBuffer();
@@ -115,7 +122,7 @@ function move(ev, gl, canvas, a_Position) {
   var rect = ev.target.getBoundingClientRect() ;
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  if ( isNaN(previousX) || isNaN(previousY)) 
+  if ( previousX === null || previousY === null) 
     return 
    
   // Clear <canvas>
@@ -186,4 +193,10 @@ function move(ev, gl, canvas, a_Position) {
   gl.drawArrays(gl.LINE_STRIP, 0, n)
 }
 
-
+function rightclick(ev, gl, canvas, a_Position) { 
+  previousX = null 
+  previousY = null
+  oldlines.push (g_points)
+  g_points = []
+  console.log(oldlines)
+}
