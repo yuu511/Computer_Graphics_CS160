@@ -48,8 +48,9 @@ function main() {
 
   // Register function (event handler) to be called on a mouse press
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
-  canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
+  canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
+  canvas.onkeydown = function(ev){ key(ev, gl, canvas, a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
@@ -57,7 +58,7 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT); 
 }
 
-function click(ev, gl, canvas, a_Position) { 
+function leftclick(ev, gl, canvas, a_Position) { 
   if (ev.button == 2)
     return
   var x = ev.clientX; // x coordinate of a mouse pointer
@@ -148,7 +149,6 @@ function rightclick(ev, gl, canvas, a_Position) {
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   console.log(x + " " + y + " right click\n")
-
   var archive = new Float32Array(g_points)
   oldlines.push (archive)
   // Clear <canvas>
@@ -178,6 +178,8 @@ function rightclick(ev, gl, canvas, a_Position) {
 // generic drawing function, will draw line with all vertices specified below.
 function draw (gl,canvas,a_Position,vertices){   
  var len = vertices.length;
+ if (len === 0)
+  return
  var vertexBuffer = gl.createBuffer();
   if (!vertexBuffer) {
     console.log('Failed to create the buffer object');
@@ -207,4 +209,9 @@ function draw (gl,canvas,a_Position,vertices){
     // Draw
     gl.drawArrays(gl.POINTS, 0, len/2);
   }
+}
+
+
+function key(ev, gl, canvas, a_Position) { 
+  console.log ("a")
 }
