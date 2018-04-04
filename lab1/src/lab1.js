@@ -80,9 +80,6 @@ function click(ev, gl, canvas, a_Position) {
   }
 
  var vertices = new Float32Array(g_points)
- if (g_points.length < 4){
-  return 
- } 
  // draw currently working line with points
  draw (gl,canvas,a_Position,vertices)
 }
@@ -153,18 +150,6 @@ function rightclick(ev, gl, canvas, a_Position) {
 // generic drawing function, will draw line with all vertices specified below.
 function draw (gl,canvas,a_Position,vertices){   
  var len = vertices.length;
- // case where vertices is just one point 
- if (vertices <= 2){
-  for(var i = 0; i < len; i += 2) {
-    // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 0.0);
-
-    // Draw
-    gl.drawArrays(gl.POINTS, 0, len/2);
-  }
-  return
- }
-
  var vertexBuffer = gl.createBuffer();
   if (!vertexBuffer) {
     console.log('Failed to create the buffer object');
