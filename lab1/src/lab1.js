@@ -71,49 +71,18 @@ function click(ev, gl, canvas, a_Position) {
    
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
- 
-
-   
-//  if (oldlines.length > 0)
-//   console.log ("Greater than 0")
-//  else
-//   console.log ("kenny did nothing wrong")
+  
+  if (oldlines.length > 0)
+   console.log ("Greater than 0")
+  else
+   console.log ("kenny did nothing wrong")
 
  var vertices = new Float32Array(g_points)
  if (g_points.length < 4){
   return 
- }
- var vertexBuffer = gl.createBuffer();
-  if (!vertexBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
-
-  // Bind the buffer object to target
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  // Write date into the buffer object
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  // Assign the buffer object to a_Position variable
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-
-  // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position);
-  gl.drawArrays(gl.LINE_STRIP, 0, g_points.length/2);
-
-  var len = g_points.length;
-  for(var i = 0; i < len; i += 2) {
-    // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0);
-
-    // Draw
-    gl.drawArrays(gl.POINTS, 0, len/2);
-  }
+ } 
+ // draw currently working line with points
+ draw (gl,canvas,a_Position,vertices)
 }
 
 function move(ev, gl, canvas, a_Position) {
@@ -129,38 +98,7 @@ function move(ev, gl, canvas, a_Position) {
   gl.clear(gl.COLOR_BUFFER_BIT);
   
  var vertices = new Float32Array(g_points)
- var vertexBuffer = gl.createBuffer();
-  if (!vertexBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
-
-  // Bind the buffer object to target
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  // Write date into the buffer object
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
-  // Assign the buffer object to a_Position variable
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-
-  // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position);
-  gl.drawArrays(gl.LINE_STRIP, 0, g_points.length/2);
-
-  var len = g_points.length;
-  for(var i = 0; i < len; i += 2) {
-    // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, g_points[i], g_points[i+1], 0.0);
-
-    // Draw
-    gl.drawArrays(gl.POINTS, 0, len/2);
-  }
-
+ draw (gl,canvas,a_Position,vertices)
   vertices = new Float32Array([
     previousX, previousY, x, y 
   ]); 
@@ -199,4 +137,49 @@ function rightclick(ev, gl, canvas, a_Position) {
   oldlines.push (g_points)
   g_points = []
   console.log(oldlines)
+}
+
+// generic drawing function, will draw line with all vertices specified below.
+function draw (gl,canvas,a_Position,vertices){   
+ var len = vertices.length;
+ if (vertices <= 2){
+  for(var i = 0; i < len; i += 2) {
+    // Pass the position of a point to a_Position variable
+    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 0.0);
+
+    // Draw
+    gl.drawArrays(gl.POINTS, 0, len/2);
+  }
+  return
+ }
+
+ var vertexBuffer = gl.createBuffer();
+  if (!vertexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+  // Bind the buffer object to target
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  // Write date into the buffer object
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  if (a_Position < 0) {
+    console.log('Failed to get the storage location of a_Position');
+    return -1;
+  }
+  // Assign the buffer object to a_Position variable
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+
+  // Enable the assignment to a_Position variable
+  gl.enableVertexAttribArray(a_Position);
+  gl.drawArrays(gl.LINE_STRIP, 0, len/2);
+
+  for(var i = 0; i < len; i += 2) {
+    // Pass the position of a point to a_Position variable
+    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 0.0);
+
+    // Draw
+    gl.drawArrays(gl.POINTS, 0, len/2);
+  }
 }
