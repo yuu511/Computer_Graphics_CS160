@@ -1,7 +1,7 @@
 // lab1.js 
 // Elijah Cordova 1425119
-  
-// ClickedPints.js (c) 2012 matsuda
+
+// Various snippets of code from ClickedPoints / Hello Triangle by Roger/Lea (Given to us by class)
 // Vertex shader program
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n' +
@@ -58,6 +58,8 @@ function main() {
 }
 
 function click(ev, gl, canvas, a_Position) { 
+  if (ev.button == 2)
+    return
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
@@ -140,16 +142,36 @@ function move(ev, gl, canvas, a_Position) {
 }
 
 function rightclick(ev, gl, canvas, a_Position) { 
-  previousX = null 
-  previousY = null
+  var x = ev.clientX; // x coordinate of a mouse pointer
+  var y = ev.clientY; // y coordinate of a mouse pointer
+  var rect = ev.target.getBoundingClientRect() ;
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  console.log(x + " " + y + " right click\n")
+
   var archive = new Float32Array(g_points)
   oldlines.push (archive)
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
+ 
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i])
+    } 
+  }
+ var vertices = new Float32Array(g_points)
+ // draw currently working line with points
+ draw (gl,canvas,a_Position,vertices)
   console.log ("You have finished drawing \n") 
   console.log ("Your finished polyline :")
   for(var i = 0; i < g_points.length; i += 2) {
     console.log ("("+ g_points[i] + "," + g_points[i+1] + ")")
   }
+  console .log ("(" + x + "," + y + ")")
   console.log ("\n")
+  previousX = null
+  previousY = null
   g_points = []
 }
 
