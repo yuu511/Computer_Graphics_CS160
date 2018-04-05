@@ -19,13 +19,15 @@ var FSHADER_SOURCE =
 
 var previousX = null
 var previousY = null 
-var g_points = []; // The array for the position of a mouse press
-var oldlines = [];
+var g_points = [] // The array for the position of a mouse press
+var oldlines = [] // all previous completed lines
+var width = 1 //current working width
+var oldwidths = [] //all old widths
 
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
-
+  var slider = document.getElementById('newslider')
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
   if (!gl) {
@@ -51,6 +53,7 @@ function main() {
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onkeydown = function(ev){ key(ev, gl, canvas, a_Position); };
+  slider.oninput = function(ev){ slide(ev, gl, canvas, slider,  a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
@@ -58,7 +61,7 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT); 
 }
 
-function leftclick(ev, gl, canvas, a_Position) { 
+function leftclick(ev, gl, canvas, a_Position) {  
   if (ev.button == 2)
     return
   var x = ev.clientX; // x coordinate of a mouse pointer
@@ -79,16 +82,16 @@ function leftclick(ev, gl, canvas, a_Position) {
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
     for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i])
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i])
     } 
   }
 
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
- draw (gl,canvas,a_Position,vertices)
+ draw (gl,canvas,a_Position,vertices,width)
 }
 
-function move(ev, gl, canvas, a_Position) {
+function move(ev, gl, canvas, a_Position) { 
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
@@ -103,13 +106,13 @@ function move(ev, gl, canvas, a_Position) {
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
     for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i])
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i])
     } 
   }
  
  //draw currently working line
  var vertices = new Float32Array(g_points)
- draw (gl,canvas,a_Position,vertices)
+ draw (gl,canvas,a_Position,vertices,width)
   vertices = new Float32Array([
     previousX, previousY, x, y 
   ]); 
@@ -151,18 +154,19 @@ function rightclick(ev, gl, canvas, a_Position) {
   console.log(x + " " + y + " right click\n")
   var archive = new Float32Array(g_points)
   oldlines.push (archive)
+  oldwidths.push (width)
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
  
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
     for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i])
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i])
     } 
   }
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
- draw (gl,canvas,a_Position,vertices)
+ draw (gl,canvas,a_Position,vertices,width)
   console.log ("You have finished drawing \n") 
   console.log ("Your finished polyline :")
   for(var i = 0; i < g_points.length; i += 2) {
@@ -176,7 +180,8 @@ function rightclick(ev, gl, canvas, a_Position) {
 }
 
 // generic drawing function, will draw line with all vertices specified below.
-function draw (gl,canvas,a_Position,vertices){   
+function draw (gl,canvas,a_Position,vertices,linewidth){   
+ gl.lineWidth(linewidth)
  var len = vertices.length;
  if (len === 0)
   return
@@ -199,7 +204,7 @@ function draw (gl,canvas,a_Position,vertices){
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
   // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position);
+  gl.enableVertexAttribArray(a_Position); //all old widths
   gl.drawArrays(gl.LINE_STRIP, 0, len/2);
 
   for(var i = 0; i < len; i += 2) {
@@ -214,4 +219,8 @@ function draw (gl,canvas,a_Position,vertices){
 
 function key(ev, gl, canvas, a_Position) { 
   console.log ("a")
+}
+
+function slide(ev, gl, canvas, slider, a_Position) { 
+  width=slider.value
 }
