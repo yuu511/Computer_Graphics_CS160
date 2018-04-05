@@ -282,10 +282,13 @@ function keypress(ev, gl, canvas, textbox, a_Position) {
   //  edge case where we have someone attempting to delete a line that you are currently drawing
   if (deletenumber==oldlines.length+1 && (previousX!==null || previousY!==null)){
     if (oldlines.length > 0){
+      gl.clear(gl.COLOR_BUFFER_BIT);
       for (var i =0 ; i < oldlines.length ; i++){       
-        gl.clear(gl.COLOR_BUFFER_BIT);
         draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
       } 
+      previousX = null
+      previousY = null
+      g_points = []
     }
    return
   }
