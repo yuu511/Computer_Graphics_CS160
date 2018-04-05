@@ -21,7 +21,7 @@ var previousX = null
 var previousY = null 
 var g_points = [] // The array for the position of a mouse press
 var oldlines = [] // all previous completed lines
-var width = 1 //current working width
+var width = 10.0 //current working width
 var oldwidths = [] //all old widths
 var Rcolor = 1
 var Gcolor = 0
@@ -217,9 +217,8 @@ function rightclick(ev, gl, canvas, a_Position) {
 }
 
 // generic drawing function, will draw line with all vertices specified below.
-function draw (gl,canvas,a_Position,vertices,linewidth,colors){   
- gl.lineWidth(linewidth)  
- updateColor (gl,colors[0],colors[1],colors[2],colors[3])
+function draw (gl,canvas,a_Position,vertices,pointwidth,colors){   
+ updateColor (gl,a_Position,pointwidth,colors[0],colors[1],colors[2],colors[3])
  var len = vertices.length;
  if (len === 0)
   return
@@ -319,8 +318,9 @@ function keypress(ev, gl, canvas, textbox, a_Position) {
  draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
-function updateColor (gl,R,G,B,A){
-  FSHADER_SOURCE = 
+function updateColor (gl,a_Position,pointwidth,R,G,B,A){
+  gl.deleteShader(FSHADER_SOURCE)
+  var FSHADER_SOURCE = 
   'void main() {\n' +
   '  gl_FragColor = vec4('+R+ ', '+ G + ', ' + B + ', ' + A + ');\n' +
   '}\n';
@@ -329,3 +329,5 @@ function updateColor (gl,R,G,B,A){
     return;
   }
 }
+
+
