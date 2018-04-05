@@ -27,16 +27,20 @@ var Rcolor = 1
 var Gcolor = 0
 var Bcolor = 0
 var Acolor = 1
-var oldcolors = [] //all old colors stored by R G B A
+var oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
+var formvalue = -1 
 
 function main() {
   // Retrieve <canvas> element
-  var canvas = document.getElementById('webgl');
-  var sliderSize = document.getElementById('newslider')
-  var sliderR = document.getElementById('sliderR')
-  var sliderG = document.getElementById('sliderG')
-  var sliderB = document.getElementById('sliderB')
-  var sliderA = document.getElementById('sliderA')
+  const canvas = document.getElementById('webgl');
+  const sliderSize = document.getElementById('newslider')
+  const sliderR = document.getElementById('sliderR')
+  const sliderG = document.getElementById('sliderG')
+  const sliderB = document.getElementById('sliderB')
+  const sliderA = document.getElementById('sliderA')
+  const textbox = document.getElementById('textbox')
+  const button = document.getElementById('button')
+
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
   if (!gl) {
@@ -67,6 +71,7 @@ function main() {
   sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
   sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
   sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
+  button.onclick = function(ev){ keypress(ev, gl, canvas, textbox,  a_Position); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -267,6 +272,48 @@ function Bslider(ev, gl, canvas, sliderB, a_Position) {
 
 function Aslider(ev, gl, canvas, sliderA, a_Position) { 
   Acolor=sliderA.value
+}
+
+function keypress(ev, gl, canvas, textbox, a_Position) { 
+  let  deletenumber = parseInt(textbox.value)
+  if (isNaN(deletenumber)){
+   return
+  }
+  //  edge case where we have someone attempting to delete a line that you are currently drawing
+  if (deletenumber==oldlines.length+1 && (previousX!==null || previousY!==null)){
+    if (oldlines.length > 0){
+      for (var i =0 ; i < oldlines.length ; i++){       
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+      } 
+    }
+   return
+  }
+  if (deletenumber < 1 || deletenumber > oldlines.length){
+    return
+  }
+ // get rid of the desired line
+ oldlines.splice(deletenumber-1,1)
+ oldwidths.splice(deletenumber-1,1)
+ oldcolors.splice(deletenumber-1,1)  
+ // Clear <canvas>
+ gl.clear(gl.COLOR_BUFFER_BIT);
+  
+ 
+ // draw all old lines (if they exist) 
+ if (oldlines.length > 0){
+   for (var i =0 ; i < oldlines.length ; i++){       
+     draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+   } 
+ }
+ var vertices = new Float32Array(g_points)
+ // draw currently working line with points
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
+ draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
 function updateColor (gl,R,G,B,A){
