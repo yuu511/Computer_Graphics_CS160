@@ -17,8 +17,6 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-console.log(FSHADER_SOURCE)
-
 var previousX = null
 var previousY = null 
 var g_points = [] // The array for the position of a mouse press
@@ -64,11 +62,7 @@ function main() {
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onkeydown = function(ev){ key(ev, gl, canvas, a_Position); };
   sliderSize.oninput = function(ev){ slide(ev, gl, canvas, sliderSize,  a_Position); };
-  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
-  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
-  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
-  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
-
+  sliderR.oninput = function(ev){ sliderR(ev, gl, canvas, sliderSize,  a_Position); };
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
@@ -172,7 +166,6 @@ function rightclick(ev, gl, canvas, a_Position) {
   oldwidths.push (width)
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-  
  
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
@@ -232,38 +225,11 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
   }
 }
 
+
+function key(ev, gl, canvas, a_Position) { 
+  console.log ("a")
+}
+
 function slide(ev, gl, canvas, sliderSize, a_Position) { 
   width=sliderSize.value
-}
-
-function Rslider(ev, gl, canvas, sliderR, a_Position) { 
-  Rcolor=sliderR.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
-}
-
-function Gslider(ev, gl, canvas, sliderG, a_Position) { 
-  Gcolor=sliderG.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
-}
-
-function Bslider(ev, gl, canvas, sliderB, a_Position) { 
-  Bcolor=sliderB.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
-}
-
-function Aslider(ev, gl, canvas, sliderA, a_Position) { 
-  Acolor=sliderA.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
-}
-
-function updateColor (gl,R,G,B,A){
-  FSHADER_SOURCE = 
-  'void main() {\n' +
-  '  gl_FragColor = vec4('+R+ ', '+ G + ', ' + B + ', ' + A + ');\n' +
-  '}\n';
-  console.log (FSHADER_SOURCE)
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
 }
