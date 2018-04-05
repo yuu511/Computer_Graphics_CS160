@@ -17,8 +17,6 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-console.log(FSHADER_SOURCE)
-
 var previousX = null
 var previousY = null 
 var g_points = [] // The array for the position of a mouse press
@@ -29,6 +27,7 @@ var Rcolor = 1
 var Gcolor = 0
 var Bcolor = 0
 var Acolor = 1
+var oldcolors = [] //all old colors stored by R G B A
 
 function main() {
   // Retrieve <canvas> element
@@ -97,13 +96,18 @@ function leftclick(ev, gl, canvas, a_Position) {
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
     for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i])
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
     } 
   }
 
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
- draw (gl,canvas,a_Position,vertices,width)
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
+ draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
 function move(ev, gl, canvas, a_Position) { 
@@ -121,13 +125,18 @@ function move(ev, gl, canvas, a_Position) {
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
     for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i])
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
     } 
   }
  
  //draw currently working line
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
  var vertices = new Float32Array(g_points)
- draw (gl,canvas,a_Position,vertices,width)
+ draw (gl,canvas,a_Position,vertices,width,colors)
   vertices = new Float32Array([
     previousX, previousY, x, y 
   ]); 
@@ -138,7 +147,7 @@ function move(ev, gl, canvas, a_Position) {
     console.log('Failed to create the buffer object');
     return -1;
   }
-
+ 
   // Bind the buffer object to target
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   // Write date into the buffer object
@@ -170,6 +179,13 @@ function rightclick(ev, gl, canvas, a_Position) {
   var archive = new Float32Array(g_points)
   oldlines.push (archive)
   oldwidths.push (width)
+  const colors = []
+  colors.push(Rcolor)
+  colors.push(Gcolor)
+  colors.push(Bcolor)
+  colors.push(Acolor)
+  oldcolors.push(colors)
+
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
   
@@ -177,12 +193,12 @@ function rightclick(ev, gl, canvas, a_Position) {
   // draw all old lines (if they exist) 
   if (oldlines.length > 0){
     for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i])
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
     } 
   }
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
- draw (gl,canvas,a_Position,vertices,width)
+ draw (gl,canvas,a_Position,vertices,width,colors)
   console.log ("You have finished drawing \n") 
   console.log ("Your finished polyline :")
   for(var i = 0; i < g_points.length; i += 2) {
@@ -196,8 +212,9 @@ function rightclick(ev, gl, canvas, a_Position) {
 }
 
 // generic drawing function, will draw line with all vertices specified below.
-function draw (gl,canvas,a_Position,vertices,linewidth){   
- gl.lineWidth(linewidth)
+function draw (gl,canvas,a_Position,vertices,linewidth,colors){   
+ gl.lineWidth(linewidth)  
+ updateColor (gl,colors[0],colors[1],colors[2],colors[3])
  var len = vertices.length;
  if (len === 0)
   return
@@ -238,22 +255,18 @@ function slide(ev, gl, canvas, sliderSize, a_Position) {
 
 function Rslider(ev, gl, canvas, sliderR, a_Position) { 
   Rcolor=sliderR.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
 }
 
 function Gslider(ev, gl, canvas, sliderG, a_Position) { 
   Gcolor=sliderG.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
 }
 
 function Bslider(ev, gl, canvas, sliderB, a_Position) { 
   Bcolor=sliderB.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
 }
 
 function Aslider(ev, gl, canvas, sliderA, a_Position) { 
   Acolor=sliderA.value
-  updateColor (gl,Rcolor,Gcolor,Bcolor,Acolor)
 }
 
 function updateColor (gl,R,G,B,A){
@@ -261,7 +274,6 @@ function updateColor (gl,R,G,B,A){
   'void main() {\n' +
   '  gl_FragColor = vec4('+R+ ', '+ G + ', ' + B + ', ' + A + ');\n' +
   '}\n';
-  console.log (FSHADER_SOURCE)
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     console.log('Failed to intialize shaders.');
     return;
