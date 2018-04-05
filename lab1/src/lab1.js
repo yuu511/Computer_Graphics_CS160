@@ -40,6 +40,7 @@ function main() {
   const sliderA = document.getElementById('sliderA')
   const textbox = document.getElementById('textbox')
   const button = document.getElementById('button')
+  const shift = document.getElementById('shift')
 
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -72,6 +73,7 @@ function main() {
   sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
   sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
   button.onclick = function(ev){ keypress(ev, gl, canvas, textbox,  a_Position); };
+  shift.onclick = function(ev){ shiftPoints(ev, gl, canvas,  a_Position); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -331,3 +333,34 @@ function updateColor (gl,a_Position,pointwidth,R,G,B,A){
 }
 
 
+function shiftPoints(ev, gl, canvas, a_Position) {  
+  //shift current line 
+  previousX = previousX + 0.1 
+  for(var i = 0; i < g_points.length; i += 2) { 
+    g_points[i]=g_points[i] + 0.1
+    console.log("test")
+  }
+ if (oldlines.length > 0){
+   for (var f =0 ; f < oldlines.length ; f++){       
+     for(var j = 0; j < oldlines[f].length; j += 2) { 
+       oldlines[f][j] = oldlines[f][j] + 0.1
+     }
+   } 
+ }
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT); 
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+    } 
+  }
+ var vertices = new Float32Array(g_points)
+ // draw currently working line with points
+ draw (gl,canvas,a_Position,vertices,width,colors)
+}
