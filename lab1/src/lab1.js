@@ -249,15 +249,15 @@ function draw (gl,canvas,a_Position,vertices,linewidth,colors){
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
   // Assign the buffer object to a_Position variable
-  gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
   // Enable the assignment to a_Position variable
-  gl.enableVertexAttribArray(a_Position); //all old widths
+  gl.enableVertexAttribArray(a_Position);
   gl.drawArrays(gl.LINE_STRIP, 0, len/2);
 
   for(var i = 0; i < len; i += 2) {
     // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 100.0, 0.0);
+    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 0.0);
 
     // Draw
     gl.drawArrays(gl.POINTS, 0, len/2);
