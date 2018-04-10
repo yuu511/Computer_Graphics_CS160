@@ -17,18 +17,19 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
-var previousX = null
-var previousY = null 
-var g_points = [] // The array for the position of a mouse press
-var oldlines = [] // all previous completed lines
-var width = 10.0 //current working width
-var oldwidths = [] //all old widths
-var Rcolor = 1
-var Gcolor = 0
-var Bcolor = 0
-var Acolor = 1
-var oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
-var formvalue = -1 
+let previousX = null
+let previousY = null 
+let g_points = [] // The array for the position of a mouse press
+let oldlines = [] // all previous completed lines
+let width = 1.0 //current working width (thickness of line)
+let oldwidths = [] //all old widths
+let Rcolor = 1
+let Gcolor = 0
+let Bcolor = 0
+let Acolor = 1
+let oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
+let formvalue = -1 
+let sizeofpoint = 10.0 
 
 function main() {
   // Retrieve <canvas> element
@@ -40,7 +41,12 @@ function main() {
   const sliderA = document.getElementById('sliderA')
   const textbox = document.getElementById('textbox')
   const button = document.getElementById('button')
-  const shift = document.getElementById('shift')
+  const shiftL = document.getElementById('shiftL')
+  const shiftR = document.getElementById('shiftR')
+  const shiftU = document.getElementById('shiftU')
+  const shiftD = document.getElementById('shiftD')
+  const pointSize = document.getElementById('pointslider')
+  const gameStart = document.getElementById('gamebutton')
 
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -73,7 +79,12 @@ function main() {
   sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
   sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
   button.onclick = function(ev){ keypress(ev, gl, canvas, textbox,  a_Position); };
-  shift.onclick = function(ev){ shiftPoints(ev, gl, canvas,  a_Position); };
+  shiftL.onclick = function(ev){ shiftPointsL(ev, gl, canvas,  a_Position); };
+  shiftR.onclick = function(ev){ shiftPointsR(ev, gl, canvas,  a_Position); };
+  shiftU.onclick = function(ev){ shiftPointsU(ev, gl, canvas,  a_Position); };
+  shiftD.onclick = function(ev){ shiftPointsD(ev, gl, canvas,  a_Position); };
+  pointSize.oninput = function(ev){ adjustpointsize(ev, gl, canvas, pointSize,a_Position); };
+  gameStart.onclick = function(ev){ startgame(ev, gl, canvas,  a_Position); };  
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -219,8 +230,9 @@ function rightclick(ev, gl, canvas, a_Position) {
 }
 
 // generic drawing function, will draw line with all vertices specified below.
-function draw (gl,canvas,a_Position,vertices,pointwidth,colors){   
- updateColor (gl,a_Position,pointwidth,colors[0],colors[1],colors[2],colors[3])
+function draw (gl,canvas,a_Position,vertices,linewidth,colors){   
+ gl.lineWidth(linewidth)
+ updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
  var len = vertices.length;
  if (len === 0)
   return
@@ -282,7 +294,7 @@ function keypress(ev, gl, canvas, textbox, a_Position) {
   }
   //  edge case where we have someone attempting to delete a line that you are currently drawing
   if (deletenumber==oldlines.length+1 && (previousX!==null || previousY!==null)){
-    if (oldlines.length > 0){
+    if (oldlines.length >= 0){
       gl.clear(gl.COLOR_BUFFER_BIT);
       for (var i =0 ; i < oldlines.length ; i++){       
         draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
@@ -320,7 +332,7 @@ function keypress(ev, gl, canvas, textbox, a_Position) {
  draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
-function updateColor (gl,a_Position,pointwidth,R,G,B,A){
+function updateColor (gl,a_Position,R,G,B,A){
   gl.deleteShader(FSHADER_SOURCE)
   var FSHADER_SOURCE = 
   'void main() {\n' +
@@ -332,26 +344,20 @@ function updateColor (gl,a_Position,pointwidth,R,G,B,A){
   }
 }
 
-
-function shiftPoints(ev, gl, canvas, a_Position) {  
+// shift left 
+function shiftPointsL(ev, gl, canvas, a_Position) {  
   //shift current line 
-  previousX = previousX + 0.1 
+  previousX = previousX - 0.1 
   for(var i = 0; i < g_points.length; i += 2) { 
-    g_points[i]=g_points[i] + 0.1
-    console.log("test")
+    g_points[i]=g_points[i] - 0.1
   }
  if (oldlines.length > 0){
    for (var f =0 ; f < oldlines.length ; f++){       
      for(var j = 0; j < oldlines[f].length; j += 2) { 
-       oldlines[f][j] = oldlines[f][j] + 0.1
+       oldlines[f][j] = oldlines[f][j] - 0.1
      }
    } 
  }
- const colors = []
- colors.push(Rcolor)
- colors.push(Gcolor)
- colors.push(Bcolor)
- colors.push(Acolor)
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT); 
   // draw all old lines (if they exist) 
@@ -362,5 +368,139 @@ function shiftPoints(ev, gl, canvas, a_Position) {
   }
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
  draw (gl,canvas,a_Position,vertices,width,colors)
+}
+
+// shift right
+function shiftPointsR(ev, gl, canvas, a_Position) {  
+  //shift current line 
+  previousX = previousX + 0.1 
+  for(var i = 0; i < g_points.length; i += 2) { 
+    g_points[i]=g_points[i] + 0.1
+  }
+ if (oldlines.length > 0){
+   for (var f =0 ; f < oldlines.length ; f++){       
+     for(var j = 0; j < oldlines[f].length; j += 2) { 
+       oldlines[f][j] = oldlines[f][j] + 0.1
+     }
+   } 
+ }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT); 
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+    } 
+  }
+ var vertices = new Float32Array(g_points)
+ // draw currently working line with points
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
+ draw (gl,canvas,a_Position,vertices,width,colors)
+}
+
+// shift up 
+function shiftPointsU(ev, gl, canvas, a_Position) {  
+  //shift current line 
+  previousY = previousY + 0.1 
+  for(var i = 0; i < g_points.length; i += 2) { 
+    g_points[i+1]=g_points[i+1] + 0.1
+  }
+ if (oldlines.length > 0){
+   for (var f =0 ; f < oldlines.length ; f++){       
+     for(var j = 0; j < oldlines[f].length; j += 2) { 
+       oldlines[f][j+1] = oldlines[f][j+1] + 0.1
+     }
+   } 
+ }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT); 
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+    } 
+  }
+ var vertices = new Float32Array(g_points)
+ // draw currently working line with points
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
+ draw (gl,canvas,a_Position,vertices,width,colors)
+}
+
+// shift down
+function shiftPointsD(ev, gl, canvas, a_Position) {  
+  //shift current line 
+  previousY = previousY - 0.1 
+  for(var i = 0; i < g_points.length; i += 2) { 
+    g_points[i+1]=g_points[i+1] - 0.1
+  }
+ if (oldlines.length > 0){
+   for (var f =0 ; f < oldlines.length ; f++){       
+     for(var j = 0; j < oldlines[f].length; j += 2) { 
+       oldlines[f][j+1] = oldlines[f][j+1] - 0.1
+     }
+   } 
+ }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT); 
+  // draw all old lines (if they exist) 
+  if (oldlines.length > 0){
+    for (var i =0 ; i < oldlines.length ; i++){       
+      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+    } 
+  }
+ var vertices = new Float32Array(g_points)
+ // draw currently working line with points
+ const colors = []
+ colors.push(Rcolor)
+ colors.push(Gcolor)
+ colors.push(Bcolor)
+ colors.push(Acolor)
+ draw (gl,canvas,a_Position,vertices,width,colors)
+}
+
+function adjustpointsize(ev, gl, canvas, pointsize, a_Position) { 
+}
+
+function startgame(ev, gl, canvas, a_Position) { 
+  //clear canvas
+  previousX = null
+  previousY = null 
+  g_points = [] // The array for the position of a mouse press
+  oldlines = [] // all previous completed lines
+  width = 1.0 //current working width (thickness of line)
+  oldwidths = [] //all old widths
+  Rcolor = 1
+  Gcolor = 0
+  Bcolor = 0
+  Acolor = 1
+  oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
+  formvalue = -1 
+  sizeofpoint = 10.0 
+  // Specify the color for clearing <canvas>
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+ 
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT); 
+  setTimeout (check,20000)
+}
+
+function check(){
+  if (oldlines.length < 5)
+   console.log ("\n\n\n\n\n\n\n\n\n\n\nyou failed")
+  else
+   console.log ("\n\n\n\n\n\n\n\n\n\n\nyou passed")
 }

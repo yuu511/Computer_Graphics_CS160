@@ -12,10 +12,7 @@
     <script src="../lib/webgl-utils.js"> </script>  
     <script src= "../lib/webgl-debug.js"> </script>
     <div class="slidecontainer">
-    <p>Point Width</p>
-      <input type="range" min="10" max="100" value="10" class="slider" id="newslider">
-      <output id="output"> </output>
-    <p>COLOR SELECT: Use the sliders to adjust R G B A values<br /></p>
+    <p>COLOR SELECT: Use the sliders to adjust R G B A values. Default value = RED [1 0 0 1 ]<br /></p>
     <p>Color of Line : R &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Color of Line:G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
        Color of Line : B &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Color of Line:A</p>
       <input type="range" min="0" max="255" value="1" class="slider" id="sliderR">
@@ -27,12 +24,23 @@
       <input type="range" min="0" max="255" value="1" class="slider" id="sliderA">
       <output id="outputA"> </output>
      <p>DELETE BUTTON: (TYPE IN WHAT LINE # YOU WANT TO DELETE AND PRESS DELETE BUTTON)</p>
-     <p>Lines are numbered 1, 2 , 3 , ... , n. Note that lines are renumbered dynamically</p>
+     <p>Lines are numbered 1, 2 , 3 , ... , n, and are assigned based on order drawn. 1= Oldest, n = newest. Note that lines are renumbered dynamically! ie : Deleting Line "1" will make the previous line "2" line "1" after the deletion is complete!</p>
       <input type= "text" id="textbox">
       <input type= "button" id="button" value = "DELETE">
-      <p> SHIFT BUTTON: PRESS BUTTON TO SHIFT EVERYTHING RIGHT BY 0.1 
-      <input type= "button" id="shift" value = "SHIFT">
+      <p> SHIFT BUTTONS : PRESS THE BUTTON TO SHIFT DIRECTION BY 0.1 
       </p>
+      <input type= "button" id="shiftL" value = "SHIFT LEFT">
+      <input type= "button" id="shiftR" value = "SHIFT RIGHT">
+      <input type= "button" id="shiftU" value = "SHIFT UP">
+      <input type= "button" id="shiftD" value = "SHIFT DOWN">
+      <p> GAME : Draw 5 or more things within 20 seconds ! Press start button when ready. Result printed in console after time is up. Note that the things can be any number of points ! Objects in progress don't count! </p>
+      <input type= "button" id="gamebutton" value = "START">
+    <p>POINT WIDTH </p>
+      <input type="range" min="10" max="100" value="10" class="slider" id="pointslider">
+      <output id="output"> </output>
+    <p>Line width [ only works in firefox or chrome for linux]</p>
+      <input type="range" min="1" max="10" value="1" class="slider" id="newslider">
+      <output id="output"> </output>
     </div>
   </body>
 </html>
