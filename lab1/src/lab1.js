@@ -61,12 +61,13 @@ function main() {
     return;
   }
 
-  // // Get the storage location of a_Position
+  // Get the storage location of a_Position
   var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
   if (a_Position < 0) {
     console.log('Failed to get the storage location of a_Position');
     return;
   }
+  
 
   // Register function (event handler) to be called on a mouse press
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
@@ -94,6 +95,7 @@ function main() {
 }
 
 function leftclick(ev, gl, canvas, a_Position) {  
+  // if left click 
   if (ev.button == 2)
     return
   var x = ev.clientX; // x coordinate of a mouse pointer
@@ -246,13 +248,8 @@ function draw (gl,canvas,a_Position,vertices,linewidth,colors){
   // Write date into the buffer object
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return -1;
-  }
   // Assign the buffer object to a_Position variable
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
 
   // Enable the assignment to a_Position variable
   gl.enableVertexAttribArray(a_Position); //all old widths
@@ -260,7 +257,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth,colors){
 
   for(var i = 0; i < len; i += 2) {
     // Pass the position of a point to a_Position variable
-    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 0.0);
+    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 100.0, 0.0);
 
     // Draw
     gl.drawArrays(gl.POINTS, 0, len/2);
@@ -347,11 +344,12 @@ function updateColor (gl,a_Position,R,G,B,A){
 // shift left 
 function shiftPointsL(ev, gl, canvas, a_Position) {  
   //shift current line 
+  if (previousX !== null)
   previousX = previousX - 0.1 
   for(var i = 0; i < g_points.length; i += 2) { 
     g_points[i]=g_points[i] - 0.1
   }
- if (oldlines.length > 0){
+  if (oldlines.length > 0){
    for (var f =0 ; f < oldlines.length ; f++){       
      for(var j = 0; j < oldlines[f].length; j += 2) { 
        oldlines[f][j] = oldlines[f][j] - 0.1
@@ -379,11 +377,12 @@ function shiftPointsL(ev, gl, canvas, a_Position) {
 // shift right
 function shiftPointsR(ev, gl, canvas, a_Position) {  
   //shift current line 
+  if (previousX !== null)
   previousX = previousX + 0.1 
   for(var i = 0; i < g_points.length; i += 2) { 
     g_points[i]=g_points[i] + 0.1
   }
- if (oldlines.length > 0){
+  if (oldlines.length > 0){
    for (var f =0 ; f < oldlines.length ; f++){       
      for(var j = 0; j < oldlines[f].length; j += 2) { 
        oldlines[f][j] = oldlines[f][j] + 0.1
@@ -411,6 +410,7 @@ function shiftPointsR(ev, gl, canvas, a_Position) {
 // shift up 
 function shiftPointsU(ev, gl, canvas, a_Position) {  
   //shift current line 
+  if (previousY !== null)
   previousY = previousY + 0.1 
   for(var i = 0; i < g_points.length; i += 2) { 
     g_points[i+1]=g_points[i+1] + 0.1
@@ -443,6 +443,7 @@ function shiftPointsU(ev, gl, canvas, a_Position) {
 // shift down
 function shiftPointsD(ev, gl, canvas, a_Position) {  
   //shift current line 
+  if (previousY !== null)
   previousY = previousY - 0.1 
   for(var i = 0; i < g_points.length; i += 2) { 
     g_points[i+1]=g_points[i+1] - 0.1
@@ -473,6 +474,7 @@ function shiftPointsD(ev, gl, canvas, a_Position) {
 }
 
 function adjustpointsize(ev, gl, canvas, pointsize, a_Position) { 
+  sizeofpoint = parseFloat(pointsize.value)
 }
 
 function startgame(ev, gl, canvas, a_Position) { 
