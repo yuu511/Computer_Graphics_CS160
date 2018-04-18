@@ -34,19 +34,22 @@ let sizeofpoint = 10.0
 function main() {
   // Retrieve <canvas> element
   const canvas = document.getElementById('webgl');
-  const sliderSize = document.getElementById('newslider')
-  const sliderR = document.getElementById('sliderR')
-  const sliderG = document.getElementById('sliderG')
-  const sliderB = document.getElementById('sliderB')
-  const sliderA = document.getElementById('sliderA')
-  const textbox = document.getElementById('textbox')
-  const button = document.getElementById('button')
-  const shiftL = document.getElementById('shiftL')
-  const shiftR = document.getElementById('shiftR')
-  const shiftU = document.getElementById('shiftU')
-  const shiftD = document.getElementById('shiftD')
-  const pointSize = document.getElementById('pointslider')
-  const gameStart = document.getElementById('gamebutton')
+
+// old lab1 stuff
+
+//  const sliderSize = document.getElementById('newslider')
+//  const sliderR = document.getElementById('sliderR')
+//  const sliderG = document.getElementById('sliderG')
+//  const sliderB = document.getElementById('sliderB')
+//  const sliderA = document.getElementById('sliderA')
+//  const textbox = document.getElementById('textbox')
+//  const button = document.getElementById('button')
+//  const shiftL = document.getElementById('shiftL')
+//  const shiftR = document.getElementById('shiftR')
+//  const shiftU = document.getElementById('shiftU')
+//  const shiftD = document.getElementById('shiftD')
+//  const pointSize = document.getElementById('pointslider')
+//  const gameStart = document.getElementById('gamebutton')
 
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -74,25 +77,26 @@ function main() {
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onkeydown = function(ev){ key(ev, gl, canvas, a_Position); };
-  sliderSize.oninput = function(ev){ slide(ev, gl, canvas, sliderSize,  a_Position); };
-  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
-  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
-  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
-  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
-  button.onclick = function(ev){ keypress(ev, gl, canvas, textbox,  a_Position); };
-  shiftL.onclick = function(ev){ shiftPointsL(ev, gl, canvas,  a_Position); };
-  shiftR.onclick = function(ev){ shiftPointsR(ev, gl, canvas,  a_Position); };
-  shiftU.onclick = function(ev){ shiftPointsU(ev, gl, canvas,  a_Position); };
-  shiftD.onclick = function(ev){ shiftPointsD(ev, gl, canvas,  a_Position); };
-  pointSize.oninput = function(ev){ adjustpointsize(ev, gl, canvas, pointSize,a_Position); };
-  gameStart.onclick = function(ev){ startgame(ev, gl, canvas,  a_Position); };  
+
+// old, lab1 Functions !
+//  sliderSize.oninput = function(ev){ slide(ev, gl, canvas, sliderSize,  a_Position); };
+//  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
+//  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
+//  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
+//  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
+//  button.onclick = function(ev){ keypress(ev, gl, canvas, textbox,  a_Position); };
+//  shiftL.onclick = function(ev){ shiftPointsL(ev, gl, canvas,  a_Position); };
+//  shiftR.onclick = function(ev){ shiftPointsR(ev, gl, canvas,  a_Position); };
+//  shiftU.onclick = function(ev){ shiftPointsU(ev, gl, canvas,  a_Position); };
+//  shiftD.onclick = function(ev){ shiftPointsD(ev, gl, canvas,  a_Position); };
+//  pointSize.oninput = function(ev){ adjustpointsize(ev, gl, canvas, pointSize,a_Position); };
+//  gameStart.onclick = function(ev){ startgame(ev, gl, canvas,  a_Position); };  
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
  
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT); 
-  drawcircle(gl, canvas, a_Position)
 }
 
 function leftclick(ev, gl, canvas, a_Position) {  
@@ -250,18 +254,18 @@ function draw (gl,canvas,a_Position,vertices,linewidth,colors){
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
   // Assign the buffer object to a_Position variable
-  gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
   // Enable the assignment to a_Position variable
   gl.enableVertexAttribArray(a_Position);
-  gl.drawArrays(gl.LINES, 0, len/3);
+  gl.drawArrays(gl.LINE_STRIP, 0, len/2);
 
-  for(var i = 0; i < len; i += 3) {
+  for(var i = 0; i < len; i += 2) {
     // Pass the position of a point to a_Position variable
-    gl.vertexAttrib4f(a_Position, vertices[i], vertices[i+1],vertices[i+2], 0.0);
+    gl.vertexAttrib3f(a_Position, vertices[i], vertices[i+1], 0.0);
 
     // Draw
-    gl.drawArrays(gl.POINTS, 0, len/3);
+    gl.drawArrays(gl.POINTS, 0, len/2);
   }
 }
 
@@ -499,27 +503,6 @@ function startgame(ev, gl, canvas, a_Position) {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT); 
   setTimeout (check,20000)
-}
-
-function drawcircle(gl, canvas, a_Position) { 
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT); 
-  var radius = 0.5 
-  for (var i = radius*-1 ; i <= radius ; i+= 0.1){
-    for (var j = radius*-1 ; j <= radius ; j+= 0.1){     
-      for (var k = 0 ; k <= 0.5 ; k+=0.1){
-      g_points.push(i);  g_points.push(Math.sqrt((radius*radius)-(i*i))); g_points.push (k)
-      g_points.push(i);  g_points.push(((Math.sqrt((radius*radius)-(i*i)))*-1)); g_points.push (k)
-     }
-   }
- }
- const colors = []
- colors.push(Rcolor)
- colors.push(Gcolor)
- colors.push(Bcolor)
- colors.push(Acolor)
- var vertices = new Float32Array(g_points)
- draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
 function check(){
