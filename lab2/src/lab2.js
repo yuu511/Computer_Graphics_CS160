@@ -131,6 +131,8 @@ function leftclick(ev, gl, canvas, a_Position) {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
  
+ // draw all finished cylinder 
+ drawAllCylinders(gl,canvas,a_Position)
 
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
@@ -151,10 +153,13 @@ function move(ev, gl, canvas, a_Position) {
   if ( previousX === null || previousY === null) 
     return 
    
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
+ // Clear <canvas>
+ gl.clear(gl.COLOR_BUFFER_BIT);
    
- //draw currently working line
+ // draw all finished cylinder 
+ drawAllCylinders(gl,canvas,a_Position)
+
+ // draw currently working line (Elastic line)
  const colors = []
  colors.push(Rcolor)
  colors.push(Gcolor)
@@ -215,19 +220,11 @@ function rightclick(ev, gl, canvas, a_Position) {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
 
-  // draw newest cylinder 
-  for (var i =0 ; i < oldlines.length ; i++){       
-    if (oldlines[i].length >= 4){
-     var loop = (((oldlines[i].length/2)-1)*2)
-     console.log(loop)
-     for (var j =0; j < loop;j+=2){   
-      drawcylinder(gl,canvas,a_Position,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3])
-      cylinder_points = []
-     }
-    }
-  }  
+  // draw all finished cylinder 
+  drawAllCylinders(gl,canvas,a_Position)
   previousX = null  
   previousY = null
+  g_points = []
 }
 
 // initialize vertex buffer
@@ -349,6 +346,20 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
   setIndexBuffer(gl,indices)
   gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
   c_points = []
+}
+
+// simple function to draw all cylinders based on all established line segments
+function drawAllCylinders(gl,canvas,a_Position){
+  // draw all finished cylinder 
+  for (var i =0 ; i < oldlines.length ; i++){       
+    if (oldlines[i].length >= 4){
+     var loop = (((oldlines[i].length/2)-1)*2)
+     for (var j =0; j < loop;j+=2){   
+      drawcylinder(gl,canvas,a_Position,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],oldcolors[i])
+      cylinder_points = []
+     }
+    }
+  }  
 }
 
 function slide(ev, gl, canvas, sliderSize, a_Position) { 
@@ -594,8 +605,7 @@ function check(){
    console.log ("\n\n\n\n\n\n\n\n\n\n\nyou passed")
 }
 
-function drawcylinder(gl,canvas,a_Position,x1,y1,x2,y2){
-  console.log("test!")
+function drawcylinder(gl,canvas,a_Position,x1,y1,x2,y2,colors){
   // multiply degrees by convert to get value in radians
   const convert = pi/180
   const radius = 0.25
@@ -612,5 +622,5 @@ function drawcylinder(gl,canvas,a_Position,x1,y1,x2,y2){
   } 
   var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
- drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,defaultcolor)
+ drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,colors)
 }
