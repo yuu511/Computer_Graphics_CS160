@@ -110,8 +110,6 @@ function main() {
   gl.clear(gl.COLOR_BUFFER_BIT); 
 
 
-// lab2 circle test function!
-  drawcylinder(gl,canvas,a_Position)
 }
 
 function leftclick(ev, gl, canvas, a_Position) {  
@@ -215,10 +213,21 @@ function rightclick(ev, gl, canvas, a_Position) {
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-  
-  console.log (oldlines) 
+
+
+  // draw newest cylinder 
+  for (var i =0 ; i < oldlines.length ; i++){       
+    if (oldlines[i].length >= 4){
+     var loop = (((oldlines[i].length/2)-1)*2)
+     console.log(loop)
+     for (var j =0; j < loop;j+=2){   
+      drawcylinder(gl,canvas,a_Position,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3])
+      cylinder_points = []
+     }
+    }
+  }  
+  previousX = null  
   previousY = null
-  g_points = []
 }
 
 // initialize vertex buffer
@@ -314,10 +323,6 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
         console.log('Failed to initialize buffers.');
         return;
     }
-  // specify the color for clearing <canvas>
-  gl.clearColor(0, 0, 0, 1);
-  // clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
   // # of vertices on base 
   let len = vertices.length/6;
   if (len === 0)
@@ -343,6 +348,7 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
   gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
+  c_points = []
 }
 
 function slide(ev, gl, canvas, sliderSize, a_Position) { 
@@ -588,20 +594,21 @@ function check(){
    console.log ("\n\n\n\n\n\n\n\n\n\n\nyou passed")
 }
 
-function drawcylinder(gl,canvas,a_Position){
+function drawcylinder(gl,canvas,a_Position,x1,y1,x2,y2){
+  console.log("test!")
   // multiply degrees by convert to get value in radians
   const convert = pi/180
   const radius = 0.25
   // gets x,y for circle
   for (var i=0 ; i <=360 ; i+=36){ 
-    cylinder_points.push(Math.sin(convert*i) * radius)
+    cylinder_points.push(Math.cos(convert*i) * radius + x1)
+    cylinder_points.push(Math.sin(convert*i) * radius + y1)
     cylinder_points.push(0)
-    cylinder_points.push(Math.cos(convert*i) * radius)
   } 
   for (var i=0 ; i <=360 ; i+=36){ 
-    cylinder_points.push(Math.sin(convert*i) * radius)
-    cylinder_points.push(0.7)
-    cylinder_points.push(Math.cos(convert*i) * radius)
+    cylinder_points.push(Math.cos(convert*i) * radius + x2)
+    cylinder_points.push(Math.sin(convert*i) * radius + y2)
+    cylinder_points.push(0)
   } 
   var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
