@@ -1,4 +1,3 @@
-// lab1.js 
 // Elijah Cordova 1425119
 
 // Various snippets of code from ClickedPoints / Hello Triangle by Roger/Lea (Given to us by class)
@@ -17,6 +16,11 @@ var FSHADER_SOURCE =
   '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
   '}\n';
 
+var FSIZE = 4 
+
+// the number we will be using to model pi
+const pi = 3.1459
+
 let previousX = null
 let previousY = null 
 let g_points = [] // The array for the position of a mouse press
@@ -30,6 +34,12 @@ let Acolor = 1
 let oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
 let formvalue = -1 
 let sizeofpoint = 10.0 
+
+const defaultcolor = []
+defaultcolor.push(Rcolor)
+defaultcolor.push(Gcolor)
+defaultcolor.push(Bcolor)
+defaultcolor.push(Acolor)
 
 function main() {
   // Retrieve <canvas> element
@@ -97,6 +107,10 @@ function main() {
  
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT); 
+
+
+// lab2 circle test function!
+  drawcylinder(gl,canvas,a_Position)
 }
 
 function leftclick(ev, gl, canvas, a_Position) {  
@@ -236,6 +250,55 @@ function rightclick(ev, gl, canvas, a_Position) {
   g_points = []
 }
 
+// initialize vertex buffer
+function initVertexBuffer(gl) {
+    // create buffer object
+    var vertex_buffer = gl.createBuffer();
+    if (!vertex_buffer) {
+	console.log("failed to create vertex buffer");
+	return false;
+    }
+    // bind buffer objects to targets
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+    return true;
+}
+
+// initialize index buffer
+function initIndexBuffer(gl) {
+    // create buffer object
+    var index_buffer = gl.createBuffer();
+    if (!index_buffer) {
+	console.log("failed to create index buffer");
+	return false;
+    }
+    // bind buffer objects to targets
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+    return true;
+}
+
+// set data in vertex buffer (given typed float32 array)
+function setVertexBuffer(gl, vertices) {
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+}
+
+// set data in index buffer (given typed uint16 array)
+function setIndexBuffer(gl, indices) {
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+}
+
+// initializes attributes
+function initAttributes(gl) {
+    // assign buffer to a_Position and enable assignment
+    var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    if (a_Position < 0) {
+	console.log("failed to get storage location of a_Position");
+	return false;
+    }
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, FSIZE * 3, 0);
+    gl.enableVertexAttribArray(a_Position);
+    return true;
+}
+
 // generic drawing function, will draw line with all vertices specified below.
 function draw (gl,canvas,a_Position,vertices,linewidth,colors){   
  gl.lineWidth(linewidth)
@@ -243,16 +306,13 @@ function draw (gl,canvas,a_Position,vertices,linewidth,colors){
  var len = vertices.length;
  if (len === 0)
   return
- var vertexBuffer = gl.createBuffer();
-  if (!vertexBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
-  // Bind the buffer object to target
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  // Write date into the buffer object
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
+  var success = initVertexBuffer(gl)
+  if (!success) {
+	console.log('Failed to initialize buffers.')
+	return
+  }
+  setVertexBuffer (gl,vertices)
   // Assign the buffer object to a_Position variable
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
 
@@ -267,6 +327,45 @@ function draw (gl,canvas,a_Position,vertices,linewidth,colors){
     // Draw
     gl.drawArrays(gl.POINTS, 0, len/2);
   }
+}
+
+
+//draws a generalized cylinder 
+function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors){   
+  gl.lineWidth(linewidth)
+  updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
+  FSIZE = 4
+  // initialize buffers
+   var success = initVertexBuffer(gl);
+    success = success && initIndexBuffer(gl);
+    success = success && initAttributes(gl);  
+    if (!success) {
+        console.log('Failed to initialize buffers.');
+        return;
+    }
+  // specify the color for clearing <canvas>
+  gl.clearColor(0, 0, 0, 1);
+  // clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  // # of vertices on base 
+  let len = vertices.length/6;
+  if (len === 0)
+   return
+  setVertexBuffer(gl,vertices)
+  var indices = []
+   for (var i=0 ; i < len-1; i++){
+    indices.push(i)
+    indices.push(i+1) 
+    indices.push(len+i-1)
+    indices.push(i)
+    indices.push(len+i-1)
+    indices.push(len+i)
+    indices.push(i+1)
+    indices.push(len+i-1)
+  }
+  indices = new Int16Array(indices)
+  setIndexBuffer(gl,indices)
+  gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
 }
 
 function slide(ev, gl, canvas, sliderSize, a_Position) { 
@@ -510,4 +609,24 @@ function check(){
    console.log ("\n\n\n\n\n\n\n\n\n\n\nyou failed")
   else
    console.log ("\n\n\n\n\n\n\n\n\n\n\nyou passed")
+}
+
+function drawcylinder(gl,canvas,a_Position){
+  // multiply degrees by convert to get value in radians
+  const convert = pi/180
+  const radius = 0.25
+  // gets x,y for circle
+  for (var i=0 ; i <360 ; i+=36){ 
+    g_points.push(Math.sin(convert*i) * radius)
+    g_points.push(0)
+    g_points.push(Math.cos(convert*i) * radius)
+  } 
+  for (var i=0 ; i <360 ; i+=36){ 
+    g_points.push(Math.sin(convert*i) * radius)
+    g_points.push(-0.7)
+    g_points.push(Math.cos(convert*i) * radius)
+  } 
+  var vertices = new Float32Array(g_points)
+  // draw currently working line with points
+ drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,defaultcolor)
 }
