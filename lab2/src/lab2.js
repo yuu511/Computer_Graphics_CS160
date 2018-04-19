@@ -29,6 +29,7 @@ let previousY = null
 let g_points = [] // The array for the position of a mouse press
 let oldlines = [] // all previous completed lines
 
+// legacy lab1 code (deprecated) 
 // width = current width, oldwidths = all old widths
 let width = 1.0 //current working width (thickness of line)
 let oldwidths = [] //all old widths
@@ -53,10 +54,17 @@ let sizeofpoint = 10.0
 // cylinder_points = currently drawing cylinder points
 // sides = number of size the cylinder will have
 let cylinder_points = []
+
 let sides = 10
+let individualsides = []
+let cylindersides = []
+
 let radius = 0.25
 let radii = []
 let cylinderradii = []
+
+let previousFace = []
+
 function main() {
   // Retrieve <canvas> element
   const canvas = document.getElementById('webgl');
@@ -146,6 +154,7 @@ function leftclick(ev, gl, canvas, a_Position) {
  colors.push(Acolor)
  oldcolors.push(colors)
  radii.push(radius)
+ individualsides.push(sides)
  draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
@@ -216,17 +225,19 @@ function rightclick(ev, gl, canvas, a_Position) {
   oldwidths.push (width)
   cylinderradii.push(radii)
   cylindercolors.push(oldcolors)
+  cylindersides.push(individualsides)
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
 
-  // draw all finished cylinder 
+  // draw all finished cylinder, clear arrays for next line segment 
   drawAllCylinders(gl,canvas,a_Position)
   previousX = null  
   previousY = null
   oldcolors = []
   g_points = []
   radii=[]
+  individualsides=[]
 }
 
 // initialize vertex buffer
@@ -329,6 +340,7 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
    return
   setVertexBuffer(gl,vertices)
   var indices = []
+   // cool traiangles
    for (var i=0 ; i < len-1; i++){
     indices.push(i)
     indices.push(i+1) 
@@ -355,10 +367,11 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
 function drawAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
   for (var i =0 ; i < oldlines.length ; i++){       
+    previousFace = []
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      drawcylinder(gl,canvas,a_Position,cylinderradii[i][j/2],oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],cylindercolors[i][j/2])
+      drawcylinder(gl,canvas,a_Position,cylinderradii[i][j/2],cylindersides[i][j/2],oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],cylindercolors[i][j/2])
       cylinder_points = []
      }
     }
@@ -444,25 +457,58 @@ function updateColor (gl,a_Position,R,G,B,A){
 
 // INPUT : x1,x2 y1,y2 : coordinates of line segment to draw on
 // r: value of radius
+// s: number of sides
 // colors : array [R,G,B,A] of colors
-function drawcylinder(gl,canvas,a_Position,r,x1,y1,x2,y2,colors){
+function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   // multiply degrees by convert to get value in radians
   const convert = pi/180
-  const test = Math.floor(360/sides)
-  // gets x,y for circle
-  for (var i=0 ; i <=360 ; i+=test){ 
-    cylinder_points.push(Math.cos(convert*i) * r + x1)
-    cylinder_points.push(Math.sin(convert*i) * r + y1)
-    cylinder_points.push(0)
-  } 
-  for (var i=0 ; i <=360 ; i+=test){ 
-    cylinder_points.push(Math.cos(convert*i) * r + x2)
-    cylinder_points.push(Math.sin(convert*i) * r + y2)
-    cylinder_points.push(0)
-  } 
+  const numsides = Math.floor(360/s)
+  if (previousFace.length < 1){
+    if (Math.abs(y2-y1) > Math.abs(x2-x1)){
+      for (var i=0 ; i <=360 ; i+=numsides){ 
+        previousFace.push(Math.cos(convert*i) * r + x1)
+        previousFace.push(y1)
+        previousFace.push(Math.sin(convert*i) * r)
+      } 
+    }
+    else if (Math.abs(y2-y1) <= Math.abs(x2-x1)){
+      for (var i=0 ; i <=360 ; i+=numsides){
+        previousFace.push(x1)
+        previousFace.push(Math.cos(convert*i) * r + y1)
+        previousFace.push(Math.sin(convert*i) * r)
+      } 
+    }
+  }
+  for (var j=0 ; j < previousFace.length ;j++){
+     cylinder_points.push(previousFace[j])    
+  }
+
+  if (Math.abs(y2-y1) > Math.abs(x2-x1)){
+    previousFace = [] 
+    for (var i=0 ; i <=360 ; i+=numsides){ 
+      cylinder_points.push(Math.cos(convert*i) * r + x2)
+      cylinder_points.push(y2)
+      cylinder_points.push(Math.sin(convert*i) * r)
+      previousFace.push(Math.cos(convert*i) * r + x2)
+      previousFace.push(y2)
+      previousFace.push(Math.sin(convert*i) * r)
+      } 
+  }
+  else if (Math.abs(y2-y1) <= Math.abs(x2-x1)){
+    previousFace = []
+    for (var i=0 ; i <=360 ; i+=numsides){
+      cylinder_points.push(x2)
+      cylinder_points.push(Math.cos(convert*i) * r + y2)
+      cylinder_points.push(Math.sin(convert*i) * r)
+  
+      previousFace.push(x2)
+      previousFace.push(Math.cos(convert*i) * r + y2)
+      previousFace.push(Math.sin(convert*i) * r)
+     } 
+  }
   var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
- drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,colors)
+  drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,colors)
 }
 
 function changeSides(ev, gl, canvas, sliderSides,  a_Position){
@@ -472,3 +518,4 @@ function changeSides(ev, gl, canvas, sliderSides,  a_Position){
 function changeRadius(ev, gl, canvas, sliderRaidus,  a_Position){
   radius = sliderRadius.value
 }
+
