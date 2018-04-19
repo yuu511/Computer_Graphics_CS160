@@ -38,7 +38,8 @@ let Rcolor = 1
 let Gcolor = 0
 let Bcolor = 0
 let Acolor = 1
-let oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
+let oldcolors = [] // array of colors in each individual cylinder 
+let cylindercolors = [] //array of oldcolors 
 const defaultcolor = []
 defaultcolor.push(Rcolor)
 defaultcolor.push(Gcolor)
@@ -54,7 +55,8 @@ let sizeofpoint = 10.0
 let cylinder_points = []
 let sides = 10
 let radius = 0.25
-
+let radii = []
+let cylinderradii = []
 function main() {
   // Retrieve <canvas> element
   const canvas = document.getElementById('webgl');
@@ -142,6 +144,8 @@ function leftclick(ev, gl, canvas, a_Position) {
  colors.push(Gcolor)
  colors.push(Bcolor)
  colors.push(Acolor)
+ oldcolors.push(colors)
+ radii.push(radius)
  draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
@@ -210,13 +214,8 @@ function rightclick(ev, gl, canvas, a_Position) {
   var archive = new Float32Array(g_points)
   oldlines.push (archive)
   oldwidths.push (width)
-  const colors = []
-  colors.push(Rcolor)
-  colors.push(Gcolor)
-  colors.push(Bcolor)
-  colors.push(Acolor)
-  oldcolors.push(colors)
-
+  cylinderradii.push(radii)
+  cylindercolors.push(oldcolors)
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -225,7 +224,9 @@ function rightclick(ev, gl, canvas, a_Position) {
   drawAllCylinders(gl,canvas,a_Position)
   previousX = null  
   previousY = null
+  oldcolors = []
   g_points = []
+  radii=[]
 }
 
 // initialize vertex buffer
@@ -356,8 +357,8 @@ function drawAllCylinders(gl,canvas,a_Position){
   for (var i =0 ; i < oldlines.length ; i++){       
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
-     for (var j =0; j < loop;j+=2){   
-      drawcylinder(gl,canvas,a_Position,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],oldcolors[i])
+     for (var j =0; j < loop;j+=2){    
+      drawcylinder(gl,canvas,a_Position,cylinderradii[i][j/2],oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],cylindercolors[i][j/2])
       cylinder_points = []
      }
     }
@@ -389,44 +390,44 @@ function deleteCylinder(ev, gl, canvas, textDelete, a_Position) {
   if (isNaN(deletenumber)){
    return
   }
-  //  edge case where we have someone attempting to delete a line that you are currently drawing
-  if (deletenumber==oldlines.length+1 && (previousX!==null || previousY!==null)){
-    if (oldlines.length >= 0){
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      for (var i =0 ; i < oldlines.length ; i++){       
-        draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
-      } 
-      previousX = null
-      previousY = null
-      g_points = []
-    }
-   return
-  }
-  if (deletenumber < 1 || deletenumber > oldlines.length){
-    return
-  }
- // get rid of the desired line
- oldlines.splice(deletenumber-1,1)
- oldwidths.splice(deletenumber-1,1)
- oldcolors.splice(deletenumber-1,1)  
- // Clear <canvas>
- gl.clear(gl.COLOR_BUFFER_BIT);
-  
- 
- // draw all old lines (if they exist) 
- if (oldlines.length > 0){
-   for (var i =0 ; i < oldlines.length ; i++){       
-     draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
-   } 
- }
- var vertices = new Float32Array(g_points)
- // draw currently working line with points
- const colors = []
- colors.push(Rcolor)
- colors.push(Gcolor)
- colors.push(Bcolor)
- colors.push(Acolor)
- draw (gl,canvas,a_Position,vertices,width,colors)
+//  //  edge case where we have someone attempting to delete a line that you are currently drawing
+//  if (deletenumber==oldlines.length+1 && (previousX!==null || previousY!==null)){
+//    if (oldlines.length >= 0){
+//      gl.clear(gl.COLOR_BUFFER_BIT);
+//      for (var i =0 ; i < oldlines.length ; i++){       
+//        draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],defaultcolor)
+//      } 
+//      previousX = null
+//      previousY = null
+//      g_points = []
+//    }
+//   return
+//  }
+//  if (deletenumber < 1 || deletenumber > oldlines.length){
+//    return
+//  }
+// // get rid of the desired line
+// oldlines.splice(deletenumber-1,1)
+// oldwidths.splice(deletenumber-1,1)
+// oldcolors.splice(deletenumber-1,1)  
+// // Clear <canvas>
+// gl.clear(gl.COLOR_BUFFER_BIT);
+//  
+// 
+// // draw all old lines (if they exist) 
+// if (oldlines.length > 0){
+//   for (var i =0 ; i < oldlines.length ; i++){       
+//     draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
+//   } 
+// }
+// var vertices = new Float32Array(g_points)
+// // draw currently working line with points
+// const colors = []
+// colors.push(Rcolor)
+// colors.push(Gcolor)
+// colors.push(Bcolor)
+// colors.push(Acolor)
+// draw (gl,canvas,a_Position,vertices,width,colors)
 }
 
 function updateColor (gl,a_Position,R,G,B,A){
@@ -441,19 +442,22 @@ function updateColor (gl,a_Position,R,G,B,A){
   }
 }
 
-function drawcylinder(gl,canvas,a_Position,x1,y1,x2,y2,colors){
+// INPUT : x1,x2 y1,y2 : coordinates of line segment to draw on
+// r: value of radius
+// colors : array [R,G,B,A] of colors
+function drawcylinder(gl,canvas,a_Position,r,x1,y1,x2,y2,colors){
   // multiply degrees by convert to get value in radians
   const convert = pi/180
   const test = Math.floor(360/sides)
   // gets x,y for circle
   for (var i=0 ; i <=360 ; i+=test){ 
-    cylinder_points.push(Math.cos(convert*i) * radius + x1)
-    cylinder_points.push(Math.sin(convert*i) * radius + y1)
+    cylinder_points.push(Math.cos(convert*i) * r + x1)
+    cylinder_points.push(Math.sin(convert*i) * r + y1)
     cylinder_points.push(0)
   } 
   for (var i=0 ; i <=360 ; i+=test){ 
-    cylinder_points.push(Math.cos(convert*i) * radius + x2)
-    cylinder_points.push(Math.sin(convert*i) * radius + y2)
+    cylinder_points.push(Math.cos(convert*i) * r + x2)
+    cylinder_points.push(Math.sin(convert*i) * r + y2)
     cylinder_points.push(0)
   } 
   var vertices = new Float32Array(cylinder_points)
