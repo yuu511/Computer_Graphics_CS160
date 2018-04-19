@@ -489,6 +489,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
       cylinder_points.push(Math.cos(convert*i) * r + x2)
       cylinder_points.push(y2)
       cylinder_points.push(Math.sin(convert*i) * r)
+
       previousFace.push(Math.cos(convert*i) * r + x2)
       previousFace.push(y2)
       previousFace.push(Math.sin(convert*i) * r)
