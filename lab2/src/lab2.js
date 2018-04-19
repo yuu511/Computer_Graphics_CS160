@@ -34,6 +34,7 @@ let Acolor = 1
 let oldcolors = [] // array of arrays. X = one entry. X[1]=R X[2] = G X[3] = B X[4] = A
 let formvalue = -1 
 let sizeofpoint = 10.0 
+let cylinder_points = []
 
 const defaultcolor = []
 defaultcolor.push(Rcolor)
@@ -132,12 +133,6 @@ function leftclick(ev, gl, canvas, a_Position) {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
  
-  // draw all old lines (if they exist) 
-  if (oldlines.length > 0){
-    for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
-    } 
-  }
 
  var vertices = new Float32Array(g_points)
  // draw currently working line with points
@@ -160,14 +155,7 @@ function move(ev, gl, canvas, a_Position) {
    
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
-  
-  // draw all old lines (if they exist) 
-  if (oldlines.length > 0){
-    for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
-    } 
-  }
- 
+   
  //draw currently working line
  const colors = []
  colors.push(Rcolor)
@@ -228,24 +216,7 @@ function rightclick(ev, gl, canvas, a_Position) {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
   
- 
-  // draw all old lines (if they exist) 
-  if (oldlines.length > 0){
-    for (var i =0 ; i < oldlines.length ; i++){       
-      draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
-    } 
-  }
- var vertices = new Float32Array(g_points)
- // draw currently working line with points
- draw (gl,canvas,a_Position,vertices,width,colors)
-  console.log ("You have finished drawing \n") 
-  console.log ("Your finished polyline :")
-  for(var i = 0; i < g_points.length; i += 2) {
-    console.log ("("+ g_points[i] + "," + g_points[i+1] + ")")
-  }
-  console .log ("(" + x + "," + y + ")")
-  console.log ("\n")
-  previousX = null
+  console.log (oldlines) 
   previousY = null
   g_points = []
 }
@@ -356,12 +327,18 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
    for (var i=0 ; i < len-1; i++){
     indices.push(i)
     indices.push(i+1) 
-    indices.push(len+i-1)
-    indices.push(i)
-    indices.push(len+i-1)
     indices.push(len+i)
+    indices.push(i)
+
+    indices.push(len+i)
+    indices.push(len+i+1) 
     indices.push(i+1)
-    indices.push(len+i-1)
+    indices.push(len+i)
+
+    indices.push(len+i)
+    indices.push(len+i+1) 
+    indices.push(i)
+    indices.push(len+i)
   }
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
@@ -616,17 +593,17 @@ function drawcylinder(gl,canvas,a_Position){
   const convert = pi/180
   const radius = 0.25
   // gets x,y for circle
-  for (var i=0 ; i <360 ; i+=36){ 
-    g_points.push(Math.sin(convert*i) * radius)
-    g_points.push(0)
-    g_points.push(Math.cos(convert*i) * radius)
+  for (var i=0 ; i <=360 ; i+=36){ 
+    cylinder_points.push(Math.sin(convert*i) * radius)
+    cylinder_points.push(0)
+    cylinder_points.push(Math.cos(convert*i) * radius)
   } 
-  for (var i=0 ; i <360 ; i+=36){ 
-    g_points.push(Math.sin(convert*i) * radius)
-    g_points.push(-0.7)
-    g_points.push(Math.cos(convert*i) * radius)
+  for (var i=0 ; i <=360 ; i+=36){ 
+    cylinder_points.push(Math.sin(convert*i) * radius)
+    cylinder_points.push(0.7)
+    cylinder_points.push(Math.cos(convert*i) * radius)
   } 
-  var vertices = new Float32Array(g_points)
+  var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
  drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,defaultcolor)
 }
