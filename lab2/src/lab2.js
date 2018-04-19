@@ -49,10 +49,10 @@ function main() {
 // old lab1 stuff
 
 //  const sliderSize = document.getElementById('newslider')
-//  const sliderR = document.getElementById('sliderR')
-//  const sliderG = document.getElementById('sliderG')
-//  const sliderB = document.getElementById('sliderB')
-//  const sliderA = document.getElementById('sliderA')
+  const sliderR = document.getElementById('sliderR')
+  const sliderG = document.getElementById('sliderG')
+  const sliderB = document.getElementById('sliderB')
+  const sliderA = document.getElementById('sliderA')
 //  const textbox = document.getElementById('textbox')
 //  const button = document.getElementById('button')
 //  const shiftL = document.getElementById('shiftL')
@@ -91,10 +91,10 @@ function main() {
 
 // old, lab1 Functions !
 //  sliderSize.oninput = function(ev){ slide(ev, gl, canvas, sliderSize,  a_Position); };
-//  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
-//  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
-//  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
-//  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
+  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
+  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
+  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
+  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
 //  button.onclick = function(ev){ keypress(ev, gl, canvas, textbox,  a_Position); };
 //  shiftL.onclick = function(ev){ shiftPointsL(ev, gl, canvas,  a_Position); };
 //  shiftR.onclick = function(ev){ shiftPointsR(ev, gl, canvas,  a_Position); };
@@ -276,6 +276,7 @@ function initAttributes(gl) {
     return true;
 }
 
+// lab1 junk
 // generic drawing function, will draw line with all vertices specified below.
 function draw (gl,canvas,a_Position,vertices,linewidth,colors){   
  gl.lineWidth(linewidth)
