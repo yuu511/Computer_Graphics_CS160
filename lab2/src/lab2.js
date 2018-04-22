@@ -65,6 +65,8 @@ let cylinderradii = []
 
 let previousFace = []
 
+let cumulativeheight = 0
+
 function main() {
   // Retrieve <canvas> element
   const canvas = document.getElementById('webgl');
@@ -246,6 +248,10 @@ function rightclick(ev, gl, canvas, a_Position) {
   radii=[]
   individualsides=[]
   drawAllCylinders(gl,canvas,a_Position)
+  console.log("VOLUME OF CYLINDER:")
+  console.log(cumulativeheight * (radius*radius) * pi)
+  console.log("SURFACE AREA:")
+  console.log((2 * pi * radius * cumulativeheight)+(2*pi*(radius*radius)))
 }
 
 // initialize vertex buffer
@@ -488,6 +494,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
       previousFace.push(Math.cos(convert*i) * r + y2)
       previousFace.push(Math.sin(convert*i) * r)
     } 
+    cumulativeheight += (Math.abs(x2-x1))
   }
   if (Math.abs(x2-x1) <= Math.abs(y2-y1)){
     for (var i=0 ; i <=360 ; i+=numsides){ 
@@ -498,6 +505,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
       previousFace.push(y2)
       previousFace.push(Math.sin(convert*i) * r)
     }  
+    cumulativeheight += Math.abs((y2-y1))
   }
 
   var vertices = new Float32Array(cylinder_points)
@@ -591,4 +599,5 @@ function hardReset(){
   radii = []
   cylinderradii = []
   previousFace = []
+  cumulativeheight = 0
 }
