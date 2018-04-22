@@ -81,6 +81,10 @@ function main() {
   const sliderSides = document.getElementById('sliderSides')
   const sliderRadius = document.getElementById('sliderRadius')
   const saveSOR = document.getElementById('saveSOR')
+  const extractSOR = document.getElementById('extractSOR')
+  
+
+  setupIOSOR("fileinput")
 
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -118,6 +122,7 @@ function main() {
   sliderSides.oninput = function(ev){ changeSides(ev, gl, canvas, sliderSides,  a_Position); };
   sliderRadius.oninput = function(ev){ changeRadius(ev, gl, canvas, sliderRadius,  a_Position); };
   saveSOR.onclick = function(ev){saveCanvas(ev); };
+  extractSOR.onclick = function(ev){ updateScreen(ev, gl, canvas, a_Position); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -234,13 +239,13 @@ function rightclick(ev, gl, canvas, a_Position) {
 
 
   // draw all finished cylinder, clear arrays for next line segment 
-  drawAllCylinders(gl,canvas,a_Position)
   previousX = null  
   previousY = null
   oldcolors = []
   g_points = []
   radii=[]
   individualsides=[]
+  drawAllCylinders(gl,canvas,a_Position)
 }
 
 // initialize vertex buffer
@@ -416,8 +421,15 @@ function deleteCylinder(ev, gl, canvas, deleteL,deleteC, a_Position) {
   temp.splice(((2*deleteCylinder)-2),2)
   if (temp === undefined)
     return
-  if (temp.length == 2)
+  if (temp.length == 2){
     oldlines.splice(deleteLine-1,1) 
+    previousX = null  
+    previousY = null
+    oldcolors = []
+    g_points = []
+    radii=[]
+    individualsides=[]
+  }
   if (temp.length > 2)
     oldlines[deleteLine-1] = new Float32Array(temp) 
 
@@ -516,5 +528,66 @@ function saveCanvas(ev) {
     saveFile(sor);
 }
 
-function updateScreen(){
+function updateScreen(ev, gl, canvas, a_Position){
+  var extract = readFile() 
+  hardReset()
+  var empty = [] 
+  for (var j=0; j< extract.vertices.length;j++){
+    oldlines.push(empty)
+  }
+  var counter = 0 
+  for(var i=0; i< extract.indexes.length;i++){ 
+      for (var i=0 ; j< extract.vertices.length;j++){
+        if (extract.indexes[i]==extract.vertices[j]){
+          counter++ 
+        }
+      }
+      //oldlines[counter-1].push(extract.indexes[i])
+  }
+  for (var j=0; j< extract.vertices.length;j++){
+    oldlines[j]=new Float32Array(oldlines[j])
+  }
+  console.log(oldlines)
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  // draw all finished cylinder 
+  for (var i =0 ; i < oldlines.length ; i++){       
+    previousFace = []
+    if (oldlines[i].length >= 4){
+     var loop = (((oldlines[i].length/2)-1)*2)
+     for (var j =0; j < loop;j+=2){    
+      drawcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],defaultcolor)
+      cylinder_points = []
+     }
+    }
+  }  
+}
+
+// restores all defaults and empties placeholder variables
+function hardReset(){
+  previousX = null
+  previousY = null 
+  g_points = [] // The array for the position of a mouse press
+  oldlines = [] // all previous completed lines
+  Rcolor = 1
+  Gcolor = 0
+  Bcolor = 0
+  Acolor = 1
+  oldcolors = [] // array of colors in each individual cylinder 
+  cylindercolors = [] //array of oldcolors 
+  const defaultcolor = []
+  defaultcolor.push(Rcolor)
+  defaultcolor.push(Gcolor)
+  defaultcolor.push(Bcolor)
+  defaultcolor.push(Acolor)
+  formvalue = -1 
+  sizeofpoint = 10.0 
+  cylinder_points = []
+  sides = 10
+  individualsides = []
+  cylindersides = []
+  radius = 0.25
+  radii = []
+  cylinderradii = []
+  previousFace = []
 }
