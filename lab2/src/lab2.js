@@ -531,18 +531,18 @@ function saveCanvas(ev) {
 function updateScreen(ev, gl, canvas, a_Position){
   var extract = readFile() 
   hardReset()
-  var empty = [] 
-  for (var j=0; j< extract.vertices.length;j++){
-    oldlines.push(empty)
-  }
   var counter = 0 
+  for (var a =0 ; a < extract.vertices.length;a++){
+    oldlines[a]=[]
+  }
   for(var i=0; i< extract.indexes.length;i++){ 
-      for (var i=0 ; j< extract.vertices.length;j++){
+      for (var j=0 ; j< extract.vertices.length;j++){ 
         if (extract.indexes[i]==extract.vertices[j]){
           counter++ 
         }
       }
-      //oldlines[counter-1].push(extract.indexes[i])
+      oldlines[counter-1].push(extract.indexes[i])
+      console.log(oldlines)
   }
   for (var j=0; j< extract.vertices.length;j++){
     oldlines[j]=new Float32Array(oldlines[j])
@@ -561,6 +561,7 @@ function updateScreen(ev, gl, canvas, a_Position){
      }
     }
   }  
+  hardReset()
 }
 
 // restores all defaults and empties placeholder variables
