@@ -425,6 +425,7 @@ function deleteCylinder(ev, gl, canvas, deleteL,deleteC, a_Position) {
    return
   var temp = Array.from(oldlines[deleteLine-1])
   temp.splice(((2*deleteCylinder)-2),2)
+  
   if (temp === undefined)
     return
   if (temp.length == 2){
@@ -436,9 +437,9 @@ function deleteCylinder(ev, gl, canvas, deleteL,deleteC, a_Position) {
     radii=[]
     individualsides=[]
   }
-  if (temp.length > 2)
+  if (temp.length > 2){
     oldlines[deleteLine-1] = new Float32Array(temp) 
-
+  }
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);  
   previousFace = []
@@ -447,6 +448,17 @@ function deleteCylinder(ev, gl, canvas, deleteL,deleteC, a_Position) {
 
 function updateColor (gl,a_Position,R,G,B,A){
   gl.deleteShader(FSHADER_SOURCE)
+  if ( isNaN(R) || isNaN(G) || isNaN(B) || isNaN(A)){
+    Rcolor = 1
+    Gcolor = 0
+    Bcolor = 0
+    Acolor = 1
+    R = 1
+    G = 0
+    B = 0
+    A = 1
+  }
+  
   var FSHADER_SOURCE = 
   'void main() {\n' +
   '  gl_FragColor = vec4('+R+ ', '+ G + ', ' + B + ', ' + A + ');\n' +
