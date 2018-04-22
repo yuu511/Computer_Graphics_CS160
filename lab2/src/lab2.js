@@ -75,10 +75,12 @@ function main() {
   const sliderG = document.getElementById('sliderG')
   const sliderB = document.getElementById('sliderB')
   const sliderA = document.getElementById('sliderA')
-  const textDelete = document.getElementById('textDelete')
+  const deleteL = document.getElementById('deleteL')
+  const deleteC = document.getElementById('deleteC')
   const buttonDelete = document.getElementById('buttonDelete')
   const sliderSides = document.getElementById('sliderSides')
   const sliderRadius = document.getElementById('sliderRadius')
+  const saveSOR = document.getElementById('saveSOR')
 
   // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -112,9 +114,10 @@ function main() {
   sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
   sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
   sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
-  buttonDelete.onclick = function(ev){ deleteCylinder(ev, gl, canvas, textDelete,  a_Position); };
+  buttonDelete.onclick = function(ev){ deleteCylinder(ev, gl, canvas, deleteL,deleteC,  a_Position); };
   sliderSides.oninput = function(ev){ changeSides(ev, gl, canvas, sliderSides,  a_Position); };
   sliderRadius.oninput = function(ev){ changeRadius(ev, gl, canvas, sliderRadius,  a_Position); };
+  saveSOR.onclick = function(ev){saveCanvas(ev); };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -398,49 +401,30 @@ function Aslider(ev, gl, canvas, sliderA, a_Position) {
   Acolor=sliderA.value
 }
 
-function deleteCylinder(ev, gl, canvas, textDelete, a_Position) { 
-  let  deletenumber = parseInt(textDelete.value)
-  if (isNaN(deletenumber)){
+function deleteCylinder(ev, gl, canvas, deleteL,deleteC, a_Position) { 
+  let  deleteLine = parseInt(deleteL.value)
+  let  deleteCylinder = parseInt(deleteC.value) 
+  if (isNaN(deleteLine)||isNaN(deleteCylinder))
    return
-  }
-//  //  edge case where we have someone attempting to delete a line that you are currently drawing
-//  if (deletenumber==oldlines.length+1 && (previousX!==null || previousY!==null)){
-//    if (oldlines.length >= 0){
-//      gl.clear(gl.COLOR_BUFFER_BIT);
-//      for (var i =0 ; i < oldlines.length ; i++){       
-//        draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],defaultcolor)
-//      } 
-//      previousX = null
-//      previousY = null
-//      g_points = []
-//    }
-//   return
-//  }
-//  if (deletenumber < 1 || deletenumber > oldlines.length){
-//    return
-//  }
-// // get rid of the desired line
-// oldlines.splice(deletenumber-1,1)
-// oldwidths.splice(deletenumber-1,1)
-// oldcolors.splice(deletenumber-1,1)  
-// // Clear <canvas>
-// gl.clear(gl.COLOR_BUFFER_BIT);
-//  
-// 
-// // draw all old lines (if they exist) 
-// if (oldlines.length > 0){
-//   for (var i =0 ; i < oldlines.length ; i++){       
-//     draw (gl,canvas,a_Position,oldlines[i],oldwidths[i],oldcolors[i])
-//   } 
-// }
-// var vertices = new Float32Array(g_points)
-// // draw currently working line with points
-// const colors = []
-// colors.push(Rcolor)
-// colors.push(Gcolor)
-// colors.push(Bcolor)
-// colors.push(Acolor)
-// draw (gl,canvas,a_Position,vertices,width,colors)
+  if (deleteLine < 1 || deleteCylinder < 1 || deleteLine > oldlines.length || oldlines.length < 1)
+   return  
+  if (oldlines[deleteLine-1] === undefined || oldlines[deleteLine-1][deleteCylinder-1] === undefined)
+   return 
+  if ((oldlines[deleteLine-1].length-2)/2 < deleteCylinder)
+   return
+  var temp = Array.from(oldlines[deleteLine-1])
+  temp.splice(((2*deleteCylinder)-2),2)
+  if (temp === undefined)
+    return
+  if (temp.length == 2)
+    oldlines.splice(deleteLine-1,1) 
+  if (temp.length > 2)
+    oldlines[deleteLine-1] = new Float32Array(temp) 
+
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);  
+  previousFace = []
+  drawAllCylinders(gl,canvas,a_Position)
 }
 
 function updateColor (gl,a_Position,R,G,B,A){
@@ -464,49 +448,46 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   const convert = pi/180
   const numsides = Math.floor(360/s)
   if (previousFace.length < 1){
-    if (Math.abs(y2-y1) > Math.abs(x2-x1)){
+    if (Math.abs(x2-x1) > Math.abs(y2-y1)){
       for (var i=0 ; i <=360 ; i+=numsides){ 
-        previousFace.push(Math.cos(convert*i) * r + x1)
-        previousFace.push(y1)
-        previousFace.push(Math.sin(convert*i) * r)
-      } 
-    }
-    else if (Math.abs(y2-y1) <= Math.abs(x2-x1)){
-      for (var i=0 ; i <=360 ; i+=numsides){
         previousFace.push(x1)
         previousFace.push(Math.cos(convert*i) * r + y1)
         previousFace.push(Math.sin(convert*i) * r)
       } 
     }
+    if (Math.abs(x2-x1) <= Math.abs(y2-y1)){
+      for (var i=0 ; i <=360 ; i+=numsides){ 
+        previousFace.push(Math.cos(convert*i) * r + x1)
+        previousFace.push(y1)
+        previousFace.push(Math.sin(convert*i) * r)
+      }  
+    }
   }
   for (var j=0 ; j < previousFace.length ;j++){
      cylinder_points.push(previousFace[j])    
   }
-
-  if (Math.abs(y2-y1) > Math.abs(x2-x1)){
-    previousFace = [] 
+  previousFace = []
+  if (Math.abs(x2-x1) > Math.abs(y2-y1)){
+    for (var i=0 ; i <=360 ; i+=numsides){ 
+      cylinder_points.push(x2)
+      cylinder_points.push(Math.cos(convert*i) * r + y2)
+      cylinder_points.push(Math.sin(convert*i) * r)
+      previousFace.push(x2)
+      previousFace.push(Math.cos(convert*i) * r + y2)
+      previousFace.push(Math.sin(convert*i) * r)
+    } 
+  }
+  if (Math.abs(x2-x1) <= Math.abs(y2-y1)){
     for (var i=0 ; i <=360 ; i+=numsides){ 
       cylinder_points.push(Math.cos(convert*i) * r + x2)
       cylinder_points.push(y2)
       cylinder_points.push(Math.sin(convert*i) * r)
-
       previousFace.push(Math.cos(convert*i) * r + x2)
       previousFace.push(y2)
       previousFace.push(Math.sin(convert*i) * r)
-      } 
+    }  
   }
-  else if (Math.abs(y2-y1) <= Math.abs(x2-x1)){
-    previousFace = []
-    for (var i=0 ; i <=360 ; i+=numsides){
-      cylinder_points.push(x2)
-      cylinder_points.push(Math.cos(convert*i) * r + y2)
-      cylinder_points.push(Math.sin(convert*i) * r)
-  
-      previousFace.push(x2)
-      previousFace.push(Math.cos(convert*i) * r + y2)
-      previousFace.push(Math.sin(convert*i) * r)
-     } 
-  }
+
   var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
   drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,colors)
@@ -520,3 +501,20 @@ function changeRadius(ev, gl, canvas, sliderRaidus,  a_Position){
   radius = sliderRadius.value
 }
 
+// saves polyline displayed on canvas to file
+function saveCanvas(ev) {
+    console.log("test")
+    var sor = new SOR();
+    sor.objName = "model";
+    sor.vertices = oldlines;
+    sor.indexes = []
+    for (let i=0;i<oldlines.length;i++){
+      for (let j=0;j<oldlines[i].length;j++){
+        sor.indexes.push(oldlines[i][j])
+      }
+    }
+    saveFile(sor);
+}
+
+function updateScreen(){
+}

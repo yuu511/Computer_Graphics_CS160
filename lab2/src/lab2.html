@@ -9,6 +9,7 @@
     <p>By Elijah Cordova</p>
     <script src="lab2.js"> </script>  
     <script src="../lib/cuon-utils.js"> </script>  
+    <script src="../lib/ioSOR.js"> </script>  
     <script src="../lib/webgl-utils.js"> </script>  
     <script src= "../lib/webgl-debug.js"> </script>
     <div class="slidecontainer">
@@ -43,6 +44,10 @@
       <input type="range" min="1" max="10" value="1" class="slider" id="newslider">
       <output id="output"> </output>
        -->
+    <p> load/ Save SOR 
+      <input type= "button" id="saveSOR" value = "saveSOR">
+      <button onclick="updateScreen()" type="button">Extract SOR</button>
+    </p>
     <p>COLOR SELECT: Use the sliders to adjust R G B A values. Default value = RED [1 0 0 1 ]<br /></p>
     <p>Color of Line : R &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Color of Line:G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
        Color of Line : B &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Color of Line:A</p>
@@ -54,15 +59,15 @@
       <output id="outputB"> </output>
       <input type="range" min="0" max="255" value="1" class="slider" id="sliderA">
       <output id="outputA"> </output>
-      <p>NUMBER OF SIDES (MIN 10,MAX 20,DEFAULT 10) </p>
+      <p>NUMBER OF SIDES  / RADIUS </p>
       <input type="range" min="10" max="20" value="10" class="slider" id="sliderSides">
       <output id="outputSides"> </output>
-      <p>Radius (MIN 0.1,MAX 0.7, DEFAULT 0.25) </p>
       <input type="range" min="0.1" max="0.7" value="0.1" class="slider" id="sliderRadius" step="0.1">
       <output id="outputRadius"> </output>
-     <p>DELETE BUTTON: (TYPE IN WHAT LINE # YOU WANT TO DELETE AND PRESS DELETE BUTTON)</p>
-     <p>Lines are numbered 1, 2 , 3 , ... , n, and are assigned based on order drawn. 1= Oldest, n = newest. Note that lines are renumbered dynamically! ie : Deleting Line "1" will make the previous line "2" line "1" after the deletion is complete!</p>
-      <input type= "text" id="textDelete">
+     <p>DELETE BUTTON: (FIRST FIELD: POLYLINE, SECOND FIELD: # CYLINDER) To delete a specific cylinder: specify 1. the polyline that contains the cylinder and 2. the number cylinder you want to delete from the polyline.</p>
+      <p> ex: 1, 2 -> Delete Cylinder 2 from Polyline 1. Note that cylinders and polylines are renumbered dynamically! If you delete a cylinder, things will be renumbered accordingly! </p>
+      <input type= "text" id="deleteL">
+      <input type= "text" id="deleteC">
       <input type= "button" id="buttonDelete" value = "DELETE">
     </div>
   </body>
