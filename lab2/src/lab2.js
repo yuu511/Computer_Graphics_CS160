@@ -303,7 +303,7 @@ function initAttributes(gl) {
     return true;
 }
 
-// lab1 junk
+// lab1 junk, only used to draw polyline
 // generic drawing function, will draw line with all vertices specified below.
 function draw (gl,canvas,a_Position,vertices,linewidth,colors){   
  gl.lineWidth(linewidth)
@@ -430,6 +430,9 @@ function deleteCylinder(ev, gl, canvas, deleteL,deleteC, a_Position) {
     return
   if (temp.length == 2){
     oldlines.splice(deleteLine-1,1) 
+    cylindercolors.splice(deleteLine-1,1)
+    cylinderradii.splice(deleteLine-1,1)
+    cylindersides.splice(deleteLine-1,1)
     previousX = null  
     previousY = null
     oldcolors = []
