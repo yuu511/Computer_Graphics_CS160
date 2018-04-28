@@ -32,9 +32,9 @@ let width = 1.0 //current working width (thickness of line)
 let oldwidths = [] //all old widths
 
 // (x)Color = current color setting, oldcolors = all old colors (an array of arrays)
-let Rcolor = 1
+let Rcolor = 0
 let Gcolor = 0
-let Bcolor = 0
+let Bcolor = 1
 let Acolor = 1
 let oldcolors = [] // array of colors in each individual cylinder 
 let cylindercolors = [] //array of oldcolors 
@@ -113,13 +113,13 @@ function main() {
   canvas.onkeydown = function(ev){ key(ev, gl, canvas, a_Position); };
 
 //  sliderSize.oninput = function(ev){ pointThick(ev, gl, canvas, sliderSize,  a_Position); };
-  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
-  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
-  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
-  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
-  buttonDelete.onclick = function(ev){ deleteCylinder(ev, gl, canvas, deleteL,deleteC,  a_Position); };
-  sliderSides.oninput = function(ev){ changeSides(ev, gl, canvas, sliderSides,  a_Position); };
-  sliderRadius.oninput = function(ev){ changeRadius(ev, gl, canvas, sliderRadius,  a_Position); };
+//  sliderR.oninput = function(ev){ Rslider(ev, gl, canvas, sliderR,  a_Position); };
+//  sliderG.oninput = function(ev){ Gslider(ev, gl, canvas, sliderG,  a_Position); };
+//  sliderB.oninput = function(ev){ Bslider(ev, gl, canvas, sliderB,  a_Position); };
+//  sliderA.oninput = function(ev){ Aslider(ev, gl, canvas, sliderA,  a_Position); };
+//  buttonDelete.onclick = function(ev){ deleteCylinder(ev, gl, canvas, deleteL,deleteC,  a_Position); };
+//  sliderSides.oninput = function(ev){ changeSides(ev, gl, canvas, sliderSides,  a_Position); };
+//  sliderRadius.oninput = function(ev){ changeRadius(ev, gl, canvas, sliderRadius,  a_Position); };
   saveSOR.onclick = function(ev){saveCanvas(ev); };
   extractSOR.onclick = function(ev){ updateScreen(ev, gl, canvas, a_Position); };
 
@@ -245,10 +245,6 @@ function rightclick(ev, gl, canvas, a_Position) {
   radii=[]
   individualsides=[]
   drawAllCylinders(gl,canvas,a_Position)
-  console.log("VOLUME OF CYLINDER:")
-  console.log(cumulativeheight * (radius*radius) * pi)
-  console.log("SURFACE AREA:")
-  console.log((2 * pi * radius * cumulativeheight)+(2*pi*(radius*radius)))
 }
 
 // initialize vertex buffer
@@ -439,13 +435,12 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   const deltaX = x2-x1
   const deltaY = y2-y1 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
+  degreeToRotate = ((2 * Math.PI) - degreeToRotate)
   
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
   let unrotated = []
 
-  // we use previous faces for line smoothing!
-  previousFace = []
   for (var i=0 ; i <=360; i+=numsides){ 
     unrotated.push(0)
     unrotated.push((Math.cos(convert*i))*r)
@@ -457,6 +452,12 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
     unrotated.push(Math.sin(convert*i)*r)
   } 
  var vertices = new Float32Array(cylinder_points) 
+ // OUR ROTATIONAL MATRIX (Rotating around the Z axis):
+ // cos sin (0)
+ // -sin cos (0)
+ // 0    0    1 
+
+ // first circle
  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
@@ -467,8 +468,8 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
   cylinder_points.push(unrotated[i+2])
  }
+ console.log (cylinder_points)
   var vertices = new Float32Array(cylinder_points)
-  // draw currently working line with points
   updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
   // initialize buffers
    var success = initVertexBuffer(gl);
@@ -503,7 +504,9 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   }
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
-  gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
+  // draw cylinder 
+  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);   
+  
   cylinder_points = []
 }
 
