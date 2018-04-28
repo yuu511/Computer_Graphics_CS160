@@ -522,7 +522,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
     }  
     cumulativeheight += Math.abs((y2-y1))
   }
-
   var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
   drawGeneralizedCylinder (gl,canvas,a_Position,vertices,width,colors)

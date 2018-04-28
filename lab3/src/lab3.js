@@ -504,9 +504,10 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
   // draw cylinder 
-  gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
+  gl.drawElements(gl.TRIANGLE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
 
-  // CAP (FOR SMOOTH EDGES) 
+  // DRAW CAP
+  // (FOR SMOOTH EDGES) 
   cylinder_points = []
   let cap_points = []
   if (previousFace.length < 1){
@@ -530,7 +531,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
    previousFace.push(unrotated[i+2])
   }
   var capvertices = new Float32Array(cap_points)
-  console.log(capvertices)
   // initialize buffers
   var success = initVertexBuffer(gl);
   success = success && initIndexBuffer(gl);
@@ -563,8 +563,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
     capindices.push(len+i)
   }
   capindices = new Int16Array(indices)
-  console.log(capindices)
-  console.log(capvertices)
   setIndexBuffer(gl,capindices)
   // draw cylinder 
   gl.drawElements(gl.LINE_STRIP, capindices.length, gl.UNSIGNED_SHORT, 0);   
