@@ -1,0 +1,44 @@
+<HTML>
+  <head>
+  </head>
+  <body onload ="main()">
+    <canvas id = "webgl" width ="500" height = "500">
+    please use a browser that supports canvas
+    </canvas>
+    <h1>Lab 3 </h1>
+    <p>By Elijah Cordova</p>
+    <script src="lab3.js"> </script>  
+    <script src="../lib/cuon-utils.js"> </script>  
+    <script src="../lib/ioSOR.js"> </script>  
+    <script src="../lib/webgl-utils.js"> </script>  
+    <script src= "../lib/webgl-debug.js"> </script>
+    <div class="slidecontainer">
+    <p> load/ Save SOR 
+      <input type= "button" id="saveSOR" value = "saveSOR">
+      <input type="file" id="fileinput">
+      <input type="button" id = "extractSOR" value = "extractSOR">
+    </p>
+    <p>COLOR SELECT: Use the sliders to adjust R G B A values. Default value = RED [1 0 0 1 ]<br /></p>
+    <p>Color of Line : R &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Color of Line:G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       Color of Line : B &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Color of Line:A</p>
+      <input type="range" min="0" max="255" value="1" class="slider" id="sliderR">
+      <output id="outputR"> </output>
+      <input type="range" min="0" max="255" value="0" class="slider" id="sliderG">
+      <output id="outputG"> </output>
+      <input type="range" min="0" max="255" value="0" class="slider" id="sliderB">
+      <output id="outputB"> </output>
+      <input type="range" min="0" max="255" value="1" class="slider" id="sliderA">
+      <output id="outputA"> </output>
+      <p>NUMBER OF SIDES  / RADIUS </p>
+      <input type="range" min="10" max="20" value="10" class="slider" id="sliderSides">
+      <output id="outputSides"> </output>
+      <input type="range" min="0.1" max="0.7" value="0.1" class="slider" id="sliderRadius" step="0.1">
+      <output id="outputRadius"> </output>
+     <p>DELETE BUTTON: (FIRST FIELD: POLYLINE, SECOND FIELD: # CYLINDER) To delete a specific cylinder: specify 1. the polyline that contains the cylinder and 2. the number cylinder you want to delete from the polyline.</p>
+      <p> ex: 1, 2 -> Delete Cylinder 2 from Polyline 1. Note that cylinders and polylines are renumbered dynamically! If you delete a cylinder, things will be renumbered accordingly! </p>
+      <input type= "text" id="deleteL">
+      <input type= "text" id="deleteC">
+      <input type= "button" id="buttonDelete" value = "DELETE">
+    </div>
+  </body>
+</html>
