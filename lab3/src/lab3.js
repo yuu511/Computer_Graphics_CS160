@@ -451,25 +451,26 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
     unrotated.push((Math.cos(convert*i))*r)
     unrotated.push(Math.sin(convert*i)*r)
   } 
- var vertices = new Float32Array(cylinder_points) 
- // OUR ROTATIONAL MATRIX (Rotating around the Z axis):
- // cos sin (0)
- // -sin cos (0)
- // 0    0    1 
-
- // first circle
- for (var i = 0 ; i < unrotated.length/2 ; i+=3){
-  cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
-  cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
-  cylinder_points.push(unrotated[i+2])
- }
- for (var i = unrotated.length/2; i < unrotated.length; i+=3){
-  cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
-  cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
-  cylinder_points.push(unrotated[i+2])
- }
- var vertices = new Float32Array(cylinder_points)
- updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
+  var vertices = new Float32Array(cylinder_points) 
+  // OUR ROTATIONAL MATRIX (Rotating around the Z axis):
+  // cos sin (0)
+  // -sin cos (0)
+  // 0    0    1 
+ 
+  // first circle
+  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
+   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[i+2])
+  }
+  // second circle
+  for (var i = unrotated.length/2; i < unrotated.length; i+=3){
+   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
+   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
+   cylinder_points.push(unrotated[i+2])
+  }
+  var vertices = new Float32Array(cylinder_points)
+  updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
   // initialize buffers
    var success = initVertexBuffer(gl);
     success = success && initIndexBuffer(gl);
@@ -485,7 +486,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   setVertexBuffer(gl,vertices)
   var indices = []
    // cool traiangles
-  for (var i=0 ; i < len-1; i++){
+  for (var i=0 ; i < s; i++){
     indices.push(i)
     indices.push(i+1) 
     indices.push(len+i)
@@ -493,22 +494,29 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
 
     indices.push(len+i)
     indices.push(len+i+1) 
-    indices.push(i+1)
+    indices.push(i)
     indices.push(len+i)
 
     indices.push(len+i)
     indices.push(len+i+1) 
-    indices.push(i)
+    indices.push(i+1)
     indices.push(len+i)
   }
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
   // draw cylinder 
-  gl.drawElements(gl.TRIANGLE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
+  gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);    
+
+  // draw normals (if applicable)
+  var normals = 1
+  // 0 = false , 1 = true
+  if (normals == 1){
+    let midX = ( 
+  }
+  cylinder_points = []
 
   // DRAW CAP
   // (FOR SMOOTH EDGES) 
-  cylinder_points = []
   let cap_points = []
   if (previousFace.length < 1){
     for (var i = unrotated.length/2; i < unrotated.length; i+=3){
@@ -544,28 +552,10 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   if (caplen === 0)
    return
   setVertexBuffer(gl,capvertices)
-  var capindices = []
-   // cool traiangles
-  for (var i=0 ; i < caplen-1; i++){
-    capindices.push(i)
-    capindices.push(i+1) 
-    capindices.push(len+i)
-    capindices.push(i)
-
-    capindices.push(len+i)
-    capindices.push(len+i+1) 
-    capindices.push(i+1)
-    capindices.push(len+i)
-
-    capindices.push(len+i)
-    capindices.push(len+i+1) 
-    capindices.push(i)
-    capindices.push(len+i)
-  }
-  capindices = new Int16Array(indices)
-  setIndexBuffer(gl,capindices)
+  // reusing old indices because they connected the same 
+  setIndexBuffer(gl,indices)
   // draw cylinder 
-  gl.drawElements(gl.LINE_STRIP, capindices.length, gl.UNSIGNED_SHORT, 0);   
+  gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
   cap_points= []
 }
 
