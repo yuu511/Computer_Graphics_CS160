@@ -468,9 +468,8 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
   cylinder_points.push(unrotated[i+2])
  }
- console.log (cylinder_points)
-  var vertices = new Float32Array(cylinder_points)
-  updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
+ var vertices = new Float32Array(cylinder_points)
+ updateColor (gl,a_Position,colors[0],colors[1],colors[2],colors[3])
   // initialize buffers
    var success = initVertexBuffer(gl);
     success = success && initIndexBuffer(gl);
@@ -486,7 +485,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   setVertexBuffer(gl,vertices)
   var indices = []
    // cool traiangles
-   for (var i=0 ; i < len-1; i++){
+  for (var i=0 ; i < len-1; i++){
     indices.push(i)
     indices.push(i+1) 
     indices.push(len+i)
@@ -505,9 +504,71 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
   // draw cylinder 
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);   
-  
+  gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0);   
+
+  // CAP (FOR SMOOTH EDGES) 
   cylinder_points = []
+  let cap_points = []
+  if (previousFace.length < 1){
+    for (var i = unrotated.length/2; i < unrotated.length; i+=3){
+      previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
+      previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
+      previousFace.push(unrotated[i+2])
+    }
+    return
+  } 
+  for (var j=0 ; j < previousFace.length ;j++){
+    cap_points.push(previousFace[j])    
+  }
+  previousFace = []
+  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
+   cap_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cap_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
+   cap_points.push(unrotated[i+2])
+   previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
+   previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
+   previousFace.push(unrotated[i+2])
+  }
+  var capvertices = new Float32Array(cap_points)
+  console.log(capvertices)
+  // initialize buffers
+  var success = initVertexBuffer(gl);
+  success = success && initIndexBuffer(gl);
+  success = success && initAttributes(gl);  
+  if (!success) {
+      console.log('Failed to initialize buffers.');
+      return;
+  }
+  // # of vertices on base 
+  let caplen = capvertices.length/6;
+  if (caplen === 0)
+   return
+  setVertexBuffer(gl,capvertices)
+  var capindices = []
+   // cool traiangles
+  for (var i=0 ; i < caplen-1; i++){
+    capindices.push(i)
+    capindices.push(i+1) 
+    capindices.push(len+i)
+    capindices.push(i)
+
+    capindices.push(len+i)
+    capindices.push(len+i+1) 
+    capindices.push(i+1)
+    capindices.push(len+i)
+
+    capindices.push(len+i)
+    capindices.push(len+i+1) 
+    capindices.push(i)
+    capindices.push(len+i)
+  }
+  capindices = new Int16Array(indices)
+  console.log(capindices)
+  console.log(capvertices)
+  setIndexBuffer(gl,capindices)
+  // draw cylinder 
+  gl.drawElements(gl.LINE_STRIP, capindices.length, gl.UNSIGNED_SHORT, 0);   
+  cap_points= []
 }
 
 function changeSides(ev, gl, canvas, sliderSides,  a_Position){
