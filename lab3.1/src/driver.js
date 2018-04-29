@@ -22,16 +22,12 @@ let Rcolor = 0
 let Gcolor = 1
 let Bcolor = 0
 let Acolor = 1
-let oldcolors = [] // array of colors in each individual cylinder 
-let cylindercolors = [] //array of oldcolors 
 const defaultcolor = []
 defaultcolor.push(Rcolor)
 defaultcolor.push(Gcolor)
 defaultcolor.push(Bcolor)
 defaultcolor.push(Acolor)
 
-// formvalue = for game, size of point = default point size
-let formvalue = -1 
 let sizeofpoint = 10.0 
 
 // cylinder_points = currently drawing cylinder points
@@ -42,7 +38,7 @@ let sides = 10
 let individualsides = []
 let cylindersides = []
 
-let radius = 0.25
+let radius = 0.20 
 let radii = []
 let cylinderradii = []
 
@@ -50,7 +46,13 @@ let previousFace = []
 
 let cumulativeheight = 0
 
-checkBox = document.getElementById('surfacenormalcheckbox')
+
+//lab 3 stuff
+let checkBox = document.getElementById('surfacenormalcheckbox')
+let normals = []
+let light1C = []
+let light1V = []
+
 // called when page is loaded
 function main() {
     // retrieve <canvas> element
@@ -92,6 +94,9 @@ function start(gl) {
      return;
    }
     const surfaceCheckbox = document.getElementById('surfacenormalcheckbox')
+    const shiftX = document.getElementById('shiftX')
+    const moveLight = document.getElementById('moveLight') 
+    const rotateAlongY = document.getElementById('rotateAlongY') 
     checkBox=surfaceCheckbox
     surfaceCheckbox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
     // initialize buffers
@@ -105,11 +110,20 @@ function start(gl) {
 
     canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
     canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
-  canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
+    canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
+    shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
+    moveLight.onclick = function(ev){ mvlight(ev, gl, canvas, a_Position); };
+    rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
     // specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
     // clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
+    for (var i= 0 ; i<4 ; i++){
+     light1C.push(1)
+    }
+    for (var i= 0 ; i<3 ; i++){
+     light1V.push(1)
+    }
 }
 
 // initialize vertex buffer
@@ -164,172 +178,6 @@ function initAttributes(gl) {
     return true;
 }
 
-// draws an n-sided polygon wireframe with radius r centered at (c_x, c_y) with color (r, g, b, a)
-function drawPolygonWireframe(gl, n, rad, c_x, c_y, r, g, b, a) {
-    var vert = []; // vertex array
-    var ind = []; // index array
-    // angle (in radians) between sides
-    var angle = (2 * Math.PI) / n; 
-    // create triangles
-    for (var i = 0; i < n; i++) {
-        // calculate the vertex locations
-        var x1 = (rad * Math.cos(angle * i)) + c_x;
-        var y1 = (rad * Math.sin(angle * i)) + c_y;
-        var x2 = (rad * Math.cos(angle * (i + 1))) + c_x;
-        var y2 = (rad * Math.sin(angle * (i + 1))) + c_y;
-        // calculate the per-surface color (all vertices on the same surface have the same color for Assignment 3)
-        // for assignment 3, you will need to calculate surface normals.
-        // in this example, we will shade based on position (namely, the average of the corners of the triangle)
-        var col = shadeRightwards((c_x + x1 + x2)/2, (c_y + y1 + y2)/3, r, g, b, a);
-        // center vertex
-        vert.push(c_x); 
-        vert.push(c_y); 
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // first outer vertex
-        vert.push(x1);
-        vert.push(y1);
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // second outer vertex
-        vert.push(x2);
-        vert.push(y2);
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // connect vertices
-        ind.push(i * 3); // start at center
-        ind.push((i * 3) + 1); // go to first outer vertex
-        ind.push((i * 3) + 2); // go to second outer vertex
-        ind.push(i * 3); // go back to center
-    }
-    // set buffers
-    setVertexBuffer(gl, new Float32Array(vert));
-    setIndexBuffer(gl, new Uint16Array(ind));
-    // draw polygon
-    gl.drawElements(gl.LINE_STRIP, ind.length, gl.UNSIGNED_SHORT, 0);    
-}
-
-// draws an n-sided polygon with filled triangles with radius r centered at (c_x, c_y) with color (r, g, b, a)
-// uses drawElements
-function drawPolygonTriangles1(gl, n, rad, c_x, c_y, r, g, b, a) {
-    var vert = []; // vertex array
-    var ind = []; // index array
-    // angle (in radians) between sides
-    var angle = (2 * Math.PI) / n; 
-    // create triangles
-    for (var i = 0; i < n; i++) {
-        // calculate the vertex locations
-        var x1 = (rad * Math.cos(angle * i)) + c_x;
-        var y1 = (rad * Math.sin(angle * i)) + c_y;
-        var x2 = (rad * Math.cos(angle * (i + 1))) + c_x;
-        var y2 = (rad * Math.sin(angle * (i + 1))) + c_y;
-        // calculate the per-surface color (all vertices on the same surface have the same color for Assignment 3)
-        // for assignment 3, you will need to calculate surface normals.
-        // in this example, we will shade based on position (namely, the average of the corners of the triangle)
-        var col = shadeRightwards((c_x + x1 + x2)/2, (c_y + y1 + y2)/3, r, g, b, a);
-        // center vertex
-        vert.push(c_x); 
-        vert.push(c_y); 
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // first outer vertex
-        vert.push(x1);
-        vert.push(y1);
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // second outer vertex
-        vert.push(x2);
-        vert.push(y2);
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // connect vertices
-        ind.push(i * 3); // start at center
-        ind.push((i * 3) + 1); // go to first outer vertex
-        ind.push((i * 3) + 2); // go to second outer vertex
-    }
-    // set buffers
-    setVertexBuffer(gl, new Float32Array(vert));
-    setIndexBuffer(gl, new Uint16Array(ind));
-    // draw polygon
-    gl.drawElements(gl.TRIANGLES, ind.length, gl.UNSIGNED_SHORT, 0);    
-}
-
-// draws an n-sided polygon with filled triangles with radius r centered at (c_x, c_y) with color (r, g, b, a)
-// uses drawArrays (functionally same as drawElements)
-function drawPolygonTriangles2(gl, n, rad, c_x, c_y, r, g, b, a) {
-    var vert = []; // vertex array
-    // angle (in radians) between sides
-    var angle = (2 * Math.PI) / n; 
-    // create triangles
-    for (var i = 0; i < n; i++) {
-                // calculate the vertex locations
-        var x1 = (rad * Math.cos(angle * i)) + c_x;
-        var y1 = (rad * Math.sin(angle * i)) + c_y;
-        var x2 = (rad * Math.cos(angle * (i + 1))) + c_x;
-        var y2 = (rad * Math.sin(angle * (i + 1))) + c_y;
-        // calculate the per-surface color (all vertices on the same surface have the same color for Assignment 3)
-        // for assignment 3, you will need to calculate surface normals.
-        // in this example, we will shade based on position (namely, the average of the corners of the triangle)
-        var col = shadeRightwards((c_x + x1 + x2)/2, (c_y + y1 + y2)/3, r, g, b, a);
-        // center vertex
-        vert.push(c_x); 
-        vert.push(c_y); 
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // first outer vertex
-        vert.push(x1);
-        vert.push(y1);
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-        // second outer vertex
-        vert.push(x2);
-        vert.push(y2);
-        vert.push(0);
-        vert.push(col[0]);
-        vert.push(col[1]);
-        vert.push(col[2]);
-        vert.push(col[3]);
-    }
-    // set buffers
-    setVertexBuffer(gl, new Float32Array(vert));
-    // draw polygon
-    gl.drawArrays(gl.TRIANGLES, 0, vert.length/7);    
-}
-
-// example shading algorithm: make slightly darker the farther right you go
-//   takes in as arguments the location of the point and the original color
-//   returns a javascript array of size 4 with new rgba components
-function shadeRightwards(x, y, r, g, b, a) {
-    var col = [r, g, b, a]; // shaded color
-    var ratio = (1 - ((x + 1) / 2)); // measure of how far right (normalized)
-    for (j = 0; j < 3; j++)
-        col[j] = col[j] * ratio;
-    return col;
-}
 
 function leftclick(ev, gl, canvas, a_Position) {  
   // if left click 
@@ -431,6 +279,7 @@ function drawAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
   for (var i =0 ; i < oldlines.length ; i++){       
     previousFace = []
+    let tempNormalholder = []
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
@@ -461,7 +310,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   const deltaX = x2-x1
   const deltaY = y2-y1 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
-  degreeToRotate = ((2 * Math.PI) - degreeToRotate)
+  degreeToRotate = ((2*Math.PI) - degreeToRotate)
   
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
@@ -477,7 +326,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
     unrotated.push((Math.cos(convert*i))*r)
     unrotated.push(Math.sin(convert*i)*r)
   } 
-  var vertices = new Float32Array(cylinder_points) 
+
   // OUR ROTATIONAL MATRIX (Rotating around the Z axis):
   // cos sin (0)
   // -sin cos (0)
@@ -503,35 +352,80 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    cylinder_points.push(Bcolor)
    cylinder_points.push(Acolor)
   }
-  var vertices = new Float32Array(cylinder_points)
-  let len = vertices.length/14;
+  let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
+  // actually apply shading after calculating surface normals
+  let colors = []
+  let individualcylindercolors = []
+  // Lambertan Shading Ld = kD * I * Max(0,n dot vl)
+  light1V = normalize(light1V)
+  // now both the light and surface normal are length 1 
+  for (var i=0 ; i < cylindernormals.length ; i++){
+    let side = []
+    let intensity = dot(cylindernormals[i],light1V)  
+    intensity = Math.max(intensity,0)
+    let red = 0 
+    let green = light1C[1]*(intensity)
+    let blue = 0 
+    let alpha = 1
+    side.push(red) 
+    side.push(green)
+    side.push(blue)
+    side.push(alpha) 
+    colors.push(side)
+  }
+  colors.push(colors[0]) 
+  cylinder_points = []
+  // first circle
+  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
+   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[i+2])
+   cylinder_points.push(colors[Math.floor(i/6)][0])
+   cylinder_points.push(colors[Math.floor(i/6)][1])
+   cylinder_points.push(colors[Math.floor(i/6)][2])
+   cylinder_points.push(colors[Math.floor(i/6)][3])
+  }
+  // second circle
+  for (var i = unrotated.length/2; i < unrotated.length; i+=3){
+   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
+   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
+   cylinder_points.push(unrotated[i+2])
+   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][0])
+   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][1])
+   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][2])
+   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][3])
+  }
+
+
+  let len = cylinder_points.length/14;
   let indices = []
   // cool traiangles
   for (var i=0 ; i < s; i++){
+
     indices.push(i)
     indices.push(i+1) 
     indices.push(len+i)
     indices.push(i)
 
-    indices.push(len+i)
-    indices.push(len+i+1) 
-    indices.push(i)
-    indices.push(len+i)
-
-    indices.push(len+i)
-    indices.push(len+i+1) 
     indices.push(i+1)
-    indices.push(len+i)
+    indices.push(len+i) 
+    indices.push(len+i+1)
+    indices.push(i+1)
+
+    indices.push(len+i+1)
+    indices.push(len+i) 
+    indices.push(i+1)
+    indices.push(len+i+1)
+
   }
+
+  var vertices = new Float32Array(cylinder_points)
   setVertexBuffer(gl, new Float32Array(vertices))
   setIndexBuffer(gl, new Uint16Array(indices))
   // draw cylinder
   gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)    
   //draw normal vectors ! (if applicable)
-
-  if (checkBox.checked){
-    drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points)
-  }
+  calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
   cylinder_points = []
 
 
@@ -539,53 +433,53 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   // ** DRAW CAP **
   // (FOR SMOOTH EDGES) 
 
-  let cap_points = []
-  if (previousFace.length < 1){
-    for (var i = unrotated.length/2; i < unrotated.length; i+=3){
-      previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
-      previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
-      previousFace.push(unrotated[i+2])
-      previousFace.push(Rcolor)
-      previousFace.push(Gcolor)
-      previousFace.push(Bcolor)
-      previousFace.push(Acolor)
-    }
-    return
-  } 
-  for (var j=0 ; j < previousFace.length ;j++){
-    cap_points.push(previousFace[j])    
-  }
-  previousFace = []
-  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
-   cap_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
-   cap_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
-   cap_points.push(unrotated[i+2])
-   cap_points.push(Rcolor)
-   cap_points.push(Gcolor)
-   cap_points.push(Bcolor)
-   cap_points.push(Acolor)
-   previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
-   previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
-   previousFace.push(unrotated[i+2])
-   previousFace.push(Rcolor)
-   previousFace.push(Gcolor)
-   previousFace.push(Bcolor)
-   previousFace.push(Acolor)
-  }
-  var capvertices = new Float32Array(cap_points)
-  let caplen = capvertices.length/14;
-  if (caplen === 0)
-   return
-  setVertexBuffer(gl, new Float32Array(cap_points))
-  setIndexBuffer(gl, new Uint16Array(indices))
-  // draw caps 
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
+//  let cap_points = []
+//  if (previousFace.length < 1){
+//    for (var i = unrotated.length/2; i < unrotated.length; i+=3){
+//      previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
+//      previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
+//      previousFace.push(unrotated[i+2])
+//      previousFace.push(colors[Math.floor(i/6)][0])
+//      previousFace.push(colors[Math.floor(i/6)][1])
+//      previousFace.push(colors[Math.floor(i/6)][2])
+//      previousFace.push(colors[Math.floor(i/6)][3])
+//    }
+//    return
+//  } 
+//  for (var j=0 ; j < previousFace.length ;j++){
+//    cap_points.push(previousFace[j])    
+//  }
+//  previousFace = []
+//  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
+//   cap_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
+//   cap_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
+//   cap_points.push(unrotated[i+2])
+//   cap_points.push(colors[Math.floor(i/6)][0])
+//   cap_points.push(colors[Math.floor(i/6)][1])
+//   cap_points.push(colors[Math.floor(i/6)][2])
+//   cap_points.push(colors[Math.floor(i/6)][3])
+//   previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
+//   previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
+//   previousFace.push(unrotated[i+2])
+//   cap_points.push(colors[Math.floor(i/6)][0])
+//   cap_points.push(colors[Math.floor(i/6)][1])
+//   cap_points.push(colors[Math.floor(i/6)][2])
+//   cap_points.push(colors[Math.floor(i/6)][3])
+//  }
+//  var capvertices = new Float32Array(cap_points)
+//  let caplen = capvertices.length/14;
+//  if (caplen === 0)
+//   return
+//  setVertexBuffer(gl, new Float32Array(cap_points))
+//  setIndexBuffer(gl, new Uint16Array(indices))
+//  // draw caps 
+//  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
 }
 
 
-function drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
-
+function calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
  // draw for the side faces
+ let cylindernormals = []
  for (var i = 0 ; i < s ; i++){
    // Find two lines (QR,QS) formed by 3 points (Q,R,S) on the surface 
    // In this case we'll use the vertices
@@ -607,13 +501,14 @@ function drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
    R.push(cylinder_points[7*i+8])
    R.push(cylinder_points[7*i+9])
 
-   S.push(cylinder_points[7*i+(cylinder_points.length/2)+7])
-   S.push(cylinder_points[7*i+(cylinder_points.length/2)+8])
-   S.push(cylinder_points[7*i+(cylinder_points.length/2)+9]) 
+   S.push(cylinder_points[7*i+(cylinder_points.length/2)])
+   S.push(cylinder_points[7*i+(cylinder_points.length/2)+1])
+   S.push(cylinder_points[7*i+(cylinder_points.length/2)+2]) 
     
    QR.push(R[0]-Q[0]) 
    QR.push(R[1]-Q[1]) 
    QR.push(R[2]-Q[2])
+
 
    QS.push(S[0]-Q[0]) 
    QS.push(S[1]-Q[1]) 
@@ -622,6 +517,7 @@ function drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
    // the surface normal vector is calculated by QR x QS which is perpendicular to the plane
    // use normalize to find the unit vector
    cross = normalize(findCross(QR,QS))
+   cylindernormals.push(cross) 
 
    // find triangle center of QRS
    trianglecenter.push ((Q[0]+R[0]+S[0])/3)
@@ -649,10 +545,13 @@ function drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
     
    indices.push(0)
    indices.push(1)
+
    setVertexBuffer(gl, new Float32Array(normalverts));
    setIndexBuffer(gl, new Uint16Array(indices))
-   // draw normals (sides) 
-   gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0)    
+   if (checkBox.checked){
+     // draw normals (sides) 
+     gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0)    
+   }
  } 
  // draw for the first base circle
  for (var i = 0 ; i < s ; i++){
@@ -719,8 +618,10 @@ function drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
    indices.push(1)
    setVertexBuffer(gl, new Float32Array(normalverts));
    setIndexBuffer(gl, new Uint16Array(indices))
-   // draw normals (face 1) 
-   gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0)    
+   if (checkBox.checked){
+     // draw normals (face 1) 
+     gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0)    
+   }
  } 
 
  // draw for the second base circle
@@ -788,9 +689,12 @@ function drawnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
    indices.push(1)
    setVertexBuffer(gl, new Float32Array(normalverts));
    setIndexBuffer(gl, new Uint16Array(indices))
-   // draw normals (face 2) 
-   gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0)    
+   if (checkBox.checked){
+     // draw normals (face 2) 
+     gl.drawElements(gl.LINE_STRIP, indices.length, gl.UNSIGNED_SHORT, 0)    
+   }
  } 
+ return cylindernormals
 }
 
 // finds cross product between 2 vectors
@@ -808,11 +712,21 @@ function findCross(QR,QS){
 // input : 1 length 3 array
 function normalize(P){
   let normalized = []
-  let magnitude = (Math.sqrt ((P[0]*P[0])+(P[1]*P[1])+(P[2]*P[2])))
+  let magnitude = findMagnitude(P) 
   normalized.push (P[0]/magnitude)
   normalized.push (P[1]/magnitude)
   normalized.push (P[2]/magnitude)
   return normalized
+}
+
+function findMagnitude(P){
+ let magnitude = (Math.sqrt ((P[0]*P[0])+(P[1]*P[1])+(P[2]*P[2])))
+ return magnitude 
+}
+
+function dot(QR,QS){
+  let dot = ((QR[0]*QS[0])+(QR[1]*QS[1])+(QR[2]*QS[2]))
+  return dot
 }
 
 function checkBoxClick(ev, gl, canvas, a_Position){
@@ -822,5 +736,44 @@ function checkBoxClick(ev, gl, canvas, a_Position){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT); 
   // draw all finished cylinder 
+  drawAllCylinders(gl,canvas,a_Position)
+}
+
+function shift (ev,gl,canvas,a_Position){   
+  // draw all finished cylinder 
+  for (var i =0 ; i < oldlines.length ; i++){       
+    if (oldlines[i].length >= 4){
+     for (var j =0; j < oldlines[i].length;j+=2){    
+       oldlines[i][j] = oldlines[i][j] +0.01 
+     }
+    } 
+  }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
+
+
+function mvlight (ev,gl,canvas,a_Position){   
+  if (light1V.length == 3){
+    light1V[2] = light1V[2]-0.2
+  }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
+
+
+function rotateY (ev,gl,canvas,a_Position){   
+  if (light1V.length == 3){
+    let newLight = []
+    let radian = Math.PI/6 
+    newLight.push((light1V[0] * Math.cos(radian)) + (light1V[2] * Math.sin(radian))) 
+    newLight.push(light1V[1])
+    newLight.push((light1V[0] * (-1  * Math.sin(radian))) + (light1V[2] * Math.cos(radian)))
+    light1V= newLight
+  }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
 }
