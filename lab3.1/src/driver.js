@@ -49,6 +49,7 @@ let cumulativeheight = 0
 
 //lab 3 stuff
 let checkBox = document.getElementById('surfacenormalcheckbox')
+let whiteLightBox = document.getElementById('whitebox')
 let normals = []
 let light1C = []
 let light1V = []
@@ -94,10 +95,11 @@ function start(gl) {
      return;
    }
     const surfaceCheckbox = document.getElementById('surfacenormalcheckbox')
+    checkBox=surfaceCheckbox
     const shiftX = document.getElementById('shiftX')
     const moveLight = document.getElementById('moveLight') 
     const rotateAlongY = document.getElementById('rotateAlongY') 
-    checkBox=surfaceCheckbox
+    const whitebox = document.getElementById('whitebox')
     surfaceCheckbox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
     // initialize buffers
     var success = initVertexBuffer(gl);
@@ -355,23 +357,27 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
   // actually apply shading after calculating surface normals
   let colors = []
-  let individualcylindercolors = []
   // Lambertan Shading Ld = kD * I * Max(0,n dot vl)
   light1V = normalize(light1V)
+  let currentred=0
+  let currentgreen=0
+  let currentblue=0
   // now both the light and surface normal are length 1 
-  for (var i=0 ; i < cylindernormals.length ; i++){
-    let side = []
-    let intensity = dot(cylindernormals[i],light1V)  
-    intensity = Math.max(intensity,0)
-    let red = 0 
-    let green = light1C[1]*(intensity)
-    let blue = 0 
-    let alpha = 1
-    side.push(red) 
-    side.push(green)
-    side.push(blue)
-    side.push(alpha) 
-    colors.push(side)
+  if (light1V){
+    for (var i=0 ; i < cylindernormals.length ; i++){
+      let side = []
+      let intensity = dot(cylindernormals[i],light1V)  
+      intensity = Math.max(intensity,0)
+      let red = currentred 
+      let green = currentgreen + (light1C[1]*(intensity))
+      let blue = currentblue 
+      let alpha = 1
+      side.push(red) 
+      side.push(green)
+      side.push(blue)
+      side.push(alpha) 
+      colors.push(side)
+    }
   }
   colors.push(colors[0]) 
   cylinder_points = []
