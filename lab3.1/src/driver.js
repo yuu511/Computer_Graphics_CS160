@@ -50,9 +50,12 @@ let cumulativeheight = 0
 //lab 3 stuff
 let checkBox = document.getElementById('surfacenormalcheckbox')
 let whiteLightBox = document.getElementById('whitebox')
+let redLightBox = document.getElementById('redbox')
 let normals = []
 let light1C = []
 let light1V = []
+let light2C = []
+let light2V = []
 
 // called when page is loaded
 function main() {
@@ -100,7 +103,12 @@ function start(gl) {
     const moveLight = document.getElementById('moveLight') 
     const rotateAlongY = document.getElementById('rotateAlongY') 
     const whitebox = document.getElementById('whitebox')
+    whiteLightBox = whitebox
+    const redbox = document.getElementById('redbox')
+    redLightBox = redbox
     surfaceCheckbox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
+    whitebox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
+    redbox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
     // initialize buffers
     var success = initVertexBuffer(gl);
     success = success && initIndexBuffer(gl);
@@ -125,7 +133,12 @@ function start(gl) {
     }
     for (var i= 0 ; i<3 ; i++){
      light1V.push(1)
+     light2V.push(1)
     }
+   light2C.push(1)
+   light2C.push(0)
+   light2C.push(0)
+   light2C.push(1)
 }
 
 // initialize vertex buffer
@@ -363,7 +376,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   let currentgreen=0
   let currentblue=0
   // now both the light and surface normal are length 1 
-  if (light1V){
+  if (whiteLightBox.checked){
     for (var i=0 ; i < cylindernormals.length ; i++){
       let side = []
       let intensity = dot(cylindernormals[i],light1V)  
@@ -378,6 +391,34 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
       side.push(alpha) 
       colors.push(side)
     }
+  }
+  if (redLightBox.checked){
+    if (whiteLightBox.checked){
+      for (var i =0 ; i < colors.length ; i++){
+        let intensity = dot(cylindernormals[i],light2V)  
+        colors[i][0]=colors[i][0]+ (intensity)
+      }
+    }
+    else{
+      for (var i=0 ; i < cylindernormals.length ; i++){
+        let side = []
+        let intensity = dot(cylindernormals[i],light2V)  
+        intensity = Math.max(intensity,0)
+        let red = currentred + intensity
+        let green = currentgreen 
+        let blue = currentblue 
+        let alpha = 1
+        side.push(red) 
+        side.push(green)
+        side.push(blue)
+        side.push(alpha) 
+        colors.push(side)
+      }
+   }
+  }
+  if (colors.length == 0){
+    console.log ("Try Turning on a light!")
+    return
   }
   colors.push(colors[0]) 
   cylinder_points = []
@@ -764,6 +805,9 @@ function mvlight (ev,gl,canvas,a_Position){
   if (light1V.length == 3){
     light1V[2] = light1V[2]-0.2
   }
+  if (light2V.length == 3){
+    light2V[2] = light1V[2]-0.2
+  }
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
@@ -778,6 +822,14 @@ function rotateY (ev,gl,canvas,a_Position){
     newLight.push(light1V[1])
     newLight.push((light1V[0] * (-1  * Math.sin(radian))) + (light1V[2] * Math.cos(radian)))
     light1V= newLight
+  }
+  if (light2V.length == 3){
+    let newLight = []
+    let radian = Math.PI/6 
+    newLight.push((light2V[0] * Math.cos(radian)) + (light2V[2] * Math.sin(radian))) 
+    newLight.push(light2V[1])
+    newLight.push((light2V[0] * (-1  * Math.sin(radian))) + (light2V[2] * Math.cos(radian)))
+    light2V= newLight
   }
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
