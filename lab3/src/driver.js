@@ -109,6 +109,7 @@ function start(gl) {
     surfaceCheckbox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
     whitebox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
     redbox.onclick = function (ev){checkBoxClick(ev, gl, canvas, a_Position)}
+    const da10 = document.getElementById('da10')
     // initialize buffers
     var success = initVertexBuffer(gl);
     success = success && initIndexBuffer(gl);
@@ -124,6 +125,7 @@ function start(gl) {
     shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
     moveLight.onclick = function(ev){ mvlight(ev, gl, canvas, a_Position); };
     rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
+    da10.onclick = function(ev){ max300(ev, gl, canvas, a_Position); };
     // specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
     // clear <canvas>
@@ -573,14 +575,6 @@ function calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
 
    // Add the surface normal vector
    // adding 0.001 for visibility (some normals point directly at you)
-   normalverts.push (trianglecenter[0] +  (cross[0]*0.09)+ 0.01)
-   normalverts.push (trianglecenter[1] +  (cross[1]*0.09) + 0.01)
-   normalverts.push (trianglecenter[2] +  (cross[2]*0.09) + 0.01)
-   normalverts.push(1)
-   normalverts.push(0)
-   normalverts.push(0)
-   normalverts.push(1)
-  
 
    normalverts.push (trianglecenter[0])
    normalverts.push (trianglecenter[1])
@@ -589,6 +583,15 @@ function calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
    normalverts.push(0)
    normalverts.push(0)
    normalverts.push(1)
+
+   normalverts.push (trianglecenter[0] +  (cross[0]*0.05))
+   normalverts.push (trianglecenter[1] +  (cross[1]*0.05))
+   normalverts.push (trianglecenter[2] +  (cross[2]*0.05))
+   normalverts.push(1)
+   normalverts.push(0)
+   normalverts.push(0)
+   normalverts.push(1)
+  
     
    indices.push(0)
    indices.push(1)
@@ -834,4 +837,7 @@ function rotateY (ev,gl,canvas,a_Position){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
+}
+
+function max300 (ev,gl,canvas,a_Position){   
 }
