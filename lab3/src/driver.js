@@ -125,7 +125,7 @@ function start(gl) {
     shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
     moveLight.onclick = function(ev){ mvlight(ev, gl, canvas, a_Position); };
     rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
-    da10.onclick = function(ev){ max300(ev, gl, canvas, a_Position); };
+    da10.onclick = function(ev){ max300(ev, gl, canvas, a_Position,0); };
     // specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
     // clear <canvas>
@@ -324,10 +324,10 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   const numsides = 360/s
 
   // get the angle that the line segment forms
-  const deltaX = x1-x2
-  const deltaY = y1-y2 
+  const deltaX = x2-x1
+  const deltaY = y2-y1 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
-  degreeToRotate = (degreeToRotate)
+  degreeToRotate = (2*Math.PI-degreeToRotate)
   
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
@@ -839,5 +839,21 @@ function rotateY (ev,gl,canvas,a_Position){
   drawAllCylinders(gl,canvas,a_Position)
 }
 
-function max300 (ev,gl,canvas,a_Position){   
+function max300 (ev,gl,canvas,a_Position,n){          
+  if (n==300)
+    return
+  if (n%2==0){
+    redLightBox.checked=true  
+    // Clear <canvas>
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    drawAllCylinders(gl,canvas,a_Position)
+  }
+  if (n%2==0){
+    whiteLightBox.checked=false
+    // Clear <canvas>
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    drawAllCylinders(gl,canvas,a_Position)
+  }
+  
+  max300 (ev,gl,canvas,a_Position,n+1)
 }
