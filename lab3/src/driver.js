@@ -324,10 +324,10 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   const numsides = 360/s
 
   // get the angle that the line segment forms
-  const deltaX = x2-x1
-  const deltaY = y2-y1 
+  const deltaX = x1-x2
+  const deltaY = y1-y2 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
-  degreeToRotate = ((2*Math.PI) - degreeToRotate)
+  degreeToRotate = (degreeToRotate)
   
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
