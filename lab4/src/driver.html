@@ -1,0 +1,38 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+<?xml version="1.0" encoding="UTF-8"?>
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/load-file.js"></script>
+    <script src="driver.js"></script>
+    <p>
+    Lab 3 : Elijah Cordova
+    </p>
+    <p>
+    SHOW SURFACE NORMALS
+    <input type= "checkbox" id="surfacenormalcheckbox" value = "showSurfaceNormals">
+    </p>
+    <p>
+    <input type= "button" id="shiftX" value = "shiftX">
+    <input type= "button" id="moveLight" value = "moveLight">
+    <input type= "button" id="rotateAlongY" value = "rotateAlongY">
+    </p> 
+    <p>
+     ON / OFF BUTTONS FOR LIGHTS : WHITE RED
+    <input type= "checkbox" id="whitebox" value = "default"checked>
+    <input type= "checkbox" id="redbox" value = "reddefault">
+    </p>
+    <p>
+    Nothing will show if a light isn't turned on. (white is turned on by default)
+    </p>
+    <input type= "button" id="da10" value = "animation">
+  </body>
+</html>
