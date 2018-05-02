@@ -26,7 +26,6 @@ const defaultcolor = []
 defaultcolor.push(Rcolor)
 defaultcolor.push(Gcolor)
 defaultcolor.push(Bcolor)
-defaultcolor.push(Acolor)
 
 let sizeofpoint = 10.0 
 
@@ -141,6 +140,7 @@ function start(gl) {
    light2C.push(0)
    light2C.push(0)
    light2C.push(1)
+
 }
 
 // initialize vertex buffer
@@ -374,77 +374,64 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   let colors = []
   // Lambertan Shading Ld = kD * I * Max(0,n dot vl)
   light1V = normalize(light1V)
-  let currentred=0
-  let currentgreen=0
-  let currentblue=0
+  light2V = normalize(light2V)
   // now both the light and surface normal are length 1 
+  
+  let currentsurfacecolor = findsurfacecolor(light1C,defaultcolor)
   if (whiteLightBox.checked){
-    for (var i=0 ; i < cylindernormals.length ; i++){
-      let side = []
-      let intensity = dot(cylindernormals[i],light1V)  
-      intensity = Math.max(intensity,0)
-      let red = currentred 
-      let green = currentgreen + (light1C[1]*(intensity))
-      let blue = currentblue 
-      let alpha = 1
-      side.push(red) 
-      side.push(green)
-      side.push(blue)
-      side.push(alpha) 
-      colors.push(side)
+   colors = calculateColors(cylindernormals,light1V,currentsurfacecolor) 
+  }
+
+  if (redLightBox.checked){ 
+     if (whiteLightBox.checked){
+       currentsurfacecolor = findsurfacecolor (light2C,currentsurfacecolor)
+       colors = calculateColors(cylindernormals,light2V,currentsurfacecolor)  
+     }
+     else{
+       currentsurfacecolor = findsurfacecolor (light2C,defaultcolor)
+       colors = calculateColors(cylindernormals,light2V,currentsurfacecolor)  
     }
   }
-  if (redLightBox.checked){
-    if (whiteLightBox.checked){
-      for (var i =0 ; i < colors.length ; i++){
-        let intensity = dot(cylindernormals[i],light2V)  
-        colors[i][0]=colors[i][0]+ (intensity)
-      }
-    }
-    else{
-      for (var i=0 ; i < cylindernormals.length ; i++){
-        let side = []
-        let intensity = dot(cylindernormals[i],light2V)  
-        intensity = Math.max(intensity,0)
-        let red = currentred + intensity
-        let green = currentgreen 
-        let blue = currentblue 
-        let alpha = 1
-        side.push(red) 
-        side.push(green)
-        side.push(blue)
-        side.push(alpha) 
-        colors.push(side)
-      }
-   }
-  }
+  cylinder_points = []
   if (colors.length == 0){
     console.log ("Try Turning on a light!")
     return
   }
   colors.push(colors[0]) 
-  cylinder_points = []
-  // first circle
-  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
-   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
-   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
-   cylinder_points.push(unrotated[i+2])
-   cylinder_points.push(colors[Math.floor(i/6)][0])
-   cylinder_points.push(colors[Math.floor(i/6)][1])
-   cylinder_points.push(colors[Math.floor(i/6)][2])
-   cylinder_points.push(colors[Math.floor(i/6)][3])
+
+  for (var i = 0 ; i < s ; i++){
+   cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[3*i+2])
+   cylinder_points.push(colors[i][0])
+   cylinder_points.push(colors[i][1])
+   cylinder_points.push(colors[i][2])
+   cylinder_points.push(colors[i][3])
+   cylinder_points.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x1)
+   cylinder_points.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[3*i+5])
+   cylinder_points.push(colors[i][0])
+   cylinder_points.push(colors[i][1])
+   cylinder_points.push(colors[i][2])
+   cylinder_points.push(colors[i][3])
   }
   // second circle
-  for (var i = unrotated.length/2; i < unrotated.length; i+=3){
-   cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
-   cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
-   cylinder_points.push(unrotated[i+2])
-   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][0])
-   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][1])
-   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][2])
-   cylinder_points.push(colors[Math.floor((i-(unrotated.length/2))/6)][3])
+  for (var i = 0 ; i < s ; i++){
+   cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+   cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+   cylinder_points.push(unrotated[3*i+2])
+   cylinder_points.push(colors[i][0])
+   cylinder_points.push(colors[i][1])
+   cylinder_points.push(colors[i][2])
+   cylinder_points.push(colors[i][3])
+   cylinder_points.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x2)
+   cylinder_points.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y2)
+   cylinder_points.push(unrotated[3*i+5])
+   cylinder_points.push(colors[i][0])
+   cylinder_points.push(colors[i][1])
+   cylinder_points.push(colors[i][2])
+   cylinder_points.push(colors[i][3])
   }
-
 
   let len = cylinder_points.length/14;
   let indices = []
@@ -482,47 +469,72 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   // ** DRAW CAP **
   // (FOR SMOOTH EDGES) 
 
-//  let cap_points = []
-//  if (previousFace.length < 1){
-//    for (var i = unrotated.length/2; i < unrotated.length; i+=3){
-//      previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
-//      previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
-//      previousFace.push(unrotated[i+2])
-//      previousFace.push(colors[Math.floor(i/6)][0])
-//      previousFace.push(colors[Math.floor(i/6)][1])
-//      previousFace.push(colors[Math.floor(i/6)][2])
-//      previousFace.push(colors[Math.floor(i/6)][3])
-//    }
-//    return
-//  } 
-//  for (var j=0 ; j < previousFace.length ;j++){
-//    cap_points.push(previousFace[j])    
-//  }
-//  previousFace = []
-//  for (var i = 0 ; i < unrotated.length/2 ; i+=3){
-//   cap_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
-//   cap_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
-//   cap_points.push(unrotated[i+2])
-//   cap_points.push(colors[Math.floor(i/6)][0])
-//   cap_points.push(colors[Math.floor(i/6)][1])
-//   cap_points.push(colors[Math.floor(i/6)][2])
-//   cap_points.push(colors[Math.floor(i/6)][3])
-//   previousFace.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +x2) 
-//   previousFace.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) +y2)
-//   previousFace.push(unrotated[i+2])
-//   cap_points.push(colors[Math.floor(i/6)][0])
-//   cap_points.push(colors[Math.floor(i/6)][1])
-//   cap_points.push(colors[Math.floor(i/6)][2])
-//   cap_points.push(colors[Math.floor(i/6)][3])
-//  }
-//  var capvertices = new Float32Array(cap_points)
-//  let caplen = capvertices.length/14;
-//  if (caplen === 0)
-//   return
-//  setVertexBuffer(gl, new Float32Array(cap_points))
-//  setIndexBuffer(gl, new Uint16Array(indices))
-//  // draw caps 
-//  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
+  let cap_points = []
+  if (previousFace.length < 1){
+    // second circle
+    for (var i = 0 ; i < s ; i++){
+     previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+     previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+     previousFace.push(unrotated[3*i+2])
+     previousFace.push(colors[i][0])
+     previousFace.push(colors[i][1])
+     previousFace.push(colors[i][2])
+     previousFace.push(colors[i][3])
+     previousFace.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x2)
+     previousFace.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y2)
+     previousFace.push(unrotated[3*i+5])
+     previousFace.push(colors[i][0])
+     previousFace.push(colors[i][1])
+     previousFace.push(colors[i][2])
+     previousFace.push(colors[i][3])
+    }
+    return
+  } 
+  for (var j=0 ; j < previousFace.length ;j++){
+    cap_points.push(previousFace[j])    
+  }
+
+  previousFace = []
+  for (var i = 0 ; i < s ; i++){
+   cap_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cap_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
+   cap_points.push(unrotated[3*i+2])
+   cap_points.push(colors[i][0])
+   cap_points.push(colors[i][1])
+   cap_points.push(colors[i][2])
+   cap_points.push(colors[i][3])
+   cap_points.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x1)
+   cap_points.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y1)
+   cap_points.push(unrotated[3*i+5])
+   cap_points.push(colors[i][0])
+   cap_points.push(colors[i][1])
+   cap_points.push(colors[i][2])
+   cap_points.push(colors[i][3])
+  }
+  for (var i = 0 ; i < s ; i++){
+   previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+   previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+   previousFace.push(unrotated[3*i+2])
+   previousFace.push(colors[i][0])
+   previousFace.push(colors[i][1])
+   previousFace.push(colors[i][2])
+   previousFace.push(colors[i][3])
+   previousFace.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x2)
+   previousFace.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y2)
+   previousFace.push(unrotated[3*i+5])
+   previousFace.push(colors[i][0])
+   previousFace.push(colors[i][1])
+   previousFace.push(colors[i][2])
+   previousFace.push(colors[i][3])
+  }
+  var capvertices = new Float32Array(cap_points)
+  let caplen = capvertices.length/14;
+  if (caplen === 0)
+   return
+  setVertexBuffer(gl, new Float32Array(cap_points))
+  setIndexBuffer(gl, new Uint16Array(indices))
+  // draw caps 
+  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
 }
 
 
@@ -779,6 +791,40 @@ function dot(QR,QS){
   return dot
 }
 
+// Lambertan Shading Ld = kD * I * Max(0,n dot vl)
+function calculateColors(cylindernormals,lightVector,surfaceColor){
+  let colors = []
+  //find the color of the surface  
+  // basically the original color + the light color 
+  for (var i=0 ; i < cylindernormals.length ; i++){
+    let side = []
+    let intensity = dot(cylindernormals[i],lightVector)  
+    intensity = Math.max(intensity,0)
+    let red = surfaceColor[0] * (intensity)
+    let green = surfaceColor[1] * (intensity)
+    let blue = surfaceColor[2] * (intensity)
+    let alpha = Acolor
+    side.push(red) 
+    side.push(green)
+    side.push(blue)
+    side.push(alpha) 
+    colors.push(side)
+  }
+  return colors
+}
+
+function findsurfacecolor(surface,light){
+  let surfacec = []
+  let redS = (surface[0] + light[0])/2
+  let greenS = (surface[1] + light[1])/2
+  let blueS = (surface[2] + light[2])/2
+  surfacec.push (redS)
+  surfacec.push (greenS)
+  surfacec.push (blueS)
+  surfacec.push (1)
+  return surfacec
+}
+
 function checkBoxClick(ev, gl, canvas, a_Position){
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -857,3 +903,4 @@ function max300 (ev,gl,canvas,a_Position,n){
   
   max300 (ev,gl,canvas,a_Position,n+1)
 }
+
