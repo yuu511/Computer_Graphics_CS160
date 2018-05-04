@@ -141,6 +141,7 @@ function start(gl) {
    light2C.push(0)
    light2C.push(1)
 
+   drawcylinder(gl,canvas,a_Position,radius,sides,0,0,0,1)
 }
 
 // initialize vertex buffer
@@ -370,6 +371,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    cylinder_points.push(Acolor)
   }
   let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
+  console.log(cylindernormals)
   // actually apply shading after calculating surface normals
   let colors = []
   // Lambertan Shading Ld = kD * I * Max(0,n dot vl)

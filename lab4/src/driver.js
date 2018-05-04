@@ -101,6 +101,7 @@ function start(gl) {
   // clear <canvas>
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawcylinder(gl,canvas,a_Position,radius,sides,0,0,0,1)
 }
 
 
@@ -290,6 +291,57 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    colors.push(Bcolor)
   }
 
+ 
+   
+  let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
+  cylindernormals.push(cylindernormals[0])
+  cylindernormals.push(cylindernormals[1])
+  cylindernormals.push(cylindernormals[2])
+  cylinder_points = []
+  colors = []
+  console.log(cylindernormals)
+  for (var i = 0 ; i < s ; i++){
+   cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[3*i+2])
+   normie.push(cylindernormals[3*i])
+   normie.push(cylindernormals[3*i+1])
+   normie.push(cylindernormals[3*i+2])
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+   cylinder_points.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x1)
+   cylinder_points.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[3*i+5])
+   normie.push(cylindernormals[3*i+3])
+   normie.push(cylindernormals[3*i+4])
+   normie.push(cylindernormals[3*i+5])
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+  }
+  // second circle
+  for (var i = 0 ; i < s ; i++){
+   cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+   cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+   cylinder_points.push(unrotated[3*i+2])
+   normie.push(cylindernormals[3*i])
+   normie.push(cylindernormals[3*i+1])
+   normie.push(cylindernormals[3*i+2])
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+   cylinder_points.push((unrotated[3*i+3] * Math.cos(degreeToRotate)) + (unrotated[3*i+4] * Math.sin(degreeToRotate)) +  x2)
+   cylinder_points.push((unrotated[3*i+3] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+4] * Math.cos(degreeToRotate)) + y2)
+   cylinder_points.push(unrotated[3*i+5])
+   normie.push(cylindernormals[3*i+3])
+   normie.push(cylindernormals[3*i+4])
+   normie.push(cylindernormals[3*i+5])
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+  }
+  
   let len = cylinder_points.length/6
   // cool traiangles
   for (var i=0 ; i < s; i++){
@@ -308,25 +360,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
     indices.push(i+1)
     indices.push(len+i+1)
   }
- 
-   
-  let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
-  for (var i =0; i < cylindernormals.length; i+=3){
-    normie.push(cylindernormals[i])
-    normie.push(cylindernormals[i+1])
-    normie.push(cylindernormals[i+2])
-  }
-  normie.push(cylindernormals[0])
-  normie.push(cylindernormals[1])
-  normie.push(cylindernormals[2])
-  for (var i =0; i < cylindernormals.length; i+=3){
-    normie.push(cylindernormals[i])
-    normie.push(cylindernormals[i+1])
-    normie.push(cylindernormals[i+2])
-  }
-  normie.push(cylindernormals[0])
-  normie.push(cylindernormals[1])
-  normie.push(cylindernormals[2])
  
   var n = initVertexBuffers(gl,cylinder_points,colors,normie,indices)
   if (n<0){
@@ -467,8 +500,7 @@ function findCross(QR,QS){
      // the surface normal vector is calculated by QR x QS which is perpendicular to the plane
      cross.push((QR[1]*QS[2]) - (QR[2]*QS[1])) 
      cross.push((QR[2]*QS[0]) - (QR[0]*QS[2]))
-     cross.push((QR[1]*QS[0]) - (QR[0]*QS[1]))
-     console.log(cross)
+     cross.push((QR[0]*QS[1]) - (QR[1]*QS[0]))
      return cross
 }
 
@@ -476,7 +508,7 @@ function findCross(QR,QS){
 // input : 1 length 3 array
 function normalize(P){
   let normalized = []
-  let magnitude = findMagnitude(P) 
+  let magnitude = findMagnitude(P)
   normalized.push (P[0]/magnitude)
   normalized.push (P[1]/magnitude)
   normalized.push (P[2]/magnitude)
@@ -494,7 +526,7 @@ function dot(QR,QS){
 }
 
 function rotateY (ev,gl,canvas,a_Position){   
-  let radian = Math.PI/6 
+  let radian = (Math.PI/6)
   let newx = 0.0
   let newy = 0.0
   let newz = 0.0
