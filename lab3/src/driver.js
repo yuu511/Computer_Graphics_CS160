@@ -442,9 +442,9 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
     indices.push(i+1) 
     indices.push(len+i)
     indices.push(i)
-
+  
     indices.push(i+1)
-    indices.push(len+i) 
+    indices.push(i)
     indices.push(len+i+1)
     indices.push(i+1)
 
@@ -452,6 +452,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
     indices.push(len+i) 
     indices.push(i+1)
     indices.push(len+i+1)
+
 
   }
 
