@@ -51,6 +51,9 @@ let light1X = 1.0
 let light1Y = 1.0
 let light1Z = 1.0
 
+// mode = 1 = gouraud shading
+let mode = 1
+
 // called when page is loaded
 function main() {
     // retrieve <canvas> element
@@ -467,14 +470,17 @@ function initArrayBuffer (gl, attribute, data, num, type) {
 
 function initAttrib(gl) {
   // Get the storage locations of uniform variables and so on
-  var u_DiffuseLight = gl.getUniformLocation(gl.program, 'u_DiffuseLight');
-  var u_LightPosition= gl.getUniformLocation(gl.program, 'u_LightPosition');
-  var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight');
-  if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight) { 
+  var u_DiffuseLight = gl.getUniformLocation(gl.program, 'u_DiffuseLight')
+  var u_LightPosition= gl.getUniformLocation(gl.program, 'u_LightPosition')
+  var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
+  var u_SpecularLight = gl.getUniformLocation(gl.program, 'u_SpecularLight')
+  var u_ViewPosition = gl.getUniformLocation(gl.program, 'u_ViewPosition')
+  if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight || !u_SpecularLight || !u_ViewPosition) { 
     console.log('Failed to get the storage location');
     console.log(u_DiffuseLight)
     console.log(u_LightPosition)
     console.log(u_AmbientLight)
+    console.log(u_ViewPosition)
     return;
   }
   // Set the light color (white)
@@ -482,7 +488,11 @@ function initAttrib(gl) {
   // Set the light Position (in the world coordinate)
   gl.uniform3f(u_LightPosition, light1X, light1Y, light1Z);
   // Set the ambient light
-  gl.uniform3f(u_AmbientLight, 0, 0, 0.1)
+  gl.uniform3f(u_AmbientLight, 0.0, 0.0, 0.2)
+  // set the Specular Light colour
+  gl.uniform3f(u_SpecularLight, 0.0, 1, 0.0)
+  // set the view position 
+  gl.uniform3f(u_ViewPosition, 0.0, 0, -1)
 }
 
 // finds cross product between 2 vectors
@@ -518,7 +528,7 @@ function dot(QR,QS){
 }
 
 function rotateY (ev,gl,canvas,a_Position){   
-  let radian = (Math.PI/6)
+  let radian = (Math.PI/12)
   let newx = 0.0
   let newy = 0.0
   let newz = 0.0
