@@ -66,9 +66,9 @@ function main() {
         console.log('Failed to get the rendering context for WebGL');
         return;
     }
-    // load shader files
-    loadFile("shader.vert", function(shader_src) { setShader(gl, gl.VERTEX_SHADER, shader_src); });
-    loadFile("shader.frag", function(shader_src) { setShader(gl, gl.FRAGMENT_SHADER, shader_src); });
+      // load shader files
+      loadFile("shader.vert", function(shader_src) { setShader(gl, gl.VERTEX_SHADER, shader_src); });
+      loadFile("shader.frag", function(shader_src) { setShader(gl, gl.FRAGMENT_SHADER, shader_src); }); 
 }
 
 // set appropriate shader and start if both are loaded
@@ -83,24 +83,28 @@ function setShader(gl, shader, shader_src) {
 
 // called when shaders are done loading
 function start(gl) {
-    // retrieve <canvas> element
-    var canvas = document.getElementById('webgl');
-    // initialize shaders
-    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-        console.log('Failed to intialize shaders.');
-        return;
-    }
-   // Get the storage location of a_Position
-   var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-   if (a_Position < 0) {
-     console.log('Failed to get the storage location of a_Position');
-     return;
+   // retrieve <canvas> element
+   var canvas = document.getElementById('webgl');
+   // initialize shaders
+   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+       console.log('Failed to intialize shaders.');
+       return;
    }
-    const rotateAlongY = document.getElementById('rotateAlongY') 
-    canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
-    canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
-    canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
-    rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
+  // Get the storage location of a_Position
+  var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  if (a_Position < 0) {
+    console.log('Failed to get the storage location of a_Position');
+    return;
+  }
+  const rotateAlongY = document.getElementById('rotateAlongY') 
+  const gouraud = document.getElementById('gouraud') 
+  const phong = document.getElementById('phong') 
+  canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
+  canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
+  canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
+  rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
+  gouraud.onclick = function(ev){ gouraudClick(ev, gl, canvas, a_Position); };
+  phong.onclick = function(ev){ phongClick(ev, gl, canvas, a_Position); };
   // specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
   // clear <canvas>
@@ -554,4 +558,14 @@ function rotateY (ev,gl,canvas,a_Position){
   drawAllCylinders(gl,canvas,a_Position)
 }
 
+function gouraudClick(ev, gl, canvas, a_Position){
+  mode = 1
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
 
+function phongClick(ev, gl, canvas, a_Position){
+  mode = 2 
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}

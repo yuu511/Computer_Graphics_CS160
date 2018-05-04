@@ -5,11 +5,8 @@ attribute vec4 a_Normal;
 uniform vec3 u_DiffuseLight;
 uniform vec3 u_LightPosition;
 uniform vec3 u_AmbientLight;
-uniform vec3 u_SpecularLight;
 uniform vec3 u_ViewPosition;
 varying vec4 v_Color;
-varying vec4 v_Position;
-varying vec3 v_Normal;
 
 void main() {
   gl_Position = a_Position;
@@ -29,9 +26,5 @@ void main() {
     v_Color = vec4(kd+ambient, 1);
   }
   if (u_vmode == 2.0){
-    v_Position = a_Position;
-    gl_Position = v_Position;
-    v_Normal = normalize (vec3(a_Normal));
-    v_Color = a_Color;
   }
 }
