@@ -101,7 +101,6 @@ function start(gl) {
   // clear <canvas>
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawcylinder(gl,canvas,a_Position,radius,sides,0,0,0,1)
 }
 
 
@@ -274,10 +273,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x1) 
    cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y1)
    cylinder_points.push(unrotated[i+2])
-
-   colors.push(Rcolor)
-   colors.push(Gcolor)
-   colors.push(Bcolor)
   }
 
   // second circle
@@ -285,21 +280,18 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    cylinder_points.push((unrotated[i] * Math.cos(degreeToRotate)) + (unrotated[i+1] * Math.sin(degreeToRotate)) +  x2) 
    cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y2)
    cylinder_points.push(unrotated[i+2])
-
-   colors.push(Rcolor)
-   colors.push(Gcolor)
-   colors.push(Bcolor)
   }
 
  
-   
+  //calculate cylinder normals from cylinder points 
   let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
+  // n+1th normal (the computer doesn't know that the point that comes after the last point is the same as the first point) 
   cylindernormals.push(cylindernormals[0])
   cylindernormals.push(cylindernormals[1])
   cylindernormals.push(cylindernormals[2])
   cylinder_points = []
   colors = []
-  console.log(cylindernormals)
+  
   for (var i = 0 ; i < s ; i++){
    cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
    cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
@@ -533,9 +525,6 @@ function rotateY (ev,gl,canvas,a_Position){
   newx = ((light1X * Math.cos(radian)) + (light1Z * Math.sin(radian))) 
   newy = light1Y
   newz = ((light1X * (-1  * Math.sin(radian))) + (light1Z * Math.cos(radian)))
-  console.log(newx)
-  console.log(newy)
-  console.log(newz)
   light1X = newx
   light1Y = newy
   light1Z = newz 

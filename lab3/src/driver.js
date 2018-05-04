@@ -140,8 +140,6 @@ function start(gl) {
    light2C.push(0)
    light2C.push(0)
    light2C.push(1)
-
-   drawcylinder(gl,canvas,a_Position,radius,sides,0,0,0,1)
 }
 
 // initialize vertex buffer
