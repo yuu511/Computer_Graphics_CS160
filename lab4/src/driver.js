@@ -106,7 +106,7 @@ function start(gl) {
   gouraud.onclick = function(ev){ gouraudClick(ev, gl, canvas, a_Position); };
   phong.onclick = function(ev){ phongClick(ev, gl, canvas, a_Position); };
   // specify the color for clearing <canvas>
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(0.1, 0.1, 0.1, 1);
   // clear <canvas>
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -219,7 +219,6 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
       return
     }
     // Set the clear color and enable the depth test
-    gl.clearColor(0, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST);
     initAttrib(gl)
     //draw the linestrip!
@@ -296,7 +295,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
  
   //calculate cylinder normals from cylinder points 
   let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
-  // n+1th normal (the computer doesn't know that the point that comes after the last point is the same as the first point) 
+  // n+1th normal (the point that comes after the last point is the same as the first point) 
   cylindernormals.push(cylindernormals[0])
   cylindernormals.push(cylindernormals[1])
   cylindernormals.push(cylindernormals[2])
@@ -370,7 +369,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
       return
     }
     // Set the clear color and enable the depth test
-    gl.clearColor(0, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST);
     initAttrib(gl)
     //draw the cylinder!
