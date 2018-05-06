@@ -53,6 +53,9 @@ let light1Y = 1.0
 let light1Z = -1.0
 // mode = 1 = gouraud shading
 // 2 = phong 
+// 3 = rim
+// 4 = toon
+// 5 = depth
 let mode = 2
 let text = document.getElementById('currentshader')
 text.innerHTML = "PHONG"
@@ -112,6 +115,8 @@ function start(gl) {
   const gouraud = document.getElementById('gouraud') 
   const phong = document.getElementById('phong') 
   const rim = document.getElementById('rim') 
+  const toon = document.getElementById('toon') 
+  const depth = document.getElementById('depth') 
   const shiftX = document.getElementById('shiftX')
   const redambient = document.getElementById('redambient')
   const blueambient = document.getElementById('blueambient')
@@ -127,6 +132,8 @@ function start(gl) {
   gouraud.onclick = function(ev){ gouraudClick(ev, gl, canvas, a_Position); };
   phong.onclick = function(ev){ phongClick(ev, gl, canvas, a_Position); };
   rim.onclick = function(ev){ rimClick(ev, gl, canvas, a_Position); };
+  toon.onclick = function(ev){ toonClick(ev, gl, canvas, a_Position); };
+  depth.onclick = function(ev){ depthClick(ev, gl, canvas, a_Position); };
 
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
@@ -142,7 +149,7 @@ function start(gl) {
   slider.oninput = function(ev){ glossChange(ev, gl, canvas, a_Position,slider); };
   
   // specify the color for clearing <canvas>
-  gl.clearColor(0.1, 0.1, 0.1, 1);
+  gl.clearColor(0.2, 0.2, 0.2, 1);
   // clear <canvas>
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -530,8 +537,8 @@ function initAttrib(gl) {
       return
     }
     // Set the vertex /fragment shader mode
-    gl.uniform1i(u_vmode,parseInt(1))
-    gl.uniform1i(u_fmode,parseInt(1))
+    gl.uniform1f(u_vmode,parseFloat(1.0))
+    gl.uniform1f(u_fmode,parseFloat(1.0))
     var u_DiffuseLight = gl.getUniformLocation(gl.program, 'u_DiffuseLight')
     var u_LightPosition= gl.getUniformLocation(gl.program, 'u_LightPosition')
     var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
@@ -557,52 +564,9 @@ function initAttrib(gl) {
     // set the specular light
     gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
     gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
-    gl.uniform1i(u_exponent,glossiness)
-  }
-  
-  if (mode == 2){
-    var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
-    var u_fmode = gl.getUniformLocation(gl.program, 'u_fmode')
-    if (!u_vmode){
-      console.log ("failed to get vmode!")
-      return
-    }
-    if (!u_fmode){
-      console.log ("failed to get fmode!")
-      return
-    }
-    // Set the vertex /fragment shader mode
-    gl.uniform1i(u_vmode,parseInt(2))
-    gl.uniform1i(u_fmode,parseInt(2))
-    var u_DiffuseLightF = gl.getUniformLocation(gl.program, 'u_DiffuseLightF')
-    var u_LightPositionF= gl.getUniformLocation(gl.program, 'u_LightPositionF')
-    var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
-    var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
-    var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
-    var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
-    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent) { 
-      console.log('Failed to get the storage location');
-      console.log(u_DiffuseLightF)
-      console.log(u_LightPositionF)
-      console.log(u_AmbientLightF)
-      console.log(u_SpecularLightF)
-      console.log(u_ViewPositionF)
-      console.log(u_exponent)
-      return;
-    }
-    // Set the light color (white)
-    gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
-    // Set the light Position (in the world coordinate)
-    gl.uniform3f(u_LightPositionF, light1X, light1Y, light1Z);
-    // Set the ambient light
-    gl.uniform3f(u_AmbientLightF, ambientR, ambientG, ambientB)
-    //set the specular light 
-    gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
-    gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
     gl.uniform1f(u_exponent,glossiness)
   }
-
-  if (mode == 3){
+  if (mode >= 2){
     var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
     var u_fmode = gl.getUniformLocation(gl.program, 'u_fmode')
     if (!u_vmode){
@@ -614,8 +578,22 @@ function initAttrib(gl) {
       return
     }
     // Set the vertex /fragment shader mode
-    gl.uniform1i(u_vmode,parseInt(3))
-    gl.uniform1i(u_fmode,parseInt(3))
+    if (mode == 2){
+      gl.uniform1f(u_vmode,parseFloat(2))
+      gl.uniform1f(u_fmode,parseFloat(2))
+    }
+    if (mode == 3){
+      gl.uniform1f(u_vmode,parseFloat(3))
+      gl.uniform1f(u_fmode,parseFloat(3))
+    }
+    if (mode == 4){
+      gl.uniform1f(u_vmode,parseFloat(4))
+      gl.uniform1f(u_fmode,parseFloat(4))
+    }
+    if (mode == 5){
+      gl.uniform1f(u_vmode,parseFloat(5))
+      gl.uniform1f(u_fmode,parseFloat(5))
+    }
     var u_DiffuseLightF = gl.getUniformLocation(gl.program, 'u_DiffuseLightF')
     var u_LightPositionF= gl.getUniformLocation(gl.program, 'u_LightPositionF')
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
@@ -710,7 +688,21 @@ function rimClick(ev, gl, canvas, a_Position){
   mode = 3 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
-  text.innerHTML = "PHONG"
+  text.innerHTML = "rim"
+}
+
+function toonClick(ev, gl, canvas, a_Position){
+  mode = 4 
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+  text.innerHTML = "toon"
+}
+
+function depthClick(ev, gl, canvas, a_Position){
+  mode = 5 
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+  text.innerHTML = "depth"
 }
 
 function shift (ev,gl,canvas,a_Position){   

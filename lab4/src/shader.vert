@@ -1,4 +1,4 @@
-uniform int u_vmode;
+uniform float u_vmode;
 attribute vec4 a_Position;
 attribute vec4 a_Color;
 attribute vec4 a_Normal;
@@ -15,12 +15,12 @@ varying vec3 v_Position;
 
 void main() {
   gl_Position = a_Position;
-  // mode 1 = gouraud shading
   v_Position = vec3(a_Position);  
   v_Normal = normalize(vec3(a_Normal)); 
   v_Color = a_Color;
 
-  if (u_vmode == 1){
+  // mode 1 = gouraud shading
+  if (u_vmode == 1.0){
     vec3 normal = normalize(vec3(a_Normal));
     vec4 vertexPosition = a_Position; 
     vec3 lightDirection = normalize (vec3(u_LightPosition));
