@@ -3,6 +3,7 @@ precision mediump float;
 #endif
 
 uniform int u_fmode;
+uniform float u_exponent;
 varying vec4 v_Color;
 
 // mode 2
@@ -18,10 +19,11 @@ uniform vec3 u_ViewPositionF;
 void main() {
   // specular 
   float specular = 0.0;
+  float exponent = u_exponent;
   vec3 viewVec = u_ViewPositionF;
   vec3 lightDir = normalize(u_LightPositionF);
   vec3 reflectVec = reflect(-lightDir,v_Normal);
-  specular = pow(max(dot(reflectVec, viewVec), 0.0), 8.0);
+  specular = pow(max(dot(reflectVec, viewVec), 0.0), exponent);
   vec3 specularF = specular * u_SpecularLightF.rgb;
 
   // mode 1 = gouraud shading

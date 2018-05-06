@@ -46,6 +46,7 @@ let previousFace = []
 let cumulativeheight = 0
 
 
+
 //lab4 stuff
 let light1X = 1.0
 let light1Y = 1.0
@@ -64,6 +65,8 @@ let currentspecularR = 0
 let currentspecularG = 1
 let currentspecularB = 0
 
+
+let glossiness = 10.0
 
 // called when page is loaded
 function main() {
@@ -115,13 +118,16 @@ function start(gl) {
   const redspecular = document.getElementById('redspecular')
   const bluespecular = document.getElementById('bluespecular')
   const greenspecular = document.getElementById('greenspecular')
+  const slider = document.getElementById('slider')
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
-  rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
+
   gouraud.onclick = function(ev){ gouraudClick(ev, gl, canvas, a_Position); };
   phong.onclick = function(ev){ phongClick(ev, gl, canvas, a_Position); };
+
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
+  rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
 
   redambient.onclick = function(ev){ redAchange(ev, gl, canvas, a_Position); };
   greenambient.onclick = function(ev){ greenAchange(ev, gl, canvas, a_Position); };
@@ -130,7 +136,9 @@ function start(gl) {
   redspecular.onclick = function(ev){ redSchange(ev, gl, canvas, a_Position); };
   greenspecular.onclick = function(ev){ greenSchange(ev, gl, canvas, a_Position); };
   bluespecular.onclick = function(ev){ blueSchange(ev, gl, canvas, a_Position); };
-
+  
+  slider.oninput = function(ev){ glossChange(ev, gl, canvas, a_Position,slider); };
+  
   // specify the color for clearing <canvas>
   gl.clearColor(0.1, 0.1, 0.1, 1);
   // clear <canvas>
@@ -527,13 +535,15 @@ function initAttrib(gl) {
     var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
-    if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight || !u_SpecularLightF || !u_ViewPositionF) { 
+    var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
+    if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight || !u_SpecularLightF || !u_ViewPositionF || ! u_exponent) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLight)
       console.log(u_LightPosition)
       console.log(u_AmbientLight)
       console.log(u_SpecularLightF)
       console.log(u_ViewPositionF)
+      console.log(u_exponent)
       return;
     }
     // Set the light color (white)
@@ -545,6 +555,7 @@ function initAttrib(gl) {
     // set the specular light
     gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
     gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
+    gl.uniform1i(u_exponent,glossiness)
   }
   
   if (mode == 2){
@@ -566,13 +577,15 @@ function initAttrib(gl) {
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
-    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF) { 
+    var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
+    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLightF)
       console.log(u_LightPositionF)
       console.log(u_AmbientLightF)
       console.log(u_SpecularLightF)
       console.log(u_ViewPositionF)
+      console.log(u_exponent)
       return;
     }
     // Set the light color (white)
@@ -584,6 +597,7 @@ function initAttrib(gl) {
     //set the specular light 
     gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
     gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
+    gl.uniform1f(u_exponent,glossiness)
   }
 }
 
@@ -708,6 +722,12 @@ function blueSchange(ev, gl, canvas, a_Position){
   currentspecularR = 0.0
   currentspecularG = 0.0
   currentspecularB = 1.0
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
+function glossChange(ev, gl, canvas, a_Position,slider){
+  glossiness = parseFloat(slider.value)
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
