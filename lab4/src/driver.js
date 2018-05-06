@@ -56,9 +56,9 @@ let light1Z = -1.0
 // 3 = rim
 // 4 = toon
 // 5 = depth
-let mode = 2
+let mode = 1
 let text = document.getElementById('currentshader')
-text.innerHTML = "PHONG"
+text.innerHTML = "GOURAUD"
 
 let ambientR = 0.0
 let ambientG = 0.0
@@ -543,16 +543,18 @@ function initAttrib(gl) {
     var u_LightPosition= gl.getUniformLocation(gl.program, 'u_LightPosition')
     var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
+    var u_specularLightV = gl.getUniformLocation(gl.program, 'u_specularLightV')
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
-    var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
-    if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight || !u_SpecularLightF || !u_ViewPositionF || ! u_exponent) { 
+    var u_exponentV = gl.getUniformLocation(gl.program, 'u_exponentV')
+    if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight || !u_SpecularLightF || !u_ViewPositionF || !u_exponentV || !u_specularLightV) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLight)
       console.log(u_LightPosition)
       console.log(u_AmbientLight)
       console.log(u_SpecularLightF)
       console.log(u_ViewPositionF)
-      console.log(u_exponent)
+      console.log(u_exponentV)
+      console.log(u_specularLightV)
       return;
     }
     // Set the light color (white)
@@ -563,8 +565,9 @@ function initAttrib(gl) {
     gl.uniform3f(u_AmbientLight, ambientR, ambientG, ambientB)
     // set the specular light
     gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
+    gl.uniform3f(u_specularLightV, currentspecularR, currentspecularG, currentspecularB)
     gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
-    gl.uniform1f(u_exponent,glossiness)
+    gl.uniform1f(u_exponentV,glossiness)
   }
   if (mode >= 2){
     var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')

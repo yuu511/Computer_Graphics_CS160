@@ -8,6 +8,8 @@ uniform vec3 u_AmbientLight;
 uniform vec3 u_ViewPosition;
 uniform vec3 u_specColor;
 varying vec4 v_Color;
+uniform float u_exponentV;
+uniform vec3 u_specularLightV;
 
 // mode 2
 varying vec3 v_Normal;
@@ -32,6 +34,13 @@ void main() {
     // diffuse light 
     vec3 kd = u_DiffuseLight * a_Color.rgb * nDotL;
 
-    v_Color = vec4(kd+ambient, 1);
+    // specular
+    float specularV = 0.0;
+    float expV = u_exponentV;
+    vec3 viewVecV = vec3 (0.0,0.0,-1.0);   
+    vec3 reflectVecV = reflect(-lightDirection,normal);
+    specularV = pow(max(dot(reflectVecV, viewVecV), 0.0), expV);
+    vec3 specularDiff= specularV * u_specularLightV;
+    v_Color = vec4(kd+ambient+specularDiff, 1);
   }
 }

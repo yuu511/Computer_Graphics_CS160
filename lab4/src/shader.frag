@@ -29,7 +29,7 @@ void main() {
   // mode 1 = gouraud shading
 
   if (u_fmode == 1.0){
-    gl_FragColor = vec4(v_Color.rgb + specularF, 1);
+    gl_FragColor = v_Color;
   }
 
   if (u_fmode == 2.0){
