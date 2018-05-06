@@ -103,11 +103,11 @@ void main() {
 
     // diffuse light 
     vec3 grey = vec3(0.5,0.5,0.5);
-    vec3 kdF = u_DiffuseLightF * grey.rgb * nDotLF;
+    vec3 kdFD = u_DiffuseLightF * grey.rgb * nDotLF;
 
     // depth  
     float depth = max(dot(v_Normal,normalize(u_ViewPositionF)),0.0);
 
-    gl_FragColor = vec4(kdF+ambientF+specularF+depth, 1);
+    gl_FragColor = vec4(kdFD+ambientF+specularF+depth, 1);
   }
 }
