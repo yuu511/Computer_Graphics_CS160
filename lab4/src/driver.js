@@ -66,7 +66,7 @@ let currentspecularG = 1
 let currentspecularB = 0
 
 
-let glossiness = 10.0
+let glossiness = 7.0
 
 // called when page is loaded
 function main() {
@@ -111,6 +111,7 @@ function start(gl) {
   const rotateAlongY = document.getElementById('rotateAlongY') 
   const gouraud = document.getElementById('gouraud') 
   const phong = document.getElementById('phong') 
+  const rim = document.getElementById('rim') 
   const shiftX = document.getElementById('shiftX')
   const redambient = document.getElementById('redambient')
   const blueambient = document.getElementById('blueambient')
@@ -125,6 +126,7 @@ function start(gl) {
 
   gouraud.onclick = function(ev){ gouraudClick(ev, gl, canvas, a_Position); };
   phong.onclick = function(ev){ phongClick(ev, gl, canvas, a_Position); };
+  rim.onclick = function(ev){ rimClick(ev, gl, canvas, a_Position); };
 
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
@@ -528,8 +530,8 @@ function initAttrib(gl) {
       return
     }
     // Set the vertex /fragment shader mode
-    gl.uniform1i(u_vmode,1)
-    gl.uniform1i(u_fmode,1)
+    gl.uniform1i(u_vmode,parseInt(1))
+    gl.uniform1i(u_fmode,parseInt(1))
     var u_DiffuseLight = gl.getUniformLocation(gl.program, 'u_DiffuseLight')
     var u_LightPosition= gl.getUniformLocation(gl.program, 'u_LightPosition')
     var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
@@ -570,8 +572,50 @@ function initAttrib(gl) {
       return
     }
     // Set the vertex /fragment shader mode
-    gl.uniform1i(u_vmode,2)
-    gl.uniform1i(u_fmode,2)
+    gl.uniform1i(u_vmode,parseInt(2))
+    gl.uniform1i(u_fmode,parseInt(2))
+    var u_DiffuseLightF = gl.getUniformLocation(gl.program, 'u_DiffuseLightF')
+    var u_LightPositionF= gl.getUniformLocation(gl.program, 'u_LightPositionF')
+    var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
+    var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
+    var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
+    var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
+    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent) { 
+      console.log('Failed to get the storage location');
+      console.log(u_DiffuseLightF)
+      console.log(u_LightPositionF)
+      console.log(u_AmbientLightF)
+      console.log(u_SpecularLightF)
+      console.log(u_ViewPositionF)
+      console.log(u_exponent)
+      return;
+    }
+    // Set the light color (white)
+    gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
+    // Set the light Position (in the world coordinate)
+    gl.uniform3f(u_LightPositionF, light1X, light1Y, light1Z);
+    // Set the ambient light
+    gl.uniform3f(u_AmbientLightF, ambientR, ambientG, ambientB)
+    //set the specular light 
+    gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
+    gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
+    gl.uniform1f(u_exponent,glossiness)
+  }
+
+  if (mode == 3){
+    var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
+    var u_fmode = gl.getUniformLocation(gl.program, 'u_fmode')
+    if (!u_vmode){
+      console.log ("failed to get vmode!")
+      return
+    }
+    if (!u_fmode){
+      console.log ("failed to get fmode!")
+      return
+    }
+    // Set the vertex /fragment shader mode
+    gl.uniform1i(u_vmode,parseInt(3))
+    gl.uniform1i(u_fmode,parseInt(3))
     var u_DiffuseLightF = gl.getUniformLocation(gl.program, 'u_DiffuseLightF')
     var u_LightPositionF= gl.getUniformLocation(gl.program, 'u_LightPositionF')
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
@@ -657,6 +701,13 @@ function gouraudClick(ev, gl, canvas, a_Position){
 
 function phongClick(ev, gl, canvas, a_Position){
   mode = 2 
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+  text.innerHTML = "PHONG"
+}
+
+function rimClick(ev, gl, canvas, a_Position){
+  mode = 3 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
   text.innerHTML = "PHONG"

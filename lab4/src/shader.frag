@@ -46,4 +46,23 @@ void main() {
 
     gl_FragColor = vec4(kdF+ambientF+specularF, 1);
   }
+
+  if (u_fmode == 3){
+    vec3 normalF = normalize(vec3(v_Normal));
+    vec3 vertexPositionF = v_Position; 
+    vec3 lightDirectionF = normalize (vec3(u_LightPositionF)-vec3(vertexPositionF));
+    float nDotLF = max(dot(lightDirectionF, normalF), 0.0);
+
+    // ambient light
+    vec3 ambientF = u_AmbientLightF;
+
+    // diffuse light 
+    vec3 kdF = u_DiffuseLightF * v_Color.rgb * nDotLF;
+
+    // rim light  
+    float rim = max(dot(v_Normal,normalize(u_ViewPositionF)),0.0);
+    float rimF = 1.0 - rim;
+
+    gl_FragColor = vec4(kdF+ambientF+specularF+rimF, 1);
+  }
 }
