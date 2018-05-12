@@ -396,10 +396,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    colors.push(Bcolor)
   }
 
-  console.log(cylinder_points) 
-  console.log(normie)
-  console.log(colors)
-
   let len = cylinder_points.length/6
   // cool traiangles
   for (var i=0 ; i < s; i++){
