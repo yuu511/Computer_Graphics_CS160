@@ -22,7 +22,7 @@ void main() {
   float exponent = u_exponent;
   vec3 viewVec = u_ViewPositionF;
   vec3 lightDir = normalize(u_LightPositionF);
-  vec3 reflectVec = reflect(-lightDir,v_Normal);
+  vec3 reflectVec = reflect(lightDir,v_Normal);
   specular = pow(max(dot(reflectVec, viewVec), 0.0), exponent);
   vec3 specularF = specular * u_SpecularLightF.rgb;
 
@@ -35,7 +35,7 @@ void main() {
   if (u_fmode == 2.0){
     vec3 normalF = normalize(vec3(v_Normal));
     vec3 vertexPositionF = v_Position; 
-    vec3 lightDirectionF = normalize (vec3(u_LightPositionF)-vec3(v_Position));
+    vec3 lightDirectionF = normalize(vec3(u_LightPositionF)-vec3(v_Position));
     float nDotLF = max(dot(lightDirectionF, normalF), 0.0);
 
     // ambient light

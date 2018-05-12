@@ -15,10 +15,15 @@ uniform vec3 u_specularLightV;
 varying vec3 v_Normal;
 varying vec3 v_Position;
 
+// lab 5
+uniform mat4 u_MvpMatrix;
+uniform mat4 u_ModelMatrix;
+uniform mat4 u_NormalMatrix;
+
 void main() {
-  gl_Position = a_Position;
-  v_Position = vec3(a_Position);  
-  v_Normal = normalize(vec3(a_Normal)); 
+  gl_Position = u_MvpMatrix * a_Position;
+  v_Position = vec3(u_ModelMatrix * a_Position);  
+  v_Normal = normalize(vec3(u_NormalMatrix * a_Normal)); 
   v_Color = a_Color;
 
   // mode 1 = gouraud shading
