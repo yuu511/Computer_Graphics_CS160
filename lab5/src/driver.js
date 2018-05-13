@@ -84,6 +84,7 @@ let rotDeg = -30
 let rotX = 0
 let rotY= 1
 let rotZ = 0
+let nP = 1
 
 // called when page is loaded
 function main() {
@@ -129,6 +130,7 @@ function start(gl) {
   const shiftX = document.getElementById('shiftX')
   const shiftY = document.getElementById('shiftY')
   const newview = document.getElementById('newview')
+  const nearplane = document.getElementById('nearplane')
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
@@ -137,6 +139,7 @@ function start(gl) {
   shiftY.onclick = function(ev){ shiftdown(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
   newview.onclick = function(ev){ rotateCam(ev, gl, canvas, a_Position); };
+  nearplane.oninput = function(ev){ adjustNear(ev, gl, canvas, a_Position,nearplane); };
 
   // specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -383,12 +386,12 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   //
   // multiply degrees by convert to get value in radians  
   // a circle is 360 degrees, rotate by (360 / s) degrees for every side, where n is number of sides!
-  const convert = Math.PI/180 
-  const numsides = 360/s
+  let convert = Math.PI/180 
+  let numsides = 360/s
 
   // get the angle that the line segment forms
-  const deltaX = x2-x1
-  const deltaY = y2-y1 
+  let deltaX = x2-x1
+  let deltaY = y2-y1 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
   degreeToRotate = ((2* Math.PI)-degreeToRotate)
   
@@ -761,7 +764,7 @@ function initAttrib(gl,canvas,numpolyline) {
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 100);
+    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 10);
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
@@ -900,6 +903,11 @@ function rotateCam(ev, gl, canvas, a_Position){
   centerX = centerX * -1
   centerY = centerY * -1
   centerZ = centerZ * -1
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
+function adjustNear(ev, gl, canvas, a_Position,nearplane){
+  nP=parseInt(nearplane.value)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
 }
