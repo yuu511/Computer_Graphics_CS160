@@ -59,6 +59,8 @@ let light1Z = 1.0
 let mode = 2
 let text = document.getElementById('currentshader')
 text.innerHTML = "PHONG"
+let textortho = document.getElementById('currentortho')
+textortho.innerHTML = "PROJECTION"
 
 let ambientR = 0.0
 let ambientG = 0.0
@@ -914,6 +916,9 @@ function check(gl, canvas, a_Position,x,y) {
 function rotateCam(ev, gl, canvas, a_Position){
   orthomode = -1
   light1Z = 1
+  if (orthomode == -1){
+    textortho.innerHTML = "PROJECTION"
+  }
   // Clear <canvas>
   eyeX = eyeX * -1
   eyeY = eyeY * -1
@@ -931,8 +936,12 @@ function adjustNear(ev, gl, canvas, a_Position,nearplane){
 }
 
 function toggleortho(ev, gl, canvas, a_Position){
+  textortho.innerHTML = "ORTHO"
   orthomode = orthomode * -1
   light1Z = light1Z * -1
+  if (orthomode == -1){
+    textortho.innerHTML = "PROJECTION"
+  }
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
 }
