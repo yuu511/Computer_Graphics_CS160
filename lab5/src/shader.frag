@@ -47,7 +47,7 @@ void main() {
 
     // higlight light
     vec3 highlight = u_HighlightF;
-    gl_FragColor = vec4(kdF+ambientF+specularF+highlight, v_Color.a);
+    gl_FragColor = vec4(kdF+ambientF+highlight, v_Color.a);
   }
 
   if (u_fmode == 3.0){

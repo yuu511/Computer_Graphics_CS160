@@ -68,7 +68,6 @@ let currentspecularR = 0
 let currentspecularG = 1
 let currentspecularB = 0
 
-
 let glossiness = 12.0
 
 //lab5 stuff
@@ -85,6 +84,7 @@ let rotX = 0
 let rotY= 1
 let rotZ = 0
 let nP = 1
+let orthomode = -1
 
 // called when page is loaded
 function main() {
@@ -131,6 +131,7 @@ function start(gl) {
   const shiftY = document.getElementById('shiftY')
   const newview = document.getElementById('newview')
   const nearplane = document.getElementById('nearplane')
+  const orthomd = document.getElementById('orthomd')
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
@@ -140,6 +141,7 @@ function start(gl) {
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
   newview.onclick = function(ev){ rotateCam(ev, gl, canvas, a_Position); };
   nearplane.oninput = function(ev){ adjustNear(ev, gl, canvas, a_Position,nearplane); };
+  orthomd.onclick = function(ev){ toggleortho(ev, gl, canvas, a_Position); };
 
   // specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -183,6 +185,13 @@ function start(gl) {
   oldlines.push(init3)
 
 
+  //generalized cylinder 4
+  let init4 = []
+  init4.push (-0.4)
+  init4.push (0.0)
+  init4.push (-0.4)
+  init4.push (0.2)
+  oldlines.push(init4)
 
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -735,6 +744,13 @@ function initAttrib(gl,canvas,numpolyline) {
       gl.uniform1f(u_vmode,parseFloat(5))
       gl.uniform1f(u_fmode,parseFloat(5))
     }
+   
+    var u_orthomode = gl.getUniformLocation(gl.program, 'u_orthomode')
+    if (!u_orthomode){
+      console.log("failed to get orthomode!")
+      return
+    }
+    gl.uniform1f(u_orthomode,orthomode)
     var u_DiffuseLightF = gl.getUniformLocation(gl.program, 'u_DiffuseLightF')
     var u_LightPositionF= gl.getUniformLocation(gl.program, 'u_LightPositionF')
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
@@ -896,6 +912,8 @@ function check(gl, canvas, a_Position,x,y) {
 }
 
 function rotateCam(ev, gl, canvas, a_Position){
+  orthomode = -1
+  light1Z = 1
   // Clear <canvas>
   eyeX = eyeX * -1
   eyeY = eyeY * -1
@@ -908,6 +926,13 @@ function rotateCam(ev, gl, canvas, a_Position){
 }
 function adjustNear(ev, gl, canvas, a_Position,nearplane){
   nP=parseInt(nearplane.value)
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
+
+function toggleortho(ev, gl, canvas, a_Position){
+  orthomode = orthomode * -1
+  light1Z = light1Z * -1
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
 }

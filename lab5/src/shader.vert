@@ -19,6 +19,7 @@ varying vec3 v_Position;
 uniform mat4 u_MvpMatrix;
 uniform mat4 u_ModelMatrix;
 uniform mat4 u_NormalMatrix;
+uniform float u_orthomode;
 
 void main() {
   gl_Position = a_Position * u_MvpMatrix;
@@ -26,6 +27,12 @@ void main() {
   v_Normal = normalize(vec3(a_Normal * u_NormalMatrix)); 
   v_Color = a_Color;
 
+  if (u_orthomode == 1.0){
+    gl_Position = a_Position;
+    v_Position = vec3(a_Position);
+    v_Normal = normalize(vec3(a_Normal));
+    v_Color = a_Color;
+  }
   // mode 1 = gouraud shading
   if (u_vmode == 1.0){
     vec3 normal = normalize(vec3(a_Normal));
@@ -48,4 +55,5 @@ void main() {
     vec3 specularDiff= specularV * u_specularLightV;
     v_Color = vec4(kd+ambient+specularDiff, v_Color.a);
   }
+
 }
