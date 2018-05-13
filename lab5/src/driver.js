@@ -50,15 +50,15 @@ let cumulativeheight = 0
 //lab4 stuff
 let light1X = 1.0
 let light1Y = 1.0
-let light1Z = -1.0
+let light1Z = 1.0
 // mode = 1 = gouraud shading
 // 2 = phong 
 // 3 = rim
 // 4 = toon
 // 5 = depth
-let mode = 1
+let mode = 2
 let text = document.getElementById('currentshader')
-text.innerHTML = "GOURAUD"
+text.innerHTML = "PHONG"
 
 let ambientR = 0.0
 let ambientG = 0.0
@@ -69,7 +69,10 @@ let currentspecularG = 1
 let currentspecularB = 0
 
 
-let glossiness = 7.0
+let glossiness = 12.0
+
+//lab5 stuff
+let highlighted = []
 
 // called when page is loaded
 function main() {
@@ -113,37 +116,96 @@ function start(gl) {
   }
   const rotateAlongY = document.getElementById('rotateAlongY') 
   const shiftX = document.getElementById('shiftX')
+  const shiftY = document.getElementById('shiftY')
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
 
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
+  shiftY.onclick = function(ev){ shiftdown(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
 
   // specify the color for clearing <canvas>
-  gl.clearColor(0.2, 0.2, 0.2, 1);
+  gl.clearColor(0, 0, 0, 0);
   // clear <canvas>
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  // generalized cylinder 1 
+  let init = []
+  init.push(1)
+  init.push(0)
+  init.push(0)
+  init.push(0)
+  init.push(0)
+  init.push(-1)
+  init.push(1)
+  init.push(-1)
+  init.push(0.4)
+  init.push(-0.5)
+  oldlines.push(init)
+
+  //generalized cylinder 2
+  let init2 = []
+  init2.push (-0.5)
+  init2.push (-0.2)
+  init2.push (-0.9)
+  init2.push (-0.2)
+  init2.push (-0.9)
+  init2.push (-0.7)
+  init2.push (-0.5)
+  init2.push (-0.7)
+  oldlines.push(init2)
+
+  //generalized cylinder 3
+  let init3 = []
+  init3.push (-0.9)
+  init3.push (0.5)
+  init3.push (-0.9)
+  init3.push (0.9)
+  init3.push (-0.1)
+  init3.push (0.9)
+  oldlines.push(init3)
+
+  for (var i =0 ; i < oldlines.length; i++){
+    highlighted.push(0)
+  }
+  // draw all finished cylinder 
+  drawAllCylinders(gl,canvas,a_Position)
 }
 
 
 
 function leftclick(ev, gl, canvas, a_Position) {  
-  // if left click 
-  if (ev.button == 2)
-    return
-  var x = ev.clientX; // x coordinate of a mouse pointer
-  var y = ev.clientY; // y coordinate of a mouse pointer
-  var rect = ev.target.getBoundingClientRect() ;
+   // if left click 
+   if (ev.button == 2)
+     return
+   var x = ev.clientX; // x coordinate of a mouse pointer
+   var y = ev.clientY; // y coordinate of a mouse pointer
+   var rect = ev.target.getBoundingClientRect() ;
 
-  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  console.log(x + " " + y + " left click\n")
-  previousX = x
-  previousY = y
-  // Store the coordinates to g_points array
-  g_points.push(x); g_points.push(y);
+   console.log(x + " " + y + " left click\n")
+   if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
+      // If pressed position is inside <canvas>, check if it is above object
+      var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
+      var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
+      if (picked){
+        console.log("R:" + picked[0] + " G:" + picked[1] + " B:" + picked[2] + " A:" + picked[3])
+          // if ambient light exists, you picked an object (ambient light is > 0 by default)
+          if (picked[2] > 0){
+             let numc = 255 - picked[3] 
+             if (highlighted[numc] == 0)
+               highlighted[numc] = 1
+             else
+               highlighted[numc] = 0
+          }     
+      }
+    }
+ //lab4 legacy 
+ //  previousX = x
+ //  previousY = y
+ //  // Store the coordinates to g_points array
+ //  g_points.push(x); g_points.push(y);
+ //
    
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -151,9 +213,11 @@ function leftclick(ev, gl, canvas, a_Position) {
   // draw all finished cylinder 
   drawAllCylinders(gl,canvas,a_Position)
 
-  var vertices = new Float32Array(g_points)
-  // draw currently working line with points
-  draw (gl,canvas,a_Position,vertices,width)
+ //lab4 legacy
+ //  var vertices = new Float32Array(g_points)
+ //  // draw currently working line with points
+ //  draw (gl,canvas,a_Position,vertices,width)
+ //
 }
 
 function rightclick (ev,gl,canvas,a_Position){   
@@ -220,6 +284,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     colors.push(Rcolor)
     colors.push(Gcolor)
     colors.push(Bcolor)
+    colors.push(Acolor)
     // normalize point 
     point = normalize(point)
     normie.push(point[0]) 
@@ -234,7 +299,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     }
     // Set the clear color and enable the depth test
     gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl)
+    initAttrib(gl,canvas)
     //draw the linestrip!
     gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
     var n = initVertexBuffers(gl,vert,colors,normie,ind)
@@ -244,7 +309,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     }
     // Set the clear color and enable the depth test
     gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl)
+    initAttrib(gl,canvas)
     //draw the linestrip!
     gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
 }
@@ -259,7 +324,7 @@ function drawAllCylinders(gl,canvas,a_Position){
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      drawcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3])
+      drawcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
      }
     }
   }  
@@ -272,11 +337,10 @@ function drawAllCylinders(gl,canvas,a_Position){
 // s: number of sides
 // colors : array [R,G,B,A] of colors
 //drawcylinder(gl,canvas,a_Position,radius,sides,0,0,0,1)
-function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
-
+function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
+  Acolor = 1 - (numpolyline/255)  
   //  ** DRAW CYLINDERS **
   //
-
   // multiply degrees by convert to get value in radians  
   // a circle is 360 degrees, rotate by (360 / s) degrees for every side, where n is number of sides!
   const convert = Math.PI/180 
@@ -286,7 +350,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   const deltaX = x2-x1
   const deltaY = y2-y1 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
-  degreeToRotate = ((2*Math.PI)-degreeToRotate)
+  degreeToRotate = ((2* Math.PI)-degreeToRotate)
   
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
@@ -324,7 +388,6 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   cylindernormals.push(cylindernormals[2])
   cylinder_points = []
   colors = []
-  console.log(cylindernormals)
   
   cylinder_points.push((unrotated[0] * Math.cos(degreeToRotate)) + (unrotated[1] * Math.sin(degreeToRotate)) +  x1) 
   cylinder_points.push((unrotated[0] * (-1  * Math.sin(degreeToRotate))) + (unrotated[1] * Math.cos(degreeToRotate)) + y1)
@@ -335,6 +398,9 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   colors.push(Rcolor)
   colors.push(Gcolor)
   colors.push(Bcolor)
+  colors.push(Acolor)
+
+
   for (var i = 1 ; i < s+1; i++){
    cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
    cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
@@ -345,6 +411,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    colors.push(Rcolor)
    colors.push(Gcolor)
    colors.push(Bcolor)
+   colors.push(Acolor)
   }
   // second circle
   cylinder_points.push((unrotated[0] * Math.cos(degreeToRotate)) + (unrotated[1] * Math.sin(degreeToRotate)) +  x2) 
@@ -356,6 +423,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
   colors.push(Rcolor)
   colors.push(Gcolor)
   colors.push(Bcolor)
+  colors.push(Acolor)
   for (var i = 1 ; i < s+1; i++){
    cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
    cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
@@ -366,8 +434,17 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
    colors.push(Rcolor)
    colors.push(Gcolor)
    colors.push(Bcolor)
+   colors.push(Acolor)
   }
 
+  // 2 points to represent the center
+   cylinder_points.push(x2) 
+   cylinder_points.push(y2)
+   cylinder_points.push(0)
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+   colors.push(Acolor)
 
   let len = cylinder_points.length/6
   // cool traiangles
@@ -387,17 +464,59 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2){
     indices.push(i+1)
     indices.push(len+i+1)
   }
-    var n = initVertexBuffers(gl,cylinder_points,colors,normie,indices)
-    if (n<0){
-      console.log('failed to set vert info')
-      return
-    }
-    // Set the clear color and enable the depth test
-    gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl)
-    //draw the cylinder!
-    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+
+  var n = initVertexBuffers(gl,cylinder_points,colors,normie,indices)
+  if (n<0){
+    console.log('failed to set vert info')
+    return
+  }
+  // Set the clear color and enable the depth test
+  gl.enable(gl.DEPTH_TEST);
+  initAttrib(gl,canvas)
+  //draw the cylinder!
+  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
   
+
+  // ** DRAW CAP **
+  // (FOR SMOOTH EDGES) 
+  let cap_points = []
+  if (previousFace.length < 1){
+    // second circle
+    for (var i = 0 ; i < s+1 ; i++){
+     previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+     previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+     previousFace.push(unrotated[3*i+2])
+    }
+    return
+  } 
+  for (var j=0 ; j < previousFace.length ;j++){
+    cap_points.push(previousFace[j])    
+  }
+  previousFace = []
+  for (var i = 0 ; i < s+1 ; i++){
+   cap_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cap_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
+   cap_points.push(unrotated[3*i+2])
+  }
+  for (var i = 0 ; i < s+1 ; i++){
+   previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+   previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+   previousFace.push(unrotated[3*i+2])
+  }
+  var capvertices = new Float32Array(cap_points)
+  let caplen = capvertices.length/14;
+  if (caplen === 0)
+   return
+  var n = initVertexBuffers(gl,capvertices,colors,normie,indices)
+  if (n<0){
+    console.log('failed to set vert info')
+    return
+  }
+  // Set the clear color and enable the depth test
+  gl.enable(gl.DEPTH_TEST);
+  initAttrib(gl,canvas)
+  //draw the cylinder!
+  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 }
 
 function calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
@@ -455,7 +574,7 @@ function initVertexBuffers(gl,vertices,colors,normals,indices){
   indices = new Uint8Array(indices)
   // Write the vertex property to buffers (coordinates, colors and normals)
   if (!initArrayBuffer(gl, 'a_Position', vertices, 3, gl.FLOAT)) return -1;
-  if (!initArrayBuffer(gl, 'a_Color', colors, 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, 'a_Color', colors, 4, gl.FLOAT)) return -1;
   if (!initArrayBuffer(gl, 'a_Normal', normals, 3, gl.FLOAT)) return -1;
 
  // Unbind the buffer object
@@ -498,7 +617,7 @@ function initArrayBuffer (gl, attribute, data, num, type) {
   return true;
 }
 
-function initAttrib(gl) {
+function initAttrib(gl,canvas) {
   // Get the storage locations of uniform variables and so on
   if (mode == 1 ){
     var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
@@ -577,8 +696,11 @@ function initAttrib(gl) {
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
+    var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+    var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
+    var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');  
     var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
-    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent) { 
+    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ModelMatrix || !u_MvpMatrix || !u_NormalMatrix) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLightF)
       console.log(u_LightPositionF)
@@ -586,8 +708,33 @@ function initAttrib(gl) {
       console.log(u_SpecularLightF)
       console.log(u_ViewPositionF)
       console.log(u_exponent)
+      console.log(u_ModelMatrix)
+      console.log(u_MvpMatrix)
+      console.log(u_NormalMatrix)
       return;
-    }
+    } 
+  var modelMatrix = new Matrix4();  // Model matrix
+  var mvpMatrix = new Matrix4();    // Model view projection matrix
+  var normalMatrix = new Matrix4(); // Transformation matrix for normals
+
+    // Calculate the model matrix
+    modelMatrix.setRotate(-30, 0, 1, 0); // Rotate around the y-axis
+    // Calculate the view projection matrix
+    mvpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 100);
+    mvpMatrix.lookAt(0, 0, 5, 0, 0, 2, 0, 1, 0);
+    mvpMatrix.multiply(modelMatrix);
+    // Calculate the matrix to transform the normal based on the model matrix
+    normalMatrix.setInverseOf(modelMatrix);
+    normalMatrix.transpose();
+
+    // Pass the model matrix to u_ModelMatrix
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+
+    // Pass the model view projection matrix to u_mvpMatrix
+    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+
+    // Pass the transformation matrix for normals to u_NormalMatrix
+    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
     // Set the light color (white)
     gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
     // Set the light Position (in the world coordinate)
@@ -660,4 +807,25 @@ function shift (ev,gl,canvas,a_Position){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
+}
+
+function shiftdown(ev,gl,canvas,a_Position){   
+  // draw all finished cylinder 
+  for (var i =0 ; i < oldlines.length ; i++){       
+    if (oldlines[i].length >= 4){
+     for (var j =0; j < oldlines[i].length;j+=2){    
+       oldlines[i][j+1] = oldlines[i][j+1] - 0.2 
+     }
+    } 
+  }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+}
+
+function check(gl, canvas, a_Position,x,y) {
+  drawAllCylinders(gl,canvas,a_Position)
+  var pixels = new Uint8Array(4); // Array for storing the pixel value
+  gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  return pixels 
 }

@@ -22,7 +22,7 @@ void main() {
   float exponent = u_exponent;
   vec3 viewVec = u_ViewPositionF;
   vec3 lightDir = normalize(vec3(u_LightPositionF)-vec3(v_Position));
-  vec3 reflectVec = reflect(-lightDir,v_Normal);
+  vec3 reflectVec = reflect(lightDir,v_Normal);
   specular = pow(max(dot(reflectVec, viewVec), 0.0), exponent);
   vec3 specularF = specular * u_SpecularLightF.rgb;
 
@@ -44,7 +44,7 @@ void main() {
     // diffuse light 
     vec3 kdF = u_DiffuseLightF * v_Color.rgb * nDotLF;
 
-    gl_FragColor = vec4(kdF+ambientF+specularF, 1);
+    gl_FragColor = vec4(kdF+ambientF+specularF, v_Color.a);
   }
 
   if (u_fmode == 3.0){
@@ -63,7 +63,7 @@ void main() {
     float rim = max(dot(v_Normal,normalize(u_ViewPositionF)),0.0);
     float rimF = 1.0 - rim;
 
-    gl_FragColor = vec4(kdF+ambientF+specularF+rimF, 1);
+    gl_FragColor = vec4(kdF+ambientF+specularF+rimF, v_Color.a);
   }
   //toon
   if (u_fmode == 4.0){
@@ -89,7 +89,7 @@ void main() {
     vec3 kdF = u_DiffuseLightF * v_Color.rgb * nDotLF;
     kdF = attenuation * kdF;
    
-    gl_FragColor = vec4(kdF+ambientF+specularF, 1);
+    gl_FragColor = vec4(kdF+ambientF+specularF, v_Color.a);
   } 
   // depth
   if (u_fmode == 5.0){
@@ -108,6 +108,6 @@ void main() {
     // depth  
     float depth = max(dot(v_Normal,normalize(u_ViewPositionF)),0.0);
 
-    gl_FragColor = vec4(kdFD+ambientF+specularF+depth, 1);
+    gl_FragColor = vec4(kdFD+ambientF+specularF+depth, v_Color.a);
   }
 }

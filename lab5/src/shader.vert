@@ -15,10 +15,15 @@ uniform vec3 u_specularLightV;
 varying vec3 v_Normal;
 varying vec3 v_Position;
 
+// lab 5 perspective
+uniform mat4 u_MvpMatrix;
+uniform mat4 u_ModelMatrix;
+uniform mat4 u_NormalMatrix;
+
 void main() {
-  gl_Position = a_Position;
-  v_Position = vec3(a_Position);  
-  v_Normal = normalize(vec3(a_Normal)); 
+  gl_Position = a_Position * u_MvpMatrix;
+  v_Position = vec3(a_Position * u_ModelMatrix);  
+  v_Normal = normalize(vec3(a_Normal * u_NormalMatrix)); 
   v_Color = a_Color;
 
   // mode 1 = gouraud shading
@@ -41,6 +46,6 @@ void main() {
     vec3 reflectVecV = reflect(-lightDirection,normal);
     specularV = pow(max(dot(reflectVecV, viewVecV), 0.0), expV);
     vec3 specularDiff= specularV * u_specularLightV;
-    v_Color = vec4(kd+ambient+specularDiff, 1);
+    v_Color = vec4(kd+ambient+specularDiff, v_Color.a);
   }
 }
