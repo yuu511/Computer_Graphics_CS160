@@ -73,6 +73,7 @@ let glossiness = 12.0
 
 //lab5 stuff
 let highlighted = []
+let thinking = []
 
 // called when page is loaded
 function main() {
@@ -126,7 +127,7 @@ function start(gl) {
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
 
   // specify the color for clearing <canvas>
-  gl.clearColor(0, 0, 0, 0);
+  gl.clearColor(0, 0, 0, 1);
   // clear <canvas>
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -168,6 +169,7 @@ function start(gl) {
 
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
+    thinking.push(0)
   }
   // draw all finished cylinder 
   drawAllCylinders(gl,canvas,a_Position)
@@ -189,15 +191,26 @@ function leftclick(ev, gl, canvas, a_Position) {
       var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
       var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
       if (picked){
-        console.log("R:" + picked[0] + " G:" + picked[1] + " B:" + picked[2] + " A:" + picked[3])
           // if ambient light exists, you picked an object (ambient light is > 0 by default)
           if (picked[2] > 0){
+          console.log("R:" + picked[0] + " G:" + picked[1] + " B:" + picked[2] + " A:" + picked[3])
              let numc = 255 - picked[3] 
-             if (highlighted[numc] == 0)
+             if (highlighted[numc] == 0){
+               for (var i =0 ; i < highlighted.length; i++){
+                 highlighted[i]=0
+               }
                highlighted[numc] = 1
-             else
+             }
+             else{
                highlighted[numc] = 0
+             }
           }     
+          else{
+            console.log("YOU PICKED THE BLANK CANVAS! (0,0,0,1) RESETTING ALL HIGHLIGHTS!")   
+            for (var i =0 ; i < highlighted.length; i++){
+              highlighted[i]=0
+            }
+          }
       }
     }
  //lab4 legacy 
@@ -242,28 +255,40 @@ function rightclick (ev,gl,canvas,a_Position){
 }
 
 function move (ev,gl,canvas,a_Position){   
-  let elastic = []
-  var x = ev.clientX; // x coordinate of a mouse pointer
-  var y = ev.clientY; // y coordinate of a mouse pointer
-  var rect = ev.target.getBoundingClientRect() ;
-  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  if ( previousX === null || previousY === null) 
-    return 
- // Clear color and depth buffer
- gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+   // if left click 
+   if (ev.button == 2)
+     return
+   var x = ev.clientX; // x coordinate of a mouse pointer
+   var y = ev.clientY; // y coordinate of a mouse pointer
+   var rect = ev.target.getBoundingClientRect() ;
 
+   if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
+      // If pressed position is inside <canvas>, check if it is above object
+      var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
+      var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
+      if (picked){
+          // if ambient light exists, you picked an object (ambient light is > 0 by default)
+          if (picked[2] > 0){
+            let numc = 255 - picked[3] 
+            for (var i =0 ; i < highlighted.length; i++){
+              thinking[i]=0
+            }
+              thinking[numc] = 1
+          }     
+          else {
+           for (var i =0 ; i < highlighted.length; i++){
+             thinking[i]=0
+           }
+          }
+      }
+    }
+   
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+ 
+  // draw all finished cylinder 
+  drawAllCylinders(gl,canvas,a_Position)
 
- // draw all finished cylinder 
- drawAllCylinders(gl,canvas,a_Position)
-
- // draw currently working line (Elastic line)  
- draw (gl,canvas,a_Position,g_points,width) 
- elastic.push(previousX)
- elastic.push(previousY)
- elastic.push(x)
- elastic.push(y)
- draw (gl,canvas,a_Position,elastic,width) 
 }
 
 // used to draw polyline given any array of 2d vertices (x1,y1,x2,y2,xn,yn)
@@ -299,7 +324,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     }
     // Set the clear color and enable the depth test
     gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl,canvas)
+    initAttrib(gl,canvas,numpolyline)
     //draw the linestrip!
     gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
     var n = initVertexBuffers(gl,vert,colors,normie,ind)
@@ -309,7 +334,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     }
     // Set the clear color and enable the depth test
     gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl,canvas)
+    initAttrib(gl,canvas,numpolyline)
     //draw the linestrip!
     gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
 }
@@ -472,7 +497,8 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   }
   // Set the clear color and enable the depth test
   gl.enable(gl.DEPTH_TEST);
-  initAttrib(gl,canvas)
+  initAttrib(gl,canvas,numpolyline)
+
   //draw the cylinder!
   gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
   
@@ -514,7 +540,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   }
   // Set the clear color and enable the depth test
   gl.enable(gl.DEPTH_TEST);
-  initAttrib(gl,canvas)
+  initAttrib(gl,canvas,numpolyline)
   //draw the cylinder!
   gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 }
@@ -617,7 +643,7 @@ function initArrayBuffer (gl, attribute, data, num, type) {
   return true;
 }
 
-function initAttrib(gl,canvas) {
+function initAttrib(gl,canvas,numpolyline) {
   // Get the storage locations of uniform variables and so on
   if (mode == 1 ){
     var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
@@ -746,6 +772,21 @@ function initAttrib(gl,canvas) {
     gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
     gl.uniform1f(u_exponent,glossiness)
   }
+  // set highlights ( if required!)
+  var u_HighlightF = gl.getUniformLocation(gl.program, 'u_HighlightF')
+  if (!u_HighlightF){
+    console.log(" failed to get location of u_HiglightF!")
+  }
+  // possible highlights
+
+  //no highlight
+  gl.uniform3f(u_HighlightF, 0, 0, 0);
+  // hover highlight (priority 2)
+  if (thinking[numpolyline] == 1)
+    gl.uniform3f(u_HighlightF, 0, 0.5, 0);
+  // select highlight (priority 1)
+  if (highlighted[numpolyline] == 1)
+    gl.uniform3f(u_HighlightF, 0.2, 0.2, 0.2);
 }
 
 // finds cross product between 2 vectors

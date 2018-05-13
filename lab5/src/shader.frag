@@ -14,6 +14,7 @@ uniform vec3 u_LightPositionF;
 uniform vec3 u_AmbientLightF;
 uniform vec3 u_SpecularLightF;
 uniform vec3 u_ViewPositionF;
+uniform vec3 u_HighlightF;
 
 
 void main() {
@@ -44,7 +45,9 @@ void main() {
     // diffuse light 
     vec3 kdF = u_DiffuseLightF * v_Color.rgb * nDotLF;
 
-    gl_FragColor = vec4(kdF+ambientF+specularF, v_Color.a);
+    // higlight light
+    vec3 highlight = u_HighlightF;
+    gl_FragColor = vec4(kdF+ambientF+specularF+highlight, v_Color.a);
   }
 
   if (u_fmode == 3.0){
