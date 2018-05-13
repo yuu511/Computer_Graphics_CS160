@@ -74,6 +74,16 @@ let glossiness = 12.0
 //lab5 stuff
 let highlighted = []
 let thinking = []
+let eyeX = 0
+let eyeY = 0
+let eyeZ = 5
+let centerX = 0
+let centerY = 0
+let centerZ = 2
+let rotDeg = -30
+let rotX = 0
+let rotY= 1
+let rotZ = 0
 
 // called when page is loaded
 function main() {
@@ -118,6 +128,7 @@ function start(gl) {
   const rotateAlongY = document.getElementById('rotateAlongY') 
   const shiftX = document.getElementById('shiftX')
   const shiftY = document.getElementById('shiftY')
+  const newview = document.getElementById('newview')
   canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
@@ -125,6 +136,7 @@ function start(gl) {
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
   shiftY.onclick = function(ev){ shiftdown(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
+  newview.onclick = function(ev){ rotateCam(ev, gl, canvas, a_Position); };
 
   // specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -167,6 +179,8 @@ function start(gl) {
   init3.push (0.9)
   oldlines.push(init3)
 
+
+
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
@@ -184,10 +198,8 @@ function leftclick(ev, gl, canvas, a_Position) {
    var x = ev.clientX; // x coordinate of a mouse pointer
    var y = ev.clientY; // y coordinate of a mouse pointer
    var rect = ev.target.getBoundingClientRect() ;
-
    console.log(x + " " + y + " left click\n")
    if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
-      // If pressed position is inside <canvas>, check if it is above object
       var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
       var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
       if (picked){
@@ -268,7 +280,7 @@ function move (ev,gl,canvas,a_Position){
       var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
       if (picked){
           // if ambient light exists, you picked an object (ambient light is > 0 by default)
-          if (picked[2] > 0){
+          if (picked[2] > 0 && picked[3] > 0){
             let numc = 255 - picked[3] 
             for (var i =0 ; i < highlighted.length; i++){
               thinking[i]=0
@@ -306,27 +318,30 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     point.push(vertices[i]) 
     point.push(vertices[i+1]) 
     point.push(0)
-    colors.push(Rcolor)
-    colors.push(Gcolor)
-    colors.push(Bcolor)
-    colors.push(Acolor)
+    colors.push(1)
+    colors.push(1)
+    colors.push(0)
+    colors.push(1-(200/255))
     // normalize point 
     point = normalize(point)
-    normie.push(point[0]) 
-    normie.push(point[1]) 
-    normie.push(point[2]) 
-    ind.push(i/2)
+    normie.push(0) 
+    normie.push(0) 
+    normie.push(1) 
   }
     var n = initVertexBuffers(gl,vert,colors,normie,ind)
     if (n<0){
       console.log('failed to set vert info')
       return
     }
+    ind.push(0)
+    ind.push(1)
+    ind.push(2)
+    ind.push(0)
     // Set the clear color and enable the depth test
     gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl,canvas,numpolyline)
+    initAttrib(gl,canvas,-1.0)
     //draw the linestrip!
-    gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
     var n = initVertexBuffers(gl,vert,colors,normie,ind)
     if (n<0){
       console.log('failed to set vert info')
@@ -334,7 +349,7 @@ function draw (gl,canvas,a_Position,vertices,linewidth){
     }
     // Set the clear color and enable the depth test
     gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl,canvas,numpolyline)
+    initAttrib(gl,canvas,-1.0)
     //draw the linestrip!
     gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
 }
@@ -744,10 +759,10 @@ function initAttrib(gl,canvas,numpolyline) {
   var normalMatrix = new Matrix4(); // Transformation matrix for normals
 
     // Calculate the model matrix
-    modelMatrix.setRotate(-30, 0, 1, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
     // Calculate the view projection matrix
     mvpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 100);
-    mvpMatrix.lookAt(0, 0, 5, 0, 0, 2, 0, 1, 0);
+    mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
     normalMatrix.setInverseOf(modelMatrix);
@@ -778,6 +793,12 @@ function initAttrib(gl,canvas,numpolyline) {
     console.log(" failed to get location of u_HiglightF!")
   }
   // possible highlights
+  // reserved for buttons only
+  if (numpolyline == -1.0){
+    gl.uniform3f(u_AmbientLight, 0.0, 0.0, 0.0)
+    gl.uniform3f(u_HighlightF, 2.0, 2.0, 0.0);
+    return
+  }
 
   //no highlight
   gl.uniform3f(u_HighlightF, 0, 0, 0);
@@ -869,4 +890,16 @@ function check(gl, canvas, a_Position,x,y) {
   var pixels = new Uint8Array(4); // Array for storing the pixel value
   gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
   return pixels 
+}
+
+function rotateCam(ev, gl, canvas, a_Position){
+  // Clear <canvas>
+  eyeX = eyeX * -1
+  eyeY = eyeY * -1
+  eyeZ = eyeZ * -1
+  centerX = centerX * -1
+  centerY = centerY * -1
+  centerZ = centerZ * -1
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
 }
