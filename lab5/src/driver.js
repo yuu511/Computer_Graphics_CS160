@@ -930,6 +930,11 @@ function rotateCam(ev, gl, canvas, a_Position){
   drawAllCylinders(gl,canvas,a_Position)
 }
 function adjustNear(ev, gl, canvas, a_Position,nearplane){
+  orthomode = -1
+  light1Z = 1
+  if (orthomode == -1){
+    textortho.innerHTML = "PROJECTION"
+  }
   nP=parseInt(nearplane.value)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
