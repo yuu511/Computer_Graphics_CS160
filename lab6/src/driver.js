@@ -37,7 +37,7 @@ let sides = 10
 let individualsides = []
 let cylindersides = []
 
-let radius = 0.20 
+let radius = 0.40 
 let radii = []
 let cylinderradii = []
 
@@ -70,7 +70,7 @@ let currentspecularR = 1
 let currentspecularG = 1
 let currentspecularB = 1
 
-let glossiness = 80.0
+let glossiness = 60.0
 
 //lab5 stuff
 let highlighted = []
@@ -85,8 +85,12 @@ let rotDeg = 0
 let rotX = 0
 let rotY= 1
 let rotZ = 0
-let nP = 1
+let nP = 3
 let orthomode = -1
+
+//lab6 stuff
+let oldc_line = []
+let oldc_points = []
 
 // called when page is loaded
 function main() {
@@ -138,6 +142,7 @@ function start(gl) {
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onmouseup = function(ev){ reset(ev, gl, canvas, a_Position); };
   canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
+  canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
 
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
   shiftY.onclick = function(ev){ shiftdown(ev, gl, canvas, a_Position); };
@@ -199,9 +204,11 @@ function start(gl) {
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
+    radii.push(radius)
   }
   // draw all finished cylinder 
   drawAllCylinders(gl,canvas,a_Position)
+  console.log(oldc_points)
 }
 
 
@@ -392,12 +399,13 @@ function drawAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
   for (var i =0 ; i < oldlines.length ; i++){       
     previousFace = []
-    let tempNormalholder = []
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      drawcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
+      drawcylinder(gl,canvas,a_Position,radii[i],sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
      }
+     oldc_points.push(oldc_line)
+     oldc_line = []
     }
   }  
 }
@@ -417,7 +425,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   // a circle is 360 degrees, rotate by (360 / s) degrees for every side, where n is number of sides!
   let convert = Math.PI/180 
   let numsides = 360/s
-
+  
   // get the angle that the line segment forms
   let deltaX = x2-x1
   let deltaY = y2-y1 
@@ -536,7 +544,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
     indices.push(i+1)
     indices.push(len+i+1)
   }
-
+  oldc_line.push(cylinder_points)
   var n = initVertexBuffers(gl,cylinder_points,colors,normie,indices)
   if (n<0){
     console.log('failed to set vert info')
@@ -800,7 +808,7 @@ function initAttrib(gl,canvas,numpolyline) {
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 10);
+    mvpMatrix.setPerspective(50, canvas.width/canvas.height, nP, 10);
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
@@ -968,6 +976,7 @@ function toggleortho(ev, gl, canvas, a_Position){
   drawAllCylinders(gl,canvas,a_Position)
 }
 
+//  changing the added x and y values after the initial rotation (effectively translating the cylinder)
 function drag(ev, gl, canvas, a_Position,x,y){
    // if right click 
    if (ev.button == 2)
@@ -999,4 +1008,28 @@ function drag(ev, gl, canvas, a_Position,x,y){
 
 function reset(ev, gl, canvas, a_Position){
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
+}
+
+// chaging the radius in our rotation matrix (effictively scaling the cylinder)
+function scaleradius(ev, gl, canvas, a_Position){
+  if(ev.deltaY > 0){
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+       if (radii[i] > 0.02){
+         radii[i] = radii[i] - 0.01
+       }
+     }
+   }
+  }
+  else {
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+       if (radii[i] < 1.00){
+         radii[i] = radii[i] + 0.01
+       }
+     }
+   }
+  }
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
 }
