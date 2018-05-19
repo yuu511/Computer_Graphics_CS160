@@ -4,9 +4,6 @@ var FSIZE = 4; // size of a vertex coordinate (32-bit float)
 var VSHADER_SOURCE = null; // vertex shader program
 var FSHADER_SOURCE = null; // fragment shader program
 
-// refrence for the rubber band line
-let previousX = null
-let previousY = null 
 
 // g_points = current working line, oldlines = all finished lines (an array of arrays)
 let g_points = [] // The array for the position of a mouse press
@@ -91,6 +88,11 @@ let orthomode = -1
 //lab6 stuff
 let oldc_line = []
 let oldc_points = []
+// refrence for left drag
+let previousX = null
+let previousY = null 
+let previousXr = null
+let previousYr = null 
 
 // called when page is loaded
 function main() {
@@ -132,16 +134,19 @@ function start(gl) {
     console.log('Failed to get the storage location of a_Position');
     return;
   }
+  // cancel context menu
+  document.addEventListener("contextmenu", function (e) {
+         e.preventDefault();
+  }, false)
   const rotateAlongY = document.getElementById('rotateAlongY') 
   const shiftX = document.getElementById('shiftX')
   const shiftY = document.getElementById('shiftY')
   const newview = document.getElementById('newview')
   const nearplane = document.getElementById('nearplane')
   const orthomd = document.getElementById('orthomd')
-  canvas.onmousedown = function(ev){ leftclick(ev, gl, canvas, a_Position); };
+  canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onmouseup = function(ev){ reset(ev, gl, canvas, a_Position); };
-  canvas.oncontextmenu = function(ev){ rightclick(ev, gl, canvas, a_Position); };
   canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
 
   shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
@@ -208,16 +213,16 @@ function start(gl) {
   }
   // draw all finished cylinder 
   drawAllCylinders(gl,canvas,a_Position)
-  console.log(oldc_points)
 }
 
 
-
-function leftclick(ev, gl, canvas, a_Position) {  
+// if rightclick, do rotating, else do highlighting /transformation
+function click(ev, gl, canvas, a_Position) {  
    // if right click click 
-   if (ev.button == 2)
+   if (ev.button == 2){
+     rightclick(ev, gl, canvas, a_Position)
      return
-   console.log (ev.button)
+   }
    var x = ev.clientX; // x coordinate of a mouse pointer
    var y = ev.clientY; // y coordinate of a mouse pointer
    var rect = ev.target.getBoundingClientRect() ;
@@ -228,7 +233,6 @@ function leftclick(ev, gl, canvas, a_Position) {
    previousY = yP
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       console.log("this is highlighted")
        canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position,x,y); }
      }
    }
@@ -258,16 +262,9 @@ function leftclick(ev, gl, canvas, a_Position) {
           }
       }
     }
- //lab4 legacy 
- //  previousX = x
- //  previousY = y
- //  // Store the coordinates to g_points array
- //  g_points.push(x); g_points.push(y);
- //
    
  for (var i =0 ; i < highlighted.length;i++){
    if (highlighted[i]==1){
-     console.log("this is highlighted")
      canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position,x,y); }
    }
  }
@@ -276,33 +273,22 @@ function leftclick(ev, gl, canvas, a_Position) {
  
   // draw all finished cylinder 
   drawAllCylinders(gl,canvas,a_Position)
-
- //lab4 legacy
- //  var vertices = new Float32Array(g_points)
- //  // draw currently working line with points
- //  draw (gl,canvas,a_Position,vertices,width)
- //
 }
 
 function rightclick (ev,gl,canvas,a_Position){   
-  var x = ev.clientX; // x coordinate of a mouse pointer
-  var y = ev.clientY; // y coordinate of a mouse pointer
-  var rect = ev.target.getBoundingClientRect() ;
+  let x = ev.clientX; // x coordinate of a mouse pointer
+  let y = ev.clientY; // y coordinate of a mouse pointer
+  let rect = ev.target.getBoundingClientRect() ;
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   console.log(x + " " + y + " right click\n")
-  var archive = new Float32Array(g_points)
-  oldlines.push (archive)
-
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-
-  // draw all finished cylinder, clear arrays for next line segment 
-  previousX = null  
-  previousY = null
-  g_points = []
-  drawAllCylinders(gl,canvas,a_Position)
+  previousXr = x
+  previousYr = y
+  for (var i =0 ; i < highlighted.length;i++){
+    if (highlighted[i]==1){
+      canvas.onmousemove = function(ev){ dragR(ev, gl, canvas, a_Position,x,y); }
+    }
+  }
 }
 
 function move (ev,gl,canvas,a_Position){   
@@ -979,11 +965,13 @@ function toggleortho(ev, gl, canvas, a_Position){
 //  changing the added x and y values after the initial rotation (effectively translating the cylinder)
 function drag(ev, gl, canvas, a_Position,x,y){
    // if right click 
-   if (ev.button == 2)
+   if (ev.button == 2){
+     console.log ("for left clixx only")
      return
-   var x = ev.clientX; // x coordinate of a mouse pointer
-   var y = ev.clientY; // y coordinate of a mouse pointer
-   var rect = ev.target.getBoundingClientRect() ;
+   } 
+   let x = ev.clientX; // x coordinate of a mouse pointer
+   let y = ev.clientY; // y coordinate of a mouse pointer
+   let rect = ev.target.getBoundingClientRect() ;
    let xP = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
    let yP = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
    let deltaX = xP - previousX
@@ -1010,6 +998,7 @@ function reset(ev, gl, canvas, a_Position){
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
 }
 
+
 // chaging the radius in our rotation matrix (effictively scaling the cylinder)
 function scaleradius(ev, gl, canvas, a_Position){
   if(ev.deltaY > 0){
@@ -1032,4 +1021,30 @@ function scaleradius(ev, gl, canvas, a_Position){
   }
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   drawAllCylinders(gl,canvas,a_Position)
+}
+
+//  changing the added x and y values after the initial rotation (effectively translating the cylinder)
+function dragR(ev, gl, canvas, a_Position,x,y){
+  var x = ev.clientX; // x coordinate of a mouse pointer
+  var y = ev.clientY; // y coordinate of a mouse pointer
+  var rect = ev.target.getBoundingClientRect() ;
+  let xP = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  let yP = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  let deltaXr = xP - previousXr
+  let deltaYr = yP - previousYr
+  for (var i =0 ; i < oldlines.length ; i++){       
+    if (oldlines[i].length >= 4){
+     for (var j =0; j < oldlines[i].length;j+=2){    
+       if (highlighted[i] == 1){
+         oldlines[i][j] = oldlines[i][j] + deltaXr 
+         oldlines[i][j+1] = oldlines[i][j+1] + deltaYr 
+       }
+     }
+    } 
+  }
+  // Clear <canvas>
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawAllCylinders(gl,canvas,a_Position)
+  previousXr = xP
+  previousYr = yP
 }
