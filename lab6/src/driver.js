@@ -35,9 +35,6 @@ let individualsides = []
 let cylindersides = []
 
 let radius = 0.40 
-let radii = []
-let cylinderradii = []
-
 let previousFace = []
 
 let cumulativeheight = 0
@@ -190,7 +187,6 @@ function start(gl) {
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
-    radii.push(1)
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
@@ -830,42 +826,31 @@ function reset(ev, gl, canvas, a_Position){
 }
 
 
-// chaging the radius in our rotation matrix (effictively scaling the cylinder)
+// scales the radius by applying the appropriate matrix
 function scaleradius(ev, gl, canvas, a_Position){
+  let scale = 1.0
   // SCROLL : UP
   if(ev.deltaY > 0){
-   for (var i =0 ; i < highlighted.length;i++){
-     if (highlighted[i]==1){
-       radii[i] = 0.9
-       let scaleM = ([
-       radii[i] , 0.0 , 0.0 , 0,
-       0.0 , radii[i] , 0.0 , 0,
-       0.0 , 0.0 , radii[i] , 0,
-       0.0 , 0.0 , 0.0 , 1.0
-       ])
-       for (var j = 0 ; j < oldc_points[i].length ; j++){
-         oldc_points[i][j] = applyMatrix (oldc_points[i][j],scaleM)
-       }
-     }
-   }
+    scale = 0.9  
   }
   // SCROLL : DOWN
-  else {
-   for (var i =0 ; i < highlighted.length;i++){
-     if (highlighted[i]==1){
-       radii[i] = 1.1
-       let scaleM = ([
-       radii[i] , 0.0 , 0.0 , 0,
-       0.0 , radii[i] , 0.0 , 0,
-       0.0 , 0.0 , radii[i] , 0,
-       0.0 , 0.0 , 0.0 , 1.0
-       ])
-       for (var j = 0 ; j < oldc_points[i].length ; j++){
-         oldc_points[i][j] = applyMatrix (oldc_points[i][j],scaleM)
-       }
-     }
-   }
+  if(ev.deltaY < 0) {
+    scale = 1.1 
   }
+  for (var i =0 ; i < highlighted.length;i++){
+    if (highlighted[i]==1){
+      let scaleM = ([
+      scale , 0.0 , 0.0 , 0,
+      0.0 , scale , 0.0 , 0,
+      0.0 , 0.0 , scale , 0,
+      0.0 , 0.0 , 0.0 , 1.0
+      ])
+      for (var j = 0 ; j < oldc_points[i].length ; j++){
+        oldc_points[i][j] = applyMatrix (oldc_points[i][j],scaleM)
+      }
+    }
+  }
+  
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points)
