@@ -39,7 +39,7 @@ let eyeZ = 5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
-let rotDeg = 0
+let rotDeg = 30
 let rotX = 0
 let rotY= 0
 let rotZ = 1
@@ -871,7 +871,7 @@ function dragR(ev, gl, canvas, a_Position){
   let deltaXr = x - previousXr
   let deltaYr = y - previousYr  
   let scalar = 1
-  let angle = (Math.PI / 12)
+  let angle = (Math.PI / 4)
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
@@ -888,15 +888,15 @@ function dragR(ev, gl, canvas, a_Position){
      }
    }
   // rotate X
-  if (Math.abs(deltaXr) > Math.abs(deltaYr)){
+  if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
    // push translation matrix
-   if (deltaXr < 0)
+   if (deltaXr > 0)
      scalar = -1
    angle = scalar * angle
    let rotateX = ([
     1.0 , 0.0 ,            0.0 ,                    0.0,
-    0.0 , Math.cos(angle), Math.sin(angle),  0.0,
-    0.0 , (-1 * Math.sin(angle)), Math.cos(angle),         0.0,
+    0.0 , Math.cos(angle), (-1 *Math.sin(angle)),  0.0,
+    0.0 , Math.sin(angle), Math.cos(angle),         0.0,
     0.0 , 0.0 ,            0.0 ,                    1.0
     ])
    for (var i =0 ; i < highlighted.length;i++){
@@ -910,13 +910,13 @@ function dragR(ev, gl, canvas, a_Position){
        else {
          roX[i] = angle + roX[i]
        }
-       }
+     }
     }
   }
   // rotate Y
-  else{ 
+  else if (Math.abs(deltaXr) >  Math.abs(deltaYr)){ 
    // push translation matrix
-   if (deltaYr < 0)
+   if (deltaYr > 0)
      scalar = -1
    angle = scalar * angle
    let rotateY = ([
@@ -966,7 +966,7 @@ function dragM(ev, gl, canvas, a_Position){
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   let deltaXm = x - previousXm  
   let deltaYm = y - previousYm 
-  let angle = (Math.PI / 12)
+  let angle = (Math.PI / 6)
   let scalar = 1
   // rotate Z
   if (Math.abs(deltaXm) > Math.abs(deltaYm)){
