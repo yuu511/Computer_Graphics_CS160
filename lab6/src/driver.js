@@ -22,10 +22,6 @@ let light1Z = 1.0
 // mode ( deprecated )
 // 2 = phong 3 = rim 4 = toon 5 = depth
 let mode = 2
-let text = document.getElementById('currentshader')
-text.innerHTML = "PHONG"
-let textortho = document.getElementById('currentortho')
-textortho.innerHTML = "PROJECTION"
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
@@ -49,6 +45,7 @@ let rotY= 0
 let rotZ = 1
 let nP = 3
 let orthomode = -1
+let ANGLE_STEP = 0.0
 
 //lab6 stuff (translations)
 // oldc_points = all current cylinder points, arranged in array of arrays
@@ -63,10 +60,12 @@ let previousXr = null
 let previousYr = null 
 let previousXm = null
 let previousYm = null 
-let last_time = null
+let g_last = Date.now()
 let roX = []
 let roY = []
 let tr = []
+let CUBEMODE = 0
+let FALLDOWN = -1
 
 // called when page is loaded
 function main() {
@@ -112,12 +111,10 @@ function start(gl) {
   document.addEventListener("contextmenu", function (e) {
          e.preventDefault();
   }, false)
-  const rotateAlongY = document.getElementById('rotateAlongY') 
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onmouseup = function(ev){ reset(ev, gl, canvas, a_Position); };
   canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
-  rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
   window.onkeypress = function(ev){ keypress(ev, gl, canvas, a_Position); };
 
   // generalized cylinder 1 
@@ -158,6 +155,48 @@ function start(gl) {
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points)
+  var currentAngle = 0.0
+    var tick = function (){
+      if (FALLDOWN == 1){
+        eyeZ = eyeZ + 1.0
+        eyeY = eyeY + 1.0
+        eyeX = eyeX + 1.0
+      }
+      currentAngle = animate(currentAngle)
+      rotDeg = currentAngle
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      draw_All(gl,canvas,a_Position,oldc_points)
+      requestAnimationFrame(tick,canvas)
+    }
+    tick()
+    var g_last = Date.now()
+  
+}
+
+function animate(angle) {
+  if (CUBEMODE == 1){
+    // Calculate the elapsed time
+    var now = Date.now();
+    var elapsed = now - g_last;
+    r_last = now;
+    let blueangle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+    if (blueangle %  120 <= 60){
+      return 90
+    }
+    if (blueangle % 120 >61){
+      return -90
+    }
+    if (blueangle % 60 == 0){
+      return 180
+    }
+  }
+  // Calculate the elapsed time
+  var now = Date.now();
+  var elapsed = now - g_last;
+  g_last = now;
+  // Update the current rotation angle (adjusted by the elapsed time)
+  var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+  return newAngle %= 360;
 }
 
 // various keypress functions
@@ -169,8 +208,30 @@ function keypress(ev, gl, canvas, a_Position){
     twist(ev, gl, canvas, a_Position)
   }
   if (ev.which == "r".charCodeAt(0)){
-   // last_time = Date.now()
-   // loopRot(ev, gl, canvas, a_Position)
+    if (ANGLE_STEP == 0)
+      ANGLE_STEP = 200
+    else 
+      ANGLE_STEP = 0
+  }
+  if (ev.which == "q".charCodeAt(0)){
+    if (ANGLE_STEP == 0){
+      CUBEMODE = 1
+      ANGLE_STEP = 10
+    }
+    else{
+      CUBEMODE = 0 
+      ANGLE_STEP = 0 
+   }
+  }
+  if (ev.which == "f".charCodeAt(0)){
+      FALLDOWN = FALLDOWN * -1
+      if (FALLDOWN == -1){
+        eyeX = 0
+        eyeY = 0
+        eyeZ = 5
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        draw_All(gl,canvas,a_Position,oldc_points)
+      }
   }
 }
 
@@ -653,22 +714,6 @@ function dot(QR,QS){
   return dot
 }
 
-function rotateY (ev,gl,canvas,a_Position){   
-  let radian = (Math.PI/12)
-  let newx = 0.0
-  let newy = 0.0
-  let newz = 0.0
-  newx = ((light1X * Math.cos(radian)) + (light1Z * Math.sin(radian))) 
-  newy = light1Y
-  newz = ((light1X * (-1  * Math.sin(radian))) + (light1Z * Math.cos(radian)))
-  light1X = newx
-  light1Y = newy
-  light1Z = newz 
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  // draw all finished cylinder 
-  draw_All(gl,canvas,a_Position,oldc_points)
-}
-
 function check(gl, canvas, a_Position,x,y) {
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -1089,28 +1134,6 @@ function applyMatrix (c_point,matrix){
   return newC
 }
 
-function rotate_continuous(ev, gl, canvas, a_Position){
-  let now = Date.now()
-  let elapsed = now - last_time
-  last_time = now
-  let newAngle = rotDeg + (45 * elapsed) / 1000.0
-  rotDeg = newAngle
-  return newAngle %360
-}
-
-
-function loopRot(ev, gl, canvas, a_Position){
-  rotDeg = rotate_continuous(ev, gl, canvas, a_Position)
-  let now = Date.now()
-  let elapsed = now - last_time
-  if (elapsed < 2000)
-    return
-  last_time = now
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFEk_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points)
-  requestAnimationFrame(loopRot(ev,gl,canvas,a_Position),canvas)
-}
 
 function twist(ev, gl, canvas, a_Position){
 for (var i =0 ; i < highlighted.length;i++){

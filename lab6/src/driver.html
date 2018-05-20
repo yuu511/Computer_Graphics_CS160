@@ -7,8 +7,6 @@
     <canvas id="webgl" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
-    <p id = "currentortho"> </p>
-    <p id = "currentshader"> </p>
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
     <script src="../lib/cuon-utils.js"></script>
@@ -19,14 +17,17 @@
     Lab 6 : Elijah Cordova
     </p>
     <p>
-    Highlight a cylinder and press "S" to shear or "T" to twist.
+    Select a cylinder and press "s" to shear or "t" to twist.
+    </p>
+    <p>
+    Press "r" to start / stop indefinite rotation , q for square movement. Note that buttons stop eachothers movement, and will only start after a stop. 
+    </p>
+    <p>
+    Press "f" for falldown
     </p>
     <p>
     Selection highlighting is turned off until the mouse is released.
     To move a cylinder, click and keep the button held down (clicking an already highlighted cylinder will de-highlight it)
-    </p>
-    <p>
-    <input type= "button" id="rotateAlongY" value = "rotateAlongY">
     </p>
   </body>
 </html>
