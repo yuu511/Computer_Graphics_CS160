@@ -135,18 +135,19 @@ function start(gl) {
   oldlines.push(init)
 
   //generalized cylinder 2
- // let init2 = []
- // init2.push (-0.9)
- // init2.push (0.5)
- // init2.push (-0.9)
- // init2.push (0.9)
- // init2.push (-0.1)
- // init2.push (0.9)
- // oldlines.push(init2)
-
+  let init2 = []
+  init2.push (-0.9)
+  init2.push (0.5)
+  init2.push (-0.9)
+  init2.push (0.9)
+  init2.push (-0.1)
+  init2.push (0.9)
+  oldlines.push(init2)
+  let temp = []
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
+    tr.push(temp) 
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
@@ -687,7 +688,6 @@ function drag(ev, gl, canvas, a_Position){
    let deltaX = xP - previousX
    let deltaY = yP - previousY
    let deltaZ = 0
-   // push translate matrix
    let translation = ([
     1.0 , 0.0 , 0.0 , deltaX,
     0.0 , 1.0 , 0.0 , deltaY,
@@ -699,15 +699,15 @@ function drag(ev, gl, canvas, a_Position){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
         oldc_points[i][j] = applyMatrix (oldc_points[i][j],translation) 
        }
+       if (tr[i].length < 1){
+         tr[i] = translation
+       }
+       else {
+         tr[i][3] = tr[i][3] + translation [3]
+         tr[i][7] = tr[i][7] + translation [7]
+         tr[i][11] = tr[i][11] + translation [11]
+       }
      }
-   }
-   if (tr.length < 1){
-     tr = translation
-   } 
-   else {
-       tr[3] = tr[3] + translation [3]
-       tr[7] = tr[7] + translation [7]
-       tr[11] = tr[11] + translation [11]
    }
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
    draw_All(gl,canvas,a_Position,oldc_points)
@@ -723,21 +723,6 @@ function reset(ev, gl, canvas, a_Position){
 // scales the radius by applying the appropriate matrix
 // must untranslate - > scale - > translate
 function scaleradius(ev, gl, canvas, a_Position){
-  if(tr.length>0){
-   let Inverse_tr = ([
-    1.0 , 0.0 , 0.0 , tr[3]*-1,
-    0.0 , 1.0 , 0.0 , tr[7]*-1,
-    0.0 , 0.0 , 1.0 , tr[11]*-1,
-    0.0 , 0.0 , 0.0 , 1.0
-    ])
-   for (var i =0 ; i < highlighted.length;i++){
-     if (highlighted[i]==1){
-     for (var j = 0 ; j < oldc_points[i].length ; j++){
-        oldc_points[i][j] = applyMatrix (oldc_points[i][j],Inverse_tr) 
-       }
-     }
-    }
-  }
   let scale = 1.0
   // SCROLL : UP
   if(ev.deltaY > 0){
@@ -755,7 +740,18 @@ function scaleradius(ev, gl, canvas, a_Position){
       0.0 , 0.0 , scale , 0,
       0.0 , 0.0 , 0.0 , 1.0
       ])
+      
+      
       for (var j = 0 ; j < oldc_points[i].length ; j++){
+       if(tr[i].length>0){
+        let Inverse_tr = ([
+         1.0 , 0.0 , 0.0 , tr[i][3]*-1,
+         0.0 , 1.0 , 0.0 , tr[i][7]*-1,
+         0.0 , 0.0 , 1.0 , tr[i][11]*-1,
+         0.0 , 0.0 , 0.0 , 1.0
+         ])
+         oldc_points[i][j] = applyMatrix (oldc_points[i][j],Inverse_tr) 
+       }
         let arrayc1 = oldc_points[i][j]
         let arrayc2 = arrayc1.splice(oldc_points[i][j].length/2,oldc_points[i][j].length)
         let circle1x = oldlines[i][2*j]
@@ -799,14 +795,16 @@ function scaleradius(ev, gl, canvas, a_Position){
       }
     }
   }
-  if(tr.length>0){
-   for (var i =0 ; i < highlighted.length;i++){
-     if (highlighted[i]==1){
-     for (var j = 0 ; j < oldc_points[i].length ; j++){
-        oldc_points[i][j] = applyMatrix (oldc_points[i][j],tr) 
+  for (var a =0 ; a < highlighted.length;a++){
+    if(tr[a].length>0){
+     for (var i =0 ; i < highlighted.length;i++){
+       if (highlighted[i]==1){
+       for (var j = 0 ; j < oldc_points[i].length ; j++){
+          oldc_points[i][j] = applyMatrix (oldc_points[i][j],tr[i]) 
+         }
        }
-     }
-    }
+      }
+   }
   }
   
   // Clear color and depth buffer
@@ -826,6 +824,21 @@ function dragR(ev, gl, canvas, a_Position){
   let scalar = 1
   let angle = (Math.PI / 12)
   // rotate X
+  if(tr.length>0){
+   let Inverse_tr = ([
+    1.0 , 0.0 , 0.0 , tr[3]*-1,
+    0.0 , 1.0 , 0.0 , tr[7]*-1,
+    0.0 , 0.0 , 1.0 , tr[11]*-1,
+    0.0 , 0.0 , 0.0 , 1.0
+    ])
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+        oldc_points[i][j] = applyMatrix (oldc_points[i][j],Inverse_tr) 
+       }
+     }
+    }
+  }
   if (Math.abs(deltaXr) > Math.abs(deltaYr)){
    // push translation matrix
    if (deltaXr < 0)
@@ -864,6 +877,15 @@ function dragR(ev, gl, canvas, a_Position){
        }
      }
    }
+  }
+  if(tr.length>0){
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+        oldc_points[i][j] = applyMatrix (oldc_points[i][j],tr) 
+       }
+     }
+    }
   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
