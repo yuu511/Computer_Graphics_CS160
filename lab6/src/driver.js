@@ -19,28 +19,13 @@ let Rcolor = 1
 let Gcolor = 0
 let Bcolor = 0
 let Acolor = 1
-const defaultcolor = []
-defaultcolor.push(Rcolor)
-defaultcolor.push(Gcolor)
-defaultcolor.push(Bcolor)
-
-let sizeofpoint = 10.0 
 
 // cylinder_points = currently drawing cylinder points
 // sides = number of size the cylinder will have
 let cylinder_points = []
-
 let sides = 10
-let individualsides = []
-let cylindersides = []
-
-let radius = 0.40 
+let radius = 0.20 
 let previousFace = []
-
-let cumulativeheight = 0
-
-
-
 //lab4 stuff
 let light1X = 1.0
 let light1Y = 1.0
@@ -55,26 +40,23 @@ let text = document.getElementById('currentshader')
 text.innerHTML = "PHONG"
 let textortho = document.getElementById('currentortho')
 textortho.innerHTML = "PROJECTION"
-
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
-
 let currentspecularR = 1
 let currentspecularG = 1
 let currentspecularB = 1
-
-let glossiness = 120.0
+let glossiness = 100.0
 
 //lab5 stuff
 let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 4
+let eyeZ = 5
 let centerX = 0
 let centerY = 0
-let centerZ = 2
+let centerZ = 0
 let rotDeg = 0
 let rotX = 0
 let rotY= 1
@@ -90,6 +72,8 @@ let previousX = null
 let previousY = null 
 let previousXr = null
 let previousYr = null 
+let previousXm = null
+let previousYm = null 
 
 // called when page is loaded
 function main() {
@@ -136,22 +120,11 @@ function start(gl) {
          e.preventDefault();
   }, false)
   const rotateAlongY = document.getElementById('rotateAlongY') 
-  const shiftX = document.getElementById('shiftX')
-  const shiftY = document.getElementById('shiftY')
-  const newview = document.getElementById('newview')
-  const nearplane = document.getElementById('nearplane')
-  const orthomd = document.getElementById('orthomd')
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onmouseup = function(ev){ reset(ev, gl, canvas, a_Position); };
   canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
-
-  shiftX.onclick = function(ev){ shift(ev, gl, canvas, a_Position); };
-  shiftY.onclick = function(ev){ shiftdown(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
-  newview.onclick = function(ev){ rotateCam(ev, gl, canvas, a_Position); };
-  nearplane.oninput = function(ev){ adjustNear(ev, gl, canvas, a_Position,nearplane); };
-  orthomd.onclick = function(ev){ toggleortho(ev, gl, canvas, a_Position); };
 
   // specify the color for clearing <canvas>
   gl.clearColor(0, 0, 0, 1);
@@ -160,13 +133,13 @@ function start(gl) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   // generalized cylinder 1 
   let init = []
-  init.push(1)
+  init.push(0.5)
   init.push(0)
+  init.push(-0.5)
   init.push(0)
-  init.push(0)
-  init.push(0)
+  init.push(-0.5)
   init.push(-1)
-  init.push(1)
+  init.push(0.5)
   init.push(-1)
   init.push(0.4)
   init.push(-0.5)
@@ -196,9 +169,16 @@ function start(gl) {
 }
 
 
-// if rightclick, do rotating, else do highlighting /transformation
+// if rightclick, do rotating, 
+// else if middleclick do translate/ rotate z
+// else do highlighting /transformation (left click)
 function click(ev, gl, canvas, a_Position) {  
-   // if right click click 
+   // if mid click
+   if (ev.button == 1){
+     midclick(ev, gl, canvas, a_Position)
+     return
+   }
+   // if right click 
    if (ev.button == 2){
      rightclick(ev, gl, canvas, a_Position)
      return
@@ -250,7 +230,6 @@ function click(ev, gl, canvas, a_Position) {
  }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
- 
   // draw all finished cylinder 
   draw_All(gl,canvas,a_Position,oldc_points)
 }
@@ -270,7 +249,22 @@ function rightclick (ev,gl,canvas,a_Position){
     }
   }
 }
-
+// middle click
+function midclick(ev, gl, canvas, a_Position){
+  let x = ev.clientX; // x coordinate of a mouse pointer
+  let y = ev.clientY; // y coordinate of a mouse pointer
+  let rect = ev.target.getBoundingClientRect() ;
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  console.log(x + " " + y + " mid click\n")
+  previousXm = x
+  previousYm = y
+  for (var i =0 ; i < highlighted.length;i++){
+    if (highlighted[i]==1){
+      canvas.onmousemove = function(ev){ dragM(ev, gl, canvas, a_Position); }
+    }
+  }
+}
 function move (ev,gl,canvas,a_Position){   
    // if right click 
    if (ev.button == 2)
@@ -612,7 +606,7 @@ function initAttrib(gl,canvas,numpolyline) {
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(50, canvas.width/canvas.height, nP, 10);
+    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 10);
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
@@ -709,34 +703,6 @@ function rotateY (ev,gl,canvas,a_Position){
   draw_All(gl,canvas,a_Position,oldc_points)
 }
 
-function shift (ev,gl,canvas,a_Position){   
-  // draw all finished cylinder 
-  for (var i =0 ; i < oldlines.length ; i++){       
-    if (oldlines[i].length >= 4){
-     for (var j =0; j < oldlines[i].length;j+=2){    
-       oldlines[i][j] = oldlines[i][j] + 0.2 
-     }
-    } 
-  }
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points)
-}
-
-function shiftdown(ev,gl,canvas,a_Position){   
-  // draw all finished cylinder 
-  for (var i =0 ; i < oldlines.length ; i++){       
-    if (oldlines[i].length >= 4){
-     for (var j =0; j < oldlines[i].length;j+=2){    
-       oldlines[i][j+1] = oldlines[i][j+1] - 0.2 
-     }
-    } 
-  }
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points)
-}
-
 function check(gl, canvas, a_Position,x,y) {
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -744,46 +710,6 @@ function check(gl, canvas, a_Position,x,y) {
   var pixels = new Uint8Array(4); // Array for storing the pixel value
   gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
   return pixels 
-}
-
-function rotateCam(ev, gl, canvas, a_Position){
-  orthomode = -1
-  if (orthomode == -1){
-    textortho.innerHTML = "PROJECTION"
-  }
-  // Clear <canvas>
-  eyeX = eyeX * -1
-  eyeY = eyeY * -1
-  eyeZ = eyeZ * -1
-  centerX = centerX * -1
-  centerY = centerY * -1
-  centerZ = centerZ * -1
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points)
-}
-function adjustNear(ev, gl, canvas, a_Position,nearplane){
-  orthomode = -1
-  light1Z = 1
-  if (orthomode == -1){
-    textortho.innerHTML = "PROJECTION"
-  }
-  nP=parseInt(nearplane.value)
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points)
-}
-
-function toggleortho(ev, gl, canvas, a_Position){
-  textortho.innerHTML = "ORTHO"
-  orthomode = orthomode * -1
-  light1Z = light1Z * -1
-  if (orthomode == -1){
-    textortho.innerHTML = "PROJECTION"
-  }
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 // applies a translation matrix  
@@ -801,7 +727,7 @@ function drag(ev, gl, canvas, a_Position){
    let deltaX = xP - previousX
    let deltaY = yP - previousY
    let deltaZ = 0
-   // push translation matrix
+   // push translate matrix
    let translation = ([
     1.0 , 0.0 , 0.0 , deltaX,
     0.0 , 1.0 , 0.0 , deltaY,
@@ -856,20 +782,119 @@ function scaleradius(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points)
 }
 
-//  changing the added x and y values after the initial rotation (effectively translating the cylinder)
+// using rotation matrix to rotate along _ axis
 function dragR(ev, gl, canvas, a_Position){
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
-  let xP = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-  let yP = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  let deltaXr = xP - previousXr
-  let deltaYr = yP - previousYr
-  previousXr = xP
-  previousYr = yP
-  console.log(oldc_points)
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  let deltaXr = x - previousXr
+  let deltaYr = y - previousYr  
+  let scalar = 1
+  let angle = (Math.PI / 12)
+  // rotate X
+  if (Math.abs(deltaXr) > Math.abs(deltaYr)){
+   // push translation matrix
+   if (deltaXr < 0)
+     scalar = -1
+   angle = scalar * angle
+   let rotateX = ([
+    1.0 , 0.0 ,            0.0 ,                    0.0,
+    0.0 , Math.cos(angle), (-1 * Math.sin(angle)),  0.0,
+    0.0 , Math.sin(angle), Math.cos(angle),         0.0,
+    0.0 , 0.0 ,            0.0 ,                    1.0
+    ])
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+          oldc_points[i][j] = applyMatrix (oldc_points[i][j],rotateX)
+       }
+     }
+   }
+  }
+  // rotate Y
+  else{ 
+   // push translation matrix
+   if (deltaYr < 0)
+     scalar = -1
+   angle = scalar * angle
+   let rotateY = ([
+    Math.cos(angle),        0.0, Math.sin(angle), 0.0,
+    0.0,                    1.0, 0.0,             0.0,
+    (-1 * Math.sin(angle)), 0.0, Math.cos(angle), 0.0,
+    0.0,                    0.0, 0.0,             1.0
+    ])
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+          oldc_points[i][j] = applyMatrix (oldc_points[i][j],rotateY)
+       }
+     }
+   }
+  }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
+  previousXr = x
+  previousYr = y
 }
 
+// using translation matrix to translate on z axis 
+function dragM(ev, gl, canvas, a_Position){
+  var x = ev.clientX; // x coordinate of a mouse pointer
+  var y = ev.clientY; // y coordinate of a mouse pointer
+  var rect = ev.target.getBoundingClientRect() ;
+  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
+  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+  let deltaXm = x - previousXm  
+  let deltaYm = y - previousYm 
+  let angle = (Math.PI / 12)
+  let scalar = 1
+  // rotate Z
+  if (Math.abs(deltaXm) > Math.abs(deltaYm)){
+    if (deltaXm < 0) 
+      scalar = -1
+    angle = scalar * angle
+    let rotateZ = ([
+    Math.cos(angle), (-1 * Math.sin(angle)),  0.0, 0.0,
+    Math.sin(angle), Math.cos(angle),         0.0, 0.0,
+    0.0,             0.0,                     1.0, 0.0,
+    0.0,             0.0,                     0.0, 1.0
+    ])
+    for (var i =0 ; i < highlighted.length;i++){
+      if (highlighted[i]==1){
+      for (var j = 0 ; j < oldc_points[i].length ; j++){
+           oldc_points[i][j] = applyMatrix (oldc_points[i][j],rotateZ)
+        }
+      }
+    }
+  }
+  // translate Z
+  else {
+   let deltaX = 0
+   let deltaY = 0
+   let deltaZ = deltaYm * 5 
+   let translation = ([
+   1.0 , 0.0 , 0.0 , deltaX,
+   0.0 , 1.0 , 0.0 , deltaY,
+   0.0 , 0.0 , 1.0 , deltaZ,
+   0.0 , 0.0 , 0.0 , 1.0
+   ])
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+          oldc_points[i][j] = applyMatrix (oldc_points[i][j],translation)
+       }
+     }
+   }
+  }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
+  previousXm = x
+  previousYm = y
+}
 // Main function to deal with Rotating already existing cylinder points.
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 // same as drawcylinder, except this time works off of cylinder points rather than a polyline
@@ -946,6 +971,7 @@ function drawcylinderC(gl,canvas,a_Position,cylinder_points,s,numcylinder){
     return
   }
   // Set the clear color and enable the depth test
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
   initAttrib(gl,canvas,numcylinder)
 
@@ -964,3 +990,5 @@ function applyMatrix (c_point,matrix){
   }
   return newC
 }
+
+
