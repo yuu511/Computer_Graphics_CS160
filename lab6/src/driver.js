@@ -740,8 +740,6 @@ function scaleradius(ev, gl, canvas, a_Position){
       0.0 , 0.0 , scale , 0,
       0.0 , 0.0 , 0.0 , 1.0
       ])
-      
-      
       for (var j = 0 ; j < oldc_points[i].length ; j++){
        if(tr[i].length>0){
         let Inverse_tr = ([
@@ -824,21 +822,21 @@ function dragR(ev, gl, canvas, a_Position){
   let scalar = 1
   let angle = (Math.PI / 12)
   // rotate X
-  if(tr.length>0){
-   let Inverse_tr = ([
-    1.0 , 0.0 , 0.0 , tr[3]*-1,
-    0.0 , 1.0 , 0.0 , tr[7]*-1,
-    0.0 , 0.0 , 1.0 , tr[11]*-1,
-    0.0 , 0.0 , 0.0 , 1.0
-    ])
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
-        oldc_points[i][j] = applyMatrix (oldc_points[i][j],Inverse_tr) 
+       if(tr[i].length>0){
+        let Inverse_tr = ([
+         1.0 , 0.0 , 0.0 , tr[i][3]*-1,
+         0.0 , 1.0 , 0.0 , tr[i][7]*-1,
+         0.0 , 0.0 , 1.0 , tr[i][11]*-1,
+         0.0 , 0.0 , 0.0 , 1.0
+         ])
+         oldc_points[i][j] = applyMatrix (oldc_points[i][j],Inverse_tr) 
        }
+      }
      }
-    }
-  }
+   }
   if (Math.abs(deltaXr) > Math.abs(deltaYr)){
    // push translation matrix
    if (deltaXr < 0)
@@ -878,14 +876,16 @@ function dragR(ev, gl, canvas, a_Position){
      }
    }
   }
-  if(tr.length>0){
-   for (var i =0 ; i < highlighted.length;i++){
-     if (highlighted[i]==1){
-     for (var j = 0 ; j < oldc_points[i].length ; j++){
-        oldc_points[i][j] = applyMatrix (oldc_points[i][j],tr) 
+  for (var a =0 ; a < highlighted.length;a++){
+    if(tr[a].length>0){
+     for (var i =0 ; i < highlighted.length;i++){
+       if (highlighted[i]==1){
+       for (var j = 0 ; j < oldc_points[i].length ; j++){
+          oldc_points[i][j] = applyMatrix (oldc_points[i][j],tr[i]) 
+         }
        }
-     }
-    }
+      }
+   }
   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
