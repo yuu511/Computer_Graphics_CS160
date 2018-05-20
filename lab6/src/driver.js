@@ -1,19 +1,10 @@
 // elijah cordova 1425119
-
 var FSIZE = 4; // size of a vertex coordinate (32-bit float)
 var VSHADER_SOURCE = null; // vertex shader program
 var FSHADER_SOURCE = null; // fragment shader program
 
-
-// g_points = current working line, oldlines = all finished lines (an array of arrays)
-let g_points = [] // The array for the position of a mouse press
+// old polyline, use it to initialize cylinders
 let oldlines = [] // all previous completed lines
-
-// legacy lab1 code (deprecated) 
-// width = current width, oldwidths = all old widths
-let width = 1.0 //current working width (thickness of line)
-let oldwidths = [] //all old widths
-
 // (x)Color = current color setting, oldcolors = all old colors (an array of arrays)
 let Rcolor = 1
 let Gcolor = 0
