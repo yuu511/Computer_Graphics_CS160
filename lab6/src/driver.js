@@ -64,8 +64,8 @@ let previousYr = null
 let previousXm = null
 let previousYm = null 
 let last_time = null
-let sc = []
-let ro = []
+let roX = []
+let roY = []
 let tr = []
 
 // called when page is loaded
@@ -148,6 +148,8 @@ function start(gl) {
     highlighted.push(0)
     thinking.push(0)
     tr.push(temp) 
+    roX.push(0)
+    roY.push(0)
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
@@ -162,6 +164,9 @@ function start(gl) {
 function keypress(ev, gl, canvas, a_Position){
   if (ev.which == "s".charCodeAt(0)){
     shear(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "t".charCodeAt(0)){
+    twist(ev, gl, canvas, a_Position)
   }
   if (ev.which == "r".charCodeAt(0)){
    // last_time = Date.now()
@@ -793,6 +798,7 @@ function scaleradius(ev, gl, canvas, a_Position){
       }
     }
   }
+
   for (var a =0 ; a < highlighted.length;a++){
     if(tr[a].length>0){
      for (var i =0 ; i < highlighted.length;i++){
@@ -821,7 +827,6 @@ function dragR(ev, gl, canvas, a_Position){
   let deltaYr = y - previousYr  
   let scalar = 1
   let angle = (Math.PI / 12)
-  // rotate X
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
@@ -837,6 +842,7 @@ function dragR(ev, gl, canvas, a_Position){
       }
      }
    }
+  // rotate X
   if (Math.abs(deltaXr) > Math.abs(deltaYr)){
    // push translation matrix
    if (deltaXr < 0)
@@ -844,8 +850,8 @@ function dragR(ev, gl, canvas, a_Position){
    angle = scalar * angle
    let rotateX = ([
     1.0 , 0.0 ,            0.0 ,                    0.0,
-    0.0 , Math.cos(angle), (-1 * Math.sin(angle)),  0.0,
-    0.0 , Math.sin(angle), Math.cos(angle),         0.0,
+    0.0 , Math.cos(angle), Math.sin(angle),  0.0,
+    0.0 , (-1 * Math.sin(angle)), Math.cos(angle),         0.0,
     0.0 , 0.0 ,            0.0 ,                    1.0
     ])
    for (var i =0 ; i < highlighted.length;i++){
@@ -853,8 +859,14 @@ function dragR(ev, gl, canvas, a_Position){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
           oldc_points[i][j] = applyMatrix (oldc_points[i][j],rotateX)
        }
-     }
-   }
+       if (roX[i].length < 1){
+         roX[i] = angle
+       }
+       else {
+         roX[i] = angle + roX[i]
+       }
+       }
+    }
   }
   // rotate Y
   else{ 
@@ -872,6 +884,12 @@ function dragR(ev, gl, canvas, a_Position){
      if (highlighted[i]==1){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
           oldc_points[i][j] = applyMatrix (oldc_points[i][j],rotateY)
+       }
+       if (roY[i].length < 1){
+         roY[i] = angle
+       }
+       else {
+         roY[i] = angle + roY[i]
        }
      }
    }
@@ -952,8 +970,8 @@ function dragM(ev, gl, canvas, a_Position){
 
 function shear(ev, gl, canvas, a_Position){
   console.log("Y SHEAR") 
-  let shearY_matrix = ([
-  1.0 , 0.0 , 0.0 , 0.0,
+  let shearY_matrix = 
+([ 1.0 , 0.0 , 0.0 , 0.0,
   0.5 , 1.0 , 0.0 , 0.0,
   0.0 , 0.0 , 1.0 , 0.0,
   0.0 , 0.0 , 0.0 , 1.0
@@ -1092,4 +1110,56 @@ function loopRot(ev, gl, canvas, a_Position){
   gl.clear(gl.COLOR_BUFFEk_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points)
   requestAnimationFrame(loopRot(ev,gl,canvas,a_Position),canvas)
+}
+
+function twist(ev, gl, canvas, a_Position){
+for (var i =0 ; i < highlighted.length;i++){
+   for (var j = 0 ; j < oldc_points[i].length ; j++){
+     if (highlighted[i]==1){
+        let arrayc1 = oldc_points[i][j]
+        let arrayc2 = arrayc1.splice(oldc_points[i][j].length/2,oldc_points[i][j].length)
+        let circle1x = oldlines[i][2*j]
+        let circle1y = oldlines[i][2*j+1]
+        let circle2x = oldlines[i][2*j+2]
+        let circle2y = oldlines[i][2*j+3]
+        let untranslate1 = ([
+        1.0 , 0.0 , 0.0 , -1 * circle1x,
+        0.0 , 1.0 , 0.0 , -1 * circle1y,
+        0.0 , 0.0 , 1.0 , 0,
+        0.0 , 0.0 , 0.0 , 1.0
+        ])
+        let untranslate2 = ([
+        1.0 , 0.0 , 0.0 , -1 * circle2x,
+        0.0 , 1.0 , 0.0 , -1 * circle2y,
+        0.0 , 0.0 , 1.0 , 0,
+        0.0 , 0.0 , 0.0 , 1.0
+        ])
+        arrayc1 = applyMatrix (arrayc1,untranslate1)
+        arrayc2 = applyMatrix (arrayc2,untranslate2)
+        let untranslatedA = arrayc1.concat(arrayc2)
+        arrayc1 = untranslatedA
+        arrayc2 = arrayc1.splice(untranslatedA.length/2,untranslatedA.length)
+        let angle = Math.PI / 3
+        let translate1 = ([
+         1.0 , 0.0 ,            0.0 ,                    0.0,
+         0.0 , Math.cos(angle), Math.sin(angle),  0.0,
+         0.0 , (-1 * Math.sin(angle)), Math.cos(angle),         0.0,
+         0.0 , 0.0 ,            0.0 ,                    1.0
+         ])
+        let translate2 = ([
+         1.0 , 0.0 ,            0.0 ,                    circle2x,
+         0.0 , Math.cos(-1 * angle), Math.sin(-1 * angle),  circle2y,
+         0.0 , (Math.sin(angle)), Math.cos(-1 * angle),         0.0,
+         0.0 , 0.0 ,            0.0 ,                    1.0
+         ])
+         arrayc1 = applyMatrix (arrayc1,translate1)
+         arrayc2 = applyMatrix (arrayc2,translate2)
+         let translatedA = arrayc1.concat(arrayc2)
+         oldc_points[i][j] = translatedA
+      }
+    }
+  }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
