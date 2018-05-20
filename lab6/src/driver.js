@@ -190,7 +190,7 @@ function start(gl) {
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
-    radii.push(radius)
+    radii.push(1)
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
@@ -323,7 +323,7 @@ function initAllCylinders(gl,canvas,a_Position){
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      initcylinder(gl,canvas,a_Position,radii[i],sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
+      initcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
      }
      oldc_points.push(oldc_line)
      oldc_line = []
@@ -331,29 +331,12 @@ function initAllCylinders(gl,canvas,a_Position){
   }  
 }
 
-// simple function to draw all cylinders based on set of established cylinder_points (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
-// cylinders are storred in an array of arrays, where the index is the polyline (for example : oldc_points[0][1] = polyline 0 , cylinder 1)
-function drawAllCylinders(gl,canvas,a_Position){
-  // draw all finished cylinder 
-  oldc_points = []
-  for (var i =0 ; i < oldlines.length ; i++){       
-    previousFace = []
-    if (oldlines[i].length >= 4){
-     var loop = (((oldlines[i].length/2)-1)*2)
-     for (var j =0; j < loop;j+=2){    
-      initcylinder(gl,canvas,a_Position,radii[i],sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
-     }
-     oldc_points.push(oldc_line)
-     oldc_line = []
-    }
-  }  
-}
 
 function draw_All(gl,canvas,a_Position,all_cylinder_points){
   for (var i =0 ; i < all_cylinder_points.length ; i++){       
      if (all_cylinder_points[i].length >= 1){
        for (var j =0; j < all_cylinder_points[i].length ; j++){
-         drawcylinderC(gl,canvas,a_Position,all_cylinder_points[i][j],radii[i],sides,i)
+         drawcylinderC(gl,canvas,a_Position,all_cylinder_points[i][j],sides,i)
        }
      }
   }  
@@ -426,7 +409,7 @@ function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
    cylinder_points.push(unrotated[3*i+2])
   }
   oldc_line.push(cylinder_points)
-  drawcylinderC(gl,canvas,a_Position,cylinder_points,r,s,numpolyline)
+  drawcylinderC(gl,canvas,a_Position,cylinder_points,s,numpolyline)
 
 //  // ** DRAW CAP **
 //  // (FOR SMOOTH EDGES) 
@@ -849,20 +832,36 @@ function reset(ev, gl, canvas, a_Position){
 
 // chaging the radius in our rotation matrix (effictively scaling the cylinder)
 function scaleradius(ev, gl, canvas, a_Position){
+  // SCROLL : UP
   if(ev.deltaY > 0){
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (radii[i] > 0.02){
-         radii[i] = radii[i] - 0.01
+       radii[i] = 0.9
+       let scaleM = ([
+       radii[i] , 0.0 , 0.0 , 0,
+       0.0 , radii[i] , 0.0 , 0,
+       0.0 , 0.0 , radii[i] , 0,
+       0.0 , 0.0 , 0.0 , 1.0
+       ])
+       for (var j = 0 ; j < oldc_points[i].length ; j++){
+         oldc_points[i][j] = applyMatrix (oldc_points[i][j],scaleM)
        }
      }
    }
   }
+  // SCROLL : DOWN
   else {
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (radii[i] < 1.00){
-         radii[i] = radii[i] + 0.01
+       radii[i] = 1.1
+       let scaleM = ([
+       radii[i] , 0.0 , 0.0 , 0,
+       0.0 , radii[i] , 0.0 , 0,
+       0.0 , 0.0 , radii[i] , 0,
+       0.0 , 0.0 , 0.0 , 1.0
+       ])
+       for (var j = 0 ; j < oldc_points[i].length ; j++){
+         oldc_points[i][j] = applyMatrix (oldc_points[i][j],scaleM)
        }
      }
    }
@@ -893,7 +892,7 @@ function dragR(ev, gl, canvas, a_Position){
 // s = sides
 // expects an input of n cylinder points (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
 // initAllcylinders should be called before calling this
-function drawcylinderC(gl,canvas,a_Position,cylinder_points,r,s,numcylinder){
+function drawcylinderC(gl,canvas,a_Position,cylinder_points,s,numcylinder){
   Acolor = 1 - (numcylinder/255)  
   let convert = Math.PI/180 
   let numsides = 360/s
