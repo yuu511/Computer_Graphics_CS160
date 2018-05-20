@@ -1,5 +1,4 @@
 // elijah cordova 1425119
-var FSIZE = 4; // size of a vertex coordinate (32-bit float)
 var VSHADER_SOURCE = null; // vertex shader program
 var FSHADER_SOURCE = null; // fragment shader program
 
@@ -12,20 +11,16 @@ let Bcolor = 0
 let Acolor = 1
 
 // cylinder_points = currently drawing cylinder points
-// sides = number of size the cylinder will have
+// sides = number of size the cylinder will have , radius = defualt radius
 let cylinder_points = []
 let sides = 10
 let radius = 0.20 
-let previousFace = []
-//lab4 stuff
+//lab4 stuff (shading)
 let light1X = 1.0
 let light1Y = 1.0
 let light1Z = 1.0
-// mode = 1 = gouraud shading
-// 2 = phong 
-// 3 = rim
-// 4 = toon
-// 5 = depth
+// mode ( deprecated )
+// 2 = phong 3 = rim 4 = toon 5 = depth
 let mode = 2
 let text = document.getElementById('currentshader')
 text.innerHTML = "PHONG"
@@ -39,7 +34,7 @@ let currentspecularG = 1
 let currentspecularB = 1
 let glossiness = 100.0
 
-//lab5 stuff
+//lab5 stuff (projection + selection)
 let highlighted = []
 let thinking = []
 let eyeX = 0
@@ -55,7 +50,9 @@ let rotZ = 0
 let nP = 3
 let orthomode = -1
 
-//lab6 stuff
+//lab6 stuff (translations)
+// oldc_points = all current cylinder points, arranged in array of arrays
+// e.x. oldc_points [0][1] = cluster(polyline) 0 , cylinder 1
 let oldc_line = []
 let oldc_points = []
 // refrence for left drag
@@ -136,17 +133,15 @@ function start(gl) {
   init.push(-0.5)
   oldlines.push(init)
 
-
-  //generalized cylinder 3
-   let init3 = []
-   init3.push (-0.9)
-   init3.push (0.5)
-   init3.push (-0.9)
-   init3.push (0.9)
-   init3.push (-0.1)
-   init3.push (0.9)
-   oldlines.push(init3)
-
+  //generalized cylinder 2
+  let init2 = []
+  init2.push (-0.9)
+  init2.push (0.5)
+  init2.push (-0.9)
+  init2.push (0.9)
+  init2.push (-0.1)
+  init2.push (0.9)
+  oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -161,8 +156,8 @@ function start(gl) {
 
 
 // if rightclick, do rotating, 
-// else if middleclick do translate/ rotate z
-// else do highlighting /transformation (left click)
+// else if middleclick do translate/ rotate z,
+// else do highlighting /transformation (left click).
 function click(ev, gl, canvas, a_Position) {  
    // if mid click
    if (ev.button == 1){
@@ -191,28 +186,28 @@ function click(ev, gl, canvas, a_Position) {
       var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
       var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
       if (picked){
-          // if ambient light exists, you picked an object (ambient light is > 0 by default)
-          if (picked[2] > 0){
-          console.log("R:" + picked[0] + " G:" + picked[1] + " B:" + picked[2] + " A:" + picked[3])
-             let numc = 255 - picked[3] 
-             if (highlighted[numc] == 0){
-               for (var i =0 ; i < highlighted.length; i++){
-                 highlighted[i]=0
-               }
-               highlighted[numc] = 1
-             }
-             else{
-               highlighted[numc] = 0
-             }
-          }     
-          else{
-            console.log("YOU PICKED THE BLANK CANVAS! (0,0,0,1) RESETTING ALL HIGHLIGHTS!")   
+        // if ambient light exists, you picked an object (ambient light is > 0 by default)
+        if (picked[2] > 0){
+        console.log("R:" + picked[0] + " G:" + picked[1] + " B:" + picked[2] + " A:" + picked[3])
+        let numc = 255 - picked[3] 
+          if (highlighted[numc] == 0){
             for (var i =0 ; i < highlighted.length; i++){
               highlighted[i]=0
             }
+            highlighted[numc] = 1
           }
+          else{
+            highlighted[numc] = 0
+          }
+        }     
+        else{
+          console.log("YOU PICKED THE BLANK CANVAS! (0,0,0,1) RESETTING ALL HIGHLIGHTS!")   
+          for (var i =0 ; i < highlighted.length; i++){
+            highlighted[i]=0
+          }
+        }
       }
-    }
+   }
    
  for (var i =0 ; i < highlighted.length;i++){
    if (highlighted[i]==1){
@@ -300,7 +295,6 @@ function initAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
   oldc_points = []
   for (var i =0 ; i < oldlines.length ; i++){       
-    previousFace = []
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
@@ -391,47 +385,6 @@ function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   }
   oldc_line.push(cylinder_points)
   drawcylinderC(gl,canvas,a_Position,cylinder_points,s,numpolyline)
-
-//  // ** DRAW CAP **
-//  // (FOR SMOOTH EDGES) 
-//  let cap_points = []
-//  if (previousFace.length < 1){
-//    // second circle
-//    for (var i = 0 ; i < s+1 ; i++){
-//     previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
-//     previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
-//     previousFace.push(unrotated[3*i+2])
-//    }
-//    return
-//  } 
-//  for (var j=0 ; j < previousFace.length ;j++){
-//    cap_points.push(previousFace[j])    
-//  }
-//  previousFace = []
-//  for (var i = 0 ; i < s+1 ; i++){
-//   cap_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
-//   cap_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
-//   cap_points.push(unrotated[3*i+2])
-//  }
-//  for (var i = 0 ; i < s+1 ; i++){
-//   previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
-//   previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
-//   previousFace.push(unrotated[3*i+2])
-//  }
-//  var capvertices = new Float32Array(cap_points)
-//  let caplen = capvertices.length/14;
-//  if (caplen === 0)
-//   return
-//  var n = initVertexBuffers(gl,capvertices,colors,normie,indices)
-//  if (n<0){
-//    console.log('failed to set vert info')
-//    return
-//  }
-//  // Set the clear color and enable the depth test
-//  gl.enable(gl.DEPTH_TEST);
-//  initAttrib(gl,canvas,numpolyline)
-//  //draw the cylinder!
-//  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 }
 
 function calcnormals(gl,canvas,a_Position,s,cylinder_points){
@@ -939,7 +892,7 @@ function drawcylinderC(gl,canvas,a_Position,cylinder_points,s,numcylinder){
    colors.push(Acolor)
   }
   let len = cylinder_points.length/6
-  // cool traiangles
+  // traiangles that form the cylinder
   for (var i=0 ; i < s; i++){
     indices.push(i)
     indices.push(i+1) 
@@ -981,5 +934,3 @@ function applyMatrix (c_point,matrix){
   }
   return newC
 }
-
-
