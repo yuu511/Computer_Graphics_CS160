@@ -45,8 +45,8 @@ let centerY = 0
 let centerZ = 0
 let rotDeg = 0
 let rotX = 0
-let rotY= 1
-let rotZ = 0
+let rotY= 0
+let rotZ = 1
 let nP = 3
 let orthomode = -1
 
@@ -55,6 +55,7 @@ let orthomode = -1
 // e.x. oldc_points [0][1] = cluster(polyline) 0 , cylinder 1
 let oldc_line = []
 let oldc_points = []
+let originalc_points = []
 // refrence for left drag
 let previousX = null
 let previousY = null 
@@ -62,6 +63,10 @@ let previousXr = null
 let previousYr = null 
 let previousXm = null
 let previousYm = null 
+let last_time = null
+let sc = []
+let ro = []
+let tr = []
 
 // called when page is loaded
 function main() {
@@ -113,12 +118,8 @@ function start(gl) {
   canvas.onmouseup = function(ev){ reset(ev, gl, canvas, a_Position); };
   canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
   rotateAlongY.onclick = function(ev){ rotateY(ev, gl, canvas, a_Position); };
+  window.onkeypress = function(ev){ keypress(ev, gl, canvas, a_Position); };
 
-  // specify the color for clearing <canvas>
-  gl.clearColor(0, 0, 0, 1);
-  // clear <canvas>
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   // generalized cylinder 1 
   let init = []
   init.push(0.5)
@@ -134,14 +135,14 @@ function start(gl) {
   oldlines.push(init)
 
   //generalized cylinder 2
-  let init2 = []
-  init2.push (-0.9)
-  init2.push (0.5)
-  init2.push (-0.9)
-  init2.push (0.9)
-  init2.push (-0.1)
-  init2.push (0.9)
-  oldlines.push(init2)
+ // let init2 = []
+ // init2.push (-0.9)
+ // init2.push (0.5)
+ // init2.push (-0.9)
+ // init2.push (0.9)
+ // init2.push (-0.1)
+ // init2.push (0.9)
+ // oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -149,11 +150,23 @@ function start(gl) {
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
+  // specify the color for clearing <canvas>
+  gl.clearColor(0, 0, 0, 1);
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points)
 }
 
+// various keypress functions
+function keypress(ev, gl, canvas, a_Position){
+  if (ev.which == "s".charCodeAt(0)){
+    shear(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "r".charCodeAt(0)){
+   // last_time = Date.now()
+   // loopRot(ev, gl, canvas, a_Position)
+  }
+}
 
 // if rightclick, do rotating, 
 // else if middleclick do translate/ rotate z,
@@ -294,6 +307,7 @@ function move (ev,gl,canvas,a_Position){
 function initAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
   oldc_points = []
+  originalc_points = []
   for (var i =0 ; i < oldlines.length ; i++){       
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
@@ -301,6 +315,7 @@ function initAllCylinders(gl,canvas,a_Position){
       initcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
      }
      oldc_points.push(oldc_line)
+     originalc_points.push(oldc_line)
      oldc_line = []
     }
   }  
@@ -347,6 +362,7 @@ function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
     unrotated.push(Math.sin(convert*i)*r)
   } 
    let cylinder_points = []     
+   let raw_points = []
    let indices = []
    let colors = []
    let normie = []
@@ -681,9 +697,17 @@ function drag(ev, gl, canvas, a_Position){
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
      for (var j = 0 ; j < oldc_points[i].length ; j++){
-          oldc_points[i][j] = applyMatrix (oldc_points[i][j],translation)
+        oldc_points[i][j] = applyMatrix (oldc_points[i][j],translation) 
        }
      }
+   }
+   if (tr.length < 1){
+     tr = translation
+   } 
+   else {
+       tr[3] = tr[3] + translation [3]
+       tr[7] = tr[7] + translation [7]
+       tr[11] = tr[11] + translation [11]
    }
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
    draw_All(gl,canvas,a_Position,oldc_points)
@@ -697,7 +721,23 @@ function reset(ev, gl, canvas, a_Position){
 
 
 // scales the radius by applying the appropriate matrix
+// must untranslate - > scale - > translate
 function scaleradius(ev, gl, canvas, a_Position){
+  if(tr.length>0){
+   let Inverse_tr = ([
+    1.0 , 0.0 , 0.0 , tr[3]*-1,
+    0.0 , 1.0 , 0.0 , tr[7]*-1,
+    0.0 , 0.0 , 1.0 , tr[11]*-1,
+    0.0 , 0.0 , 0.0 , 1.0
+    ])
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+        oldc_points[i][j] = applyMatrix (oldc_points[i][j],Inverse_tr) 
+       }
+     }
+    }
+  }
   let scale = 1.0
   // SCROLL : UP
   if(ev.deltaY > 0){
@@ -716,8 +756,56 @@ function scaleradius(ev, gl, canvas, a_Position){
       0.0 , 0.0 , 0.0 , 1.0
       ])
       for (var j = 0 ; j < oldc_points[i].length ; j++){
-        oldc_points[i][j] = applyMatrix (oldc_points[i][j],scaleM)
+        let arrayc1 = oldc_points[i][j]
+        let arrayc2 = arrayc1.splice(oldc_points[i][j].length/2,oldc_points[i][j].length)
+        let circle1x = oldlines[i][2*j]
+        let circle1y = oldlines[i][2*j+1]
+        let circle2x = oldlines[i][2*j+2]
+        let circle2y = oldlines[i][2*j+3]
+        let untranslate1 = ([
+        1.0 , 0.0 , 0.0 , -1 * circle1x,
+        0.0 , 1.0 , 0.0 , -1 * circle1y,
+        0.0 , 0.0 , 1.0 , 0,
+        0.0 , 0.0 , 0.0 , 1.0
+        ])
+        let untranslate2 = ([
+        1.0 , 0.0 , 0.0 , -1 * circle2x,
+        0.0 , 1.0 , 0.0 , -1 * circle2y,
+        0.0 , 0.0 , 1.0 , 0,
+        0.0 , 0.0 , 0.0 , 1.0
+        ])
+        arrayc1 = applyMatrix (arrayc1,untranslate1)
+        arrayc2 = applyMatrix (arrayc2,untranslate2)
+        let untranslatedA = arrayc1.concat(arrayc2)
+        let intermediate = applyMatrix (untranslatedA,scaleM)
+        arrayc1 = intermediate 
+        arrayc2 = arrayc1.splice(intermediate.length/2,intermediate.length)
+        let translate1 = ([
+        1.0 , 0.0 , 0.0 , circle1x,
+        0.0 , 1.0 , 0.0 , circle1y,
+        0.0 , 0.0 , 1.0 , 0,
+        0.0 , 0.0 , 0.0 , 1.0
+        ])
+        let translate2 = ([
+        1.0 , 0.0 , 0.0 ,  circle2x,
+        0.0 , 1.0 , 0.0 ,  circle2y,
+        0.0 , 0.0 , 1.0 , 0,
+        0.0 , 0.0 , 0.0 , 1.0
+        ])
+        arrayc1 = applyMatrix (arrayc1,translate1)
+        arrayc2 = applyMatrix (arrayc2,translate2)
+        let translatedA = arrayc1.concat(arrayc2)
+        oldc_points[i][j] = translatedA
       }
+    }
+  }
+  if(tr.length>0){
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+        oldc_points[i][j] = applyMatrix (oldc_points[i][j],tr) 
+       }
+     }
     }
   }
   
@@ -839,6 +927,31 @@ function dragM(ev, gl, canvas, a_Position){
   previousXm = x
   previousYm = y
 }
+
+function shear(ev, gl, canvas, a_Position){
+  console.log("Y SHEAR") 
+  let shearY_matrix = ([
+  1.0 , 0.0 , 0.0 , 0.0,
+  0.5 , 1.0 , 0.0 , 0.0,
+  0.0 , 0.0 , 1.0 , 0.0,
+  0.0 , 0.0 , 0.0 , 1.0
+  ])
+  let count = 0 
+  for (var i =0 ; i < highlighted.length;i++){
+    if (highlighted[i]==1){
+    count = 1
+      for (var j = 0 ; j < oldc_points[i].length ; j++){
+           oldc_points[i][j] = applyMatrix (oldc_points[i][j],shearY_matrix)
+        }
+    }
+  }
+ if (count == 0 ){
+   console.log("please highlight a cylinder to SHEAR.")
+ }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
+}
 // Main function to deal with Rotating already existing cylinder points.
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 // same as drawcylinder, except this time works off of cylinder points rather than a polyline
@@ -925,6 +1038,7 @@ function drawcylinderC(gl,canvas,a_Position,cylinder_points,s,numcylinder){
 
 // expected input : c_point set (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
 // transformation matrix to apply (in the format of an length 16 array, each 4 items in the array representing a row in a matrix)
+// output : transformed points
 function applyMatrix (c_point,matrix){
   let newC = []
   for (let i = 0 ; i < c_point.length ; i+=3){
@@ -933,4 +1047,27 @@ function applyMatrix (c_point,matrix){
     newC.push( (c_point[i] * matrix [8]) + (c_point[i+1] * matrix [9]) + (c_point[i+2] * matrix [10]) +(1 * matrix [11]) )
   }
   return newC
+}
+
+function rotate_continuous(ev, gl, canvas, a_Position){
+  let now = Date.now()
+  let elapsed = now - last_time
+  last_time = now
+  let newAngle = rotDeg + (45 * elapsed) / 1000.0
+  rotDeg = newAngle
+  return newAngle %360
+}
+
+
+function loopRot(ev, gl, canvas, a_Position){
+  rotDeg = rotate_continuous(ev, gl, canvas, a_Position)
+  let now = Date.now()
+  let elapsed = now - last_time
+  if (elapsed < 2000)
+    return
+  last_time = now
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFEk_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
+  requestAnimationFrame(loopRot(ev,gl,canvas,a_Position),canvas)
 }
