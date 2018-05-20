@@ -67,7 +67,7 @@ let currentspecularR = 1
 let currentspecularG = 1
 let currentspecularB = 1
 
-let glossiness = 60.0
+let glossiness = 120.0
 
 //lab5 stuff
 let highlighted = []
@@ -175,17 +175,6 @@ function start(gl) {
   init.push(-0.5)
   oldlines.push(init)
 
-  //generalized cylinder 2
- // let init2 = []
- //  init2.push (-0.5)
- //  init2.push (-0.2)
- //  init2.push (-0.9)
- //  init2.push (-0.2)
- //  init2.push (-0.9)
- //  init2.push (-0.7)
- //  init2.push (-0.5)
- //  init2.push (-0.7)
- //  oldlines.push(init2)
 
   //generalized cylinder 3
    let init3 = []
@@ -198,21 +187,16 @@ function start(gl) {
    oldlines.push(init3)
 
 
-  //generalized cylinder 4
- //  let init4 = []
- //  init4.push (-0.4)
- //  init4.push (0.0)
- //  init4.push (-0.4)
- //  init4.push (0.2)
- //  oldlines.push(init4)
-
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
     radii.push(radius)
   }
-  // draw all finished cylinder 
-  drawAllCylinders(gl,canvas,a_Position)
+  // init all finished cylinder 
+  initAllCylinders(gl,canvas,a_Position)
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 
@@ -233,7 +217,7 @@ function click(ev, gl, canvas, a_Position) {
    previousY = yP
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position,x,y); }
+       canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position); }
      }
    }
    if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
@@ -265,14 +249,14 @@ function click(ev, gl, canvas, a_Position) {
    
  for (var i =0 ; i < highlighted.length;i++){
    if (highlighted[i]==1){
-     canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position,x,y); }
+     canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position); }
    }
  }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
  
   // draw all finished cylinder 
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 function rightclick (ev,gl,canvas,a_Position){   
@@ -286,7 +270,7 @@ function rightclick (ev,gl,canvas,a_Position){
   previousYr = y
   for (var i =0 ; i < highlighted.length;i++){
     if (highlighted[i]==1){
-      canvas.onmousemove = function(ev){ dragR(ev, gl, canvas, a_Position,x,y); }
+      canvas.onmousemove = function(ev){ dragR(ev, gl, canvas, a_Position); }
     }
   }
 }
@@ -324,71 +308,22 @@ function move (ev,gl,canvas,a_Position){
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
  
   // draw all finished cylinder 
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 
 }
 
-// used to draw polyline given any array of 2d vertices (x1,y1,x2,y2,xn,yn)
-
-function draw (gl,canvas,a_Position,vertices,linewidth){   
-   let vert = []     
-   let ind = []
-   let colors = []
-   let normie = []
-   for (var i =0; i<vertices.length;i+=2){
-    let point = []
-    vert.push(vertices[i]) 
-    vert.push(vertices[i+1]) 
-    vert.push(0)
-    point.push(vertices[i]) 
-    point.push(vertices[i+1]) 
-    point.push(0)
-    colors.push(1)
-    colors.push(1)
-    colors.push(0)
-    colors.push(1-(200/255))
-    // normalize point 
-    point = normalize(point)
-    normie.push(0) 
-    normie.push(0) 
-    normie.push(1) 
-  }
-    var n = initVertexBuffers(gl,vert,colors,normie,ind)
-    if (n<0){
-      console.log('failed to set vert info')
-      return
-    }
-    ind.push(0)
-    ind.push(1)
-    ind.push(2)
-    ind.push(0)
-    // Set the clear color and enable the depth test
-    gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl,canvas,-1.0)
-    //draw the linestrip!
-    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
-    var n = initVertexBuffers(gl,vert,colors,normie,ind)
-    if (n<0){
-      console.log('failed to set vert info')
-      return
-    }
-    // Set the clear color and enable the depth test
-    gl.enable(gl.DEPTH_TEST);
-    initAttrib(gl,canvas,-1.0)
-    //draw the linestrip!
-    gl.drawElements(gl.LINE_STRIP, n, gl.UNSIGNED_BYTE, 0);
-}
 
 // simple function to draw all cylinders based on all established line segments
 // vertices are storred in an array of arrays, where the index is the polyline  [(x,y),(x,y)],[(x,y),(x,y)] ]
-function drawAllCylinders(gl,canvas,a_Position){
+function initAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
+  oldc_points = []
   for (var i =0 ; i < oldlines.length ; i++){       
     previousFace = []
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      drawcylinder(gl,canvas,a_Position,radii[i],sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
+      initcylinder(gl,canvas,a_Position,radii[i],sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
      }
      oldc_points.push(oldc_line)
      oldc_line = []
@@ -396,14 +331,40 @@ function drawAllCylinders(gl,canvas,a_Position){
   }  
 }
 
+// simple function to draw all cylinders based on set of established cylinder_points (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
+// cylinders are storred in an array of arrays, where the index is the polyline (for example : oldc_points[0][1] = polyline 0 , cylinder 1)
+function drawAllCylinders(gl,canvas,a_Position){
+  // draw all finished cylinder 
+  oldc_points = []
+  for (var i =0 ; i < oldlines.length ; i++){       
+    previousFace = []
+    if (oldlines[i].length >= 4){
+     var loop = (((oldlines[i].length/2)-1)*2)
+     for (var j =0; j < loop;j+=2){    
+      initcylinder(gl,canvas,a_Position,radii[i],sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
+     }
+     oldc_points.push(oldc_line)
+     oldc_line = []
+    }
+  }  
+}
+
+function draw_All(gl,canvas,a_Position,all_cylinder_points){
+  for (var i =0 ; i < all_cylinder_points.length ; i++){       
+     if (all_cylinder_points[i].length >= 1){
+       for (var j =0; j < all_cylinder_points[i].length ; j++){
+         drawcylinderC(gl,canvas,a_Position,all_cylinder_points[i][j],radii[i],sides,i)
+       }
+     }
+  }  
+}
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
 // INPUT : x1,x2 y1,y2 : coordinates of line segment to draw on
 // r: value of radius
 // s: number of sides
 // colors : array [R,G,B,A] of colors
-//drawcylinder(gl,canvas,a_Position,radius,sides,0,0,0,1)
-function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
+function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   Acolor = 1 - (numpolyline/255)  
   //  ** DRAW CYLINDERS **
   //
@@ -417,7 +378,7 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   let deltaY = y2-y1 
   let degreeToRotate = Math.atan2(deltaY,deltaX)
   degreeToRotate = ((2* Math.PI)-degreeToRotate)
-  
+ 
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
   let unrotated = []
@@ -444,149 +405,72 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
    cylinder_points.push((unrotated[i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[i+1] * Math.cos(degreeToRotate)) + y2)
    cylinder_points.push(unrotated[i+2])
   }
-
  
-  //calculate face normals from cylinder points 
-  let cylindernormals = calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points) 
-  // n+1th normal (the point that comes after the last point is the same as the first point) 
-  cylindernormals.push(cylindernormals[0])
-  cylindernormals.push(cylindernormals[1])
-  cylindernormals.push(cylindernormals[2])
   cylinder_points = []
-  colors = []
-  
   cylinder_points.push((unrotated[0] * Math.cos(degreeToRotate)) + (unrotated[1] * Math.sin(degreeToRotate)) +  x1) 
   cylinder_points.push((unrotated[0] * (-1  * Math.sin(degreeToRotate))) + (unrotated[1] * Math.cos(degreeToRotate)) + y1)
   cylinder_points.push(unrotated[2])
-  normie.push((cylindernormals[0]+cylindernormals[27]) / 2)
-  normie.push((cylindernormals[1]+cylindernormals[28]) / 2)
-  normie.push((cylindernormals[2]+cylindernormals[29]) / 2)
-  colors.push(Rcolor)
-  colors.push(Gcolor)
-  colors.push(Bcolor)
-  colors.push(Acolor)
-
 
   for (var i = 1 ; i < s+1; i++){
    cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
    cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
    cylinder_points.push(unrotated[3*i+2])
-   normie.push((cylindernormals[3*i]+cylindernormals[3*(i-1)])/2) 
-   normie.push((cylindernormals[3*i+1]+cylindernormals[3*(i-1)+1])/2) 
-   normie.push((cylindernormals[3*i+2]+cylindernormals[3*(i-1)+2])/2) 
-   colors.push(Rcolor)
-   colors.push(Gcolor)
-   colors.push(Bcolor)
-   colors.push(Acolor)
   }
   // second circle
   cylinder_points.push((unrotated[0] * Math.cos(degreeToRotate)) + (unrotated[1] * Math.sin(degreeToRotate)) +  x2) 
   cylinder_points.push((unrotated[0] * (-1  * Math.sin(degreeToRotate))) + (unrotated[1] * Math.cos(degreeToRotate)) + y2)
   cylinder_points.push(unrotated[2])
-  normie.push((cylindernormals[0]+cylindernormals[27]) / 2)
-  normie.push((cylindernormals[1]+cylindernormals[28]) / 2)
-  normie.push((cylindernormals[2]+cylindernormals[29]) / 2)
-  colors.push(Rcolor)
-  colors.push(Gcolor)
-  colors.push(Bcolor)
-  colors.push(Acolor)
   for (var i = 1 ; i < s+1; i++){
    cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
    cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
    cylinder_points.push(unrotated[3*i+2])
-   normie.push((cylindernormals[3*i]+cylindernormals[3*(i-1)])/2) 
-   normie.push((cylindernormals[3*i+1]+cylindernormals[3*(i-1)+1])/2) 
-   normie.push((cylindernormals[3*i+2]+cylindernormals[3*(i-1)+2])/2) 
-   colors.push(Rcolor)
-   colors.push(Gcolor)
-   colors.push(Bcolor)
-   colors.push(Acolor)
-  }
-
-  // 2 points to represent the center
-   cylinder_points.push(x2) 
-   cylinder_points.push(y2)
-   cylinder_points.push(0)
-   colors.push(Rcolor)
-   colors.push(Gcolor)
-   colors.push(Bcolor)
-   colors.push(Acolor)
-
-  let len = cylinder_points.length/6
-  // cool traiangles
-  for (var i=0 ; i < s; i++){
-    indices.push(i)
-    indices.push(i+1) 
-    indices.push(len+i)
-    indices.push(i)
-  
-    indices.push(i+1)
-    indices.push(i)
-    indices.push(len+i+1)
-    indices.push(i+1)
-
-    indices.push(len+i+1)
-    indices.push(len+i) 
-    indices.push(i+1)
-    indices.push(len+i+1)
   }
   oldc_line.push(cylinder_points)
-  var n = initVertexBuffers(gl,cylinder_points,colors,normie,indices)
-  if (n<0){
-    console.log('failed to set vert info')
-    return
-  }
-  // Set the clear color and enable the depth test
-  gl.enable(gl.DEPTH_TEST);
-  initAttrib(gl,canvas,numpolyline)
+  drawcylinderC(gl,canvas,a_Position,cylinder_points,r,s,numpolyline)
 
-  //draw the cylinder!
-  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
-  
-
-  // ** DRAW CAP **
-  // (FOR SMOOTH EDGES) 
-  let cap_points = []
-  if (previousFace.length < 1){
-    // second circle
-    for (var i = 0 ; i < s+1 ; i++){
-     previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
-     previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
-     previousFace.push(unrotated[3*i+2])
-    }
-    return
-  } 
-  for (var j=0 ; j < previousFace.length ;j++){
-    cap_points.push(previousFace[j])    
-  }
-  previousFace = []
-  for (var i = 0 ; i < s+1 ; i++){
-   cap_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
-   cap_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
-   cap_points.push(unrotated[3*i+2])
-  }
-  for (var i = 0 ; i < s+1 ; i++){
-   previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
-   previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
-   previousFace.push(unrotated[3*i+2])
-  }
-  var capvertices = new Float32Array(cap_points)
-  let caplen = capvertices.length/14;
-  if (caplen === 0)
-   return
-  var n = initVertexBuffers(gl,capvertices,colors,normie,indices)
-  if (n<0){
-    console.log('failed to set vert info')
-    return
-  }
-  // Set the clear color and enable the depth test
-  gl.enable(gl.DEPTH_TEST);
-  initAttrib(gl,canvas,numpolyline)
-  //draw the cylinder!
-  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+//  // ** DRAW CAP **
+//  // (FOR SMOOTH EDGES) 
+//  let cap_points = []
+//  if (previousFace.length < 1){
+//    // second circle
+//    for (var i = 0 ; i < s+1 ; i++){
+//     previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+//     previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+//     previousFace.push(unrotated[3*i+2])
+//    }
+//    return
+//  } 
+//  for (var j=0 ; j < previousFace.length ;j++){
+//    cap_points.push(previousFace[j])    
+//  }
+//  previousFace = []
+//  for (var i = 0 ; i < s+1 ; i++){
+//   cap_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
+//   cap_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
+//   cap_points.push(unrotated[3*i+2])
+//  }
+//  for (var i = 0 ; i < s+1 ; i++){
+//   previousFace.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+//   previousFace.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+//   previousFace.push(unrotated[3*i+2])
+//  }
+//  var capvertices = new Float32Array(cap_points)
+//  let caplen = capvertices.length/14;
+//  if (caplen === 0)
+//   return
+//  var n = initVertexBuffers(gl,capvertices,colors,normie,indices)
+//  if (n<0){
+//    console.log('failed to set vert info')
+//    return
+//  }
+//  // Set the clear color and enable the depth test
+//  gl.enable(gl.DEPTH_TEST);
+//  initAttrib(gl,canvas,numpolyline)
+//  //draw the cylinder!
+//  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 }
 
-function calcnormals(gl,canvas,a_Position,r,s,x1,y1,x2,y2,cylinder_points){
+function calcnormals(gl,canvas,a_Position,s,cylinder_points){
   let cylindernormals = []
   for (var i = 0 ; i < s ; i++){
      // Find two lines (QR,QS) formed by 3 points (Q,R,S) on the surface 
@@ -685,51 +569,6 @@ function initArrayBuffer (gl, attribute, data, num, type) {
 }
 
 function initAttrib(gl,canvas,numpolyline) {
-  // Get the storage locations of uniform variables and so on
-  if (mode == 1 ){
-    var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
-    var u_fmode = gl.getUniformLocation(gl.program, 'u_fmode')
-    if (!u_vmode){
-      console.log ("failed to get vmode!")
-      return
-    }
-    if (!u_fmode){
-      console.log ("failed to get fmode!")
-      return
-    }
-    // Set the vertex /fragment shader mode
-    gl.uniform1f(u_vmode,parseFloat(1.0))
-    gl.uniform1f(u_fmode,parseFloat(1.0))
-    var u_DiffuseLight = gl.getUniformLocation(gl.program, 'u_DiffuseLight')
-    var u_LightPosition= gl.getUniformLocation(gl.program, 'u_LightPosition')
-    var u_AmbientLight = gl.getUniformLocation(gl.program, 'u_AmbientLight')
-    var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
-    var u_specularLightV = gl.getUniformLocation(gl.program, 'u_specularLightV')
-    var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
-    var u_exponentV = gl.getUniformLocation(gl.program, 'u_exponentV')
-    if (!u_DiffuseLight || !u_LightPosition || !u_AmbientLight || !u_SpecularLightF || !u_ViewPositionF || !u_exponentV || !u_specularLightV) { 
-      console.log('Failed to get the storage location');
-      console.log(u_DiffuseLight)
-      console.log(u_LightPosition)
-      console.log(u_AmbientLight)
-      console.log(u_SpecularLightF)
-      console.log(u_ViewPositionF)
-      console.log(u_exponentV)
-      console.log(u_specularLightV)
-      return;
-    }
-    // Set the light color (white)
-    gl.uniform3f(u_DiffuseLight, 1.0, 1.0, 1.0);
-    // Set the light Position (in the world coordinate)
-    gl.uniform3f(u_LightPosition, light1X, light1Y, light1Z);
-    // Set the ambient light
-    gl.uniform3f(u_AmbientLight, ambientR, ambientG, ambientB)
-    // set the specular light
-    gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
-    gl.uniform3f(u_specularLightV, currentspecularR, currentspecularG, currentspecularB)
-    gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
-    gl.uniform1f(u_exponentV,glossiness)
-  }
   if (mode >= 2){
     var u_vmode = gl.getUniformLocation(gl.program, 'u_vmode')
     var u_fmode = gl.getUniformLocation(gl.program, 'u_fmode')
@@ -887,7 +726,8 @@ function rotateY (ev,gl,canvas,a_Position){
   light1Y = newy
   light1Z = newz 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  // draw all finished cylinder 
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 function shift (ev,gl,canvas,a_Position){   
@@ -899,9 +739,9 @@ function shift (ev,gl,canvas,a_Position){
      }
     } 
   }
-  // Clear <canvas>
+  // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 function shiftdown(ev,gl,canvas,a_Position){   
@@ -913,13 +753,15 @@ function shiftdown(ev,gl,canvas,a_Position){
      }
     } 
   }
-  // Clear <canvas>
+  // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 function check(gl, canvas, a_Position,x,y) {
-  drawAllCylinders(gl,canvas,a_Position)
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points)
   var pixels = new Uint8Array(4); // Array for storing the pixel value
   gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
   return pixels 
@@ -937,8 +779,9 @@ function rotateCam(ev, gl, canvas, a_Position){
   centerX = centerX * -1
   centerY = centerY * -1
   centerZ = centerZ * -1
+  // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 function adjustNear(ev, gl, canvas, a_Position,nearplane){
   orthomode = -1
@@ -947,8 +790,9 @@ function adjustNear(ev, gl, canvas, a_Position,nearplane){
     textortho.innerHTML = "PROJECTION"
   }
   nP=parseInt(nearplane.value)
+  // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 function toggleortho(ev, gl, canvas, a_Position){
@@ -958,12 +802,13 @@ function toggleortho(ev, gl, canvas, a_Position){
   if (orthomode == -1){
     textortho.innerHTML = "PROJECTION"
   }
+  // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
-//  changing the added x and y values after the initial rotation (effectively translating the cylinder)
-function drag(ev, gl, canvas, a_Position,x,y){
+// applies a translation matrix  
+function drag(ev, gl, canvas, a_Position){
    // if right click 
    if (ev.button == 2){
      console.log ("for left clixx only")
@@ -976,20 +821,23 @@ function drag(ev, gl, canvas, a_Position,x,y){
    let yP = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
    let deltaX = xP - previousX
    let deltaY = yP - previousY
-   // draw all finished cylinder 
-   for (var i =0 ; i < oldlines.length ; i++){       
-     if (oldlines[i].length >= 4){
-      for (var j =0; j < oldlines[i].length;j+=2){    
-        if (highlighted[i] == 1){
-          oldlines[i][j] = oldlines[i][j] + deltaX 
-          oldlines[i][j+1] = oldlines[i][j+1] + deltaY 
-        }
-      }
-     } 
+   let deltaZ = 0
+   // push translation matrix
+   let translation = ([
+    1.0 , 0.0 , 0.0 , deltaX,
+    0.0 , 1.0 , 0.0 , deltaY,
+    0.0 , 0.0 , 1.0 , deltaZ,
+    0.0 , 0.0 , 0.0 , 1.0
+    ])
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+     for (var j = 0 ; j < oldc_points[i].length ; j++){
+          oldc_points[i][j] = applyMatrix (oldc_points[i][j],translation)
+       }
+     }
    }
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+   draw_All(gl,canvas,a_Position,oldc_points)
    previousX = xP
    previousY = yP
 }
@@ -1019,12 +867,13 @@ function scaleradius(ev, gl, canvas, a_Position){
      }
    }
   }
+  // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
+  draw_All(gl,canvas,a_Position,oldc_points)
 }
 
 //  changing the added x and y values after the initial rotation (effectively translating the cylinder)
-function dragR(ev, gl, canvas, a_Position,x,y){
+function dragR(ev, gl, canvas, a_Position){
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   var rect = ev.target.getBoundingClientRect() ;
@@ -1032,19 +881,102 @@ function dragR(ev, gl, canvas, a_Position,x,y){
   let yP = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   let deltaXr = xP - previousXr
   let deltaYr = yP - previousYr
-  for (var i =0 ; i < oldlines.length ; i++){       
-    if (oldlines[i].length >= 4){
-     for (var j =0; j < oldlines[i].length;j+=2){    
-       if (highlighted[i] == 1){
-         oldlines[i][j] = oldlines[i][j] + deltaXr 
-         oldlines[i][j+1] = oldlines[i][j+1] + deltaYr 
-       }
-     }
-    } 
-  }
-  // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  drawAllCylinders(gl,canvas,a_Position)
   previousXr = xP
   previousYr = yP
+  console.log(oldc_points)
+}
+
+// Main function to deal with Rotating already existing cylinder points.
+// Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
+// same as drawcylinder, except this time works off of cylinder points rather than a polyline
+// r = radius 
+// s = sides
+// expects an input of n cylinder points (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
+// initAllcylinders should be called before calling this
+function drawcylinderC(gl,canvas,a_Position,cylinder_points,r,s,numcylinder){
+  Acolor = 1 - (numcylinder/255)  
+  let convert = Math.PI/180 
+  let numsides = 360/s
+  let colors = []
+  let normie = []
+  let indices = []
+  let cylindernormals = calcnormals(gl,canvas,a_Position,s,cylinder_points) 
+  
+  // the 1st point
+  normie.push((cylindernormals[0]+cylindernormals[27]) / 2)
+  normie.push((cylindernormals[1]+cylindernormals[28]) / 2)
+  normie.push((cylindernormals[2]+cylindernormals[29]) / 2)
+  colors.push(Rcolor)
+  colors.push(Gcolor)
+  colors.push(Bcolor)
+  colors.push(Acolor)
+  // the 2nd -> n+1th point 
+  // the n+1th point is the same as the first point, added for easier convenience of drawing
+  for (var i = 1 ; i < s+1; i++){
+   normie.push((cylindernormals[3*i]+cylindernormals[3*(i-1)])/2) 
+   normie.push((cylindernormals[3*i+1]+cylindernormals[3*(i-1)+1])/2) 
+   normie.push((cylindernormals[3*i+2]+cylindernormals[3*(i-1)+2])/2) 
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+   colors.push(Acolor)
+  }
+  // same thing, except for the 2nd circle 
+  normie.push((cylindernormals[0]+cylindernormals[27]) / 2)
+  normie.push((cylindernormals[1]+cylindernormals[28]) / 2)
+  normie.push((cylindernormals[2]+cylindernormals[29]) / 2)
+  colors.push(Rcolor)
+  colors.push(Gcolor)
+  colors.push(Bcolor)
+  colors.push(Acolor)
+  for (var i = 1 ; i < s+1; i++){
+   normie.push((cylindernormals[3*i]+cylindernormals[3*(i-1)])/2) 
+   normie.push((cylindernormals[3*i+1]+cylindernormals[3*(i-1)+1])/2) 
+   normie.push((cylindernormals[3*i+2]+cylindernormals[3*(i-1)+2])/2) 
+   colors.push(Rcolor)
+   colors.push(Gcolor)
+   colors.push(Bcolor)
+   colors.push(Acolor)
+  }
+  let len = cylinder_points.length/6
+  // cool traiangles
+  for (var i=0 ; i < s; i++){
+    indices.push(i)
+    indices.push(i+1) 
+    indices.push(len+i)
+    indices.push(i)
+  
+    indices.push(i+1)
+    indices.push(i)
+    indices.push(len+i+1)
+    indices.push(i+1)
+
+    indices.push(len+i+1)
+    indices.push(len+i) 
+    indices.push(i+1)
+    indices.push(len+i+1)
+  }
+  var n = initVertexBuffers(gl,cylinder_points,colors,normie,indices)
+  if (n<0){
+    console.log('failed to set vert info')
+    return
+  }
+  // Set the clear color and enable the depth test
+  gl.enable(gl.DEPTH_TEST);
+  initAttrib(gl,canvas,numcylinder)
+
+  //draw the cylinder!
+  gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+}
+
+// expected input : c_point set (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
+// transformation matrix to apply (in the format of an length 16 array, each 4 items in the array representing a row in a matrix)
+function applyMatrix (c_point,matrix){
+  let newC = []
+  for (let i = 0 ; i < c_point.length ; i+=3){
+    newC.push( (c_point[i] * matrix [0]) + (c_point[i+1] * matrix [1]) + (c_point[i+2] * matrix [2]) +(1 * matrix [3]) )
+    newC.push( (c_point[i] * matrix [4]) + (c_point[i+1] * matrix [5]) + (c_point[i+2] * matrix [6]) +(1 * matrix [7]) )
+    newC.push( (c_point[i] * matrix [8]) + (c_point[i+1] * matrix [9]) + (c_point[i+2] * matrix [10]) +(1 * matrix [11]) )
+  }
+  return newC
 }
