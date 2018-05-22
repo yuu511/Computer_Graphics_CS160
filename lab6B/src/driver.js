@@ -63,7 +63,7 @@ let previousXm = null
 let previousYm = null 
 let g_last = Date.now()
 let sc = []
-let tr = []
+let transl = []
 let roX = []
 let roY = []
 let CUBEMODE = 0
@@ -146,14 +146,13 @@ function start(gl) {
  // init2.push (-0.1)
  // init2.push (0.9)
   oldlines.push(init2)
-  let temp = []
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
-    tr.push(temp) 
     roX.push(0)
     roY.push(0)
     sc.push(0)
+    transl.push([])
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
@@ -436,76 +435,60 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   0.0 , 0.0 , 1.0 , 0.0,
   0.0 , 0.0 , 0.0 , 1.0
   ])
-
+  let identitym = new Matrix4().setIdentity() 
+  
+  
   //scale
   for (var s=0 ; s < sc.length ; s++){
     if (sc[s] == 0){
-      scMatrices.push(identity) 
+      scMatrices.push(identitym) 
     } 
     else {
-      let scaleM = ([
-      sc[s] , 0.0 , 0.0 , 0,
-      0.0 , sc[s] , 0.0 , 0,
-      0.0 , 0.0 , sc[s] , 0,
-      0.0 , 0.0 , 0.0 , 1.0
-      ])
+      let scaleM = new Matrix4().setScale(sc[s],sc[s],sc[s])
       scMatrices.push(scaleM)
     }
-  }
- 
+  } 
   // rotate
   for (var j=0 ; j < roX.length ; j++){
     if(roX[j] == 0){
-      roXMatrices.push(identity)
+      roXMatrices.push(identitym)
     }
     else {
-      let rotateX = ([
-       1.0 , 0.0 ,            0.0 ,                    0.0,
-       0.0 , Math.cos(roX[j]), (-1 *Math.sin(roX[j])),  0.0,
-       0.0 , Math.sin(roX[j]), Math.cos(roX[j]),         0.0,
-       0.0 , 0.0 ,            0.0 ,                    1.0
-       ])
+      let rotateX = new Matrix4().rotate(roX[j],1,0,0)
       roXMatrices.push(rotateX)
     }
   }
+
   for (var k=0 ; k < roY.length ; k++){
     if(roY[k] == 0){
-      roYMatrices.push(identity)
+      roYMatrices.push(identitym)
     }
     else {
-      let rotateY = ([
-       Math.cos(roY[k]),        0.0, Math.sin(roY[k]), 0.0,
-       0.0,                    1.0, 0.0,             0.0,
-       (-1 * Math.sin(roY[k])), 0.0, Math.cos(roY[k]), 0.0,
-       0.0,                    0.0, 0.0,             1.0
-       ])
+      let rotateY = new Matrix4().rotate(roY[k],0,1,0)
       roYMatrices.push(rotateY)
     }
   }
-  // translate
-  for (var i=0 ; i < tr.length ; i++){
-    if (tr[i].length == 0){
-      trMatrices.push(identity)
-    } 
-    else {
-      trMatrices.push(tr[i])
-    } 
-  }
 
+  // translate 
+  for (var i=0; i < transl.length; i++){
+    if (transl[i].length < 1){
+      trMatrices.push(identitym)
+    }
+    else{
+      let toTr = new Matrix4().translate(transl[i][0],transl[i][1],transl[i][2])
+      trMatrices.push(toTr)
+    }
+  } 
   // init rotate angle along z 
   for (var i = 0 ; i < all_old_angles.length ; i++){
     let t = []
     for (var j = 0 ; j < all_old_angles[i].length ; j++){
-      let rotateZ = ([
-      Math.cos(all_old_angles[i][j]), (-1 * Math.sin(all_old_angles[i][j])),  0.0, 0.0,
-      Math.sin(all_old_angles[i][j]), Math.cos(all_old_angles[i][j]),         0.0, 0.0,
-      0.0,             0.0,                     1.0, 0.0,
-      0.0,             0.0,                     0.0, 1.0
-      ])
+      let rotateZ = new Matrix4().rotate(all_old_angles[i][j],0,0,1)
       t.push(rotateZ)
     }
     old_rotate.push(t)
   }
+ 
 
   // init  old translate
   // 3d array : (polyline) (cylinder #) (1st or second circle)
@@ -513,28 +496,21 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
     let allc_o =[]
     for (var j =0; j < oldlines[i].length-2;j+=2){    
       let bothc_o = []
-      let circle1t = ([
-       1.0 , 0.0 , 0.0 , oldlines[i][j],
-       0.0 , 1.0 , 0.0 , oldlines[i][j+1],
-       0.0 , 0.0 , 1.0 , 0.0,
-       0.0 , 0.0 , 0.0 , 1.0
-      ])
-      let circle2t = ([
-       1.0 , 0.0 , 0.0 , oldlines[i][j+2],
-       0.0 , 1.0 , 0.0 , oldlines[i][j+3],
-       0.0 , 0.0 , 1.0 , 0.0,
-       0.0 , 0.0 , 0.0 , 1.0
-      ])
+      let circle1t = new Matrix4().translate(oldlines[i][j],oldlines[i][j+1],0.0)
+      let circle2t = new Matrix4().translate(oldlines[i][j+2],oldlines[i][j+3],0.0)
       bothc_o.push(circle1t)
       bothc_o.push(circle2t)
       allc_o.push(bothc_o)
     }
     old_translate.push(allc_o)
   }  
+  // let scMatrices = []
+  // let trMatrices = []
+  // let roXMatrices = []
+  // let roYMatrices = []
+  // let old_rotate = []
+  // let old_translate = []
 
-  console.log(old_translate[0][0][0])
-  console.log(convertM4(old_translate[0][0][0]))
-  console.log(transpose(convertM4(old_translate[0][0][0])))
   // init transformation
   // copy the original circle rotated around x (center 0,0 , rot x)
   let base = JSON.parse(JSON.stringify(reference))
@@ -564,11 +540,30 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
 
      // let full = circle_one.concat(circle_two)
      // c_p[i][j] = full
+     let circle= new Matrix4()
+         circle.set(scMatrices[i])
+         circle = new Matrix4(circle.concat(old_rotate[i][j]))
+         circle = new Matrix4(circle.concat(roXMatrices[i]))
+         circle = new Matrix4(circle.concat(roYMatrices[i]))
+         let C1 = new Matrix4()
+         C1.set(trMatrices[i])
+         C1 = new Matrix4(C1.concat(old_translate[i][j][0]))
+         C1 = new Matrix4(C1.concat(circle))
+         let C2 = new Matrix4()
+         C2.set(trMatrices[i])
+         C2 = new Matrix4(C2.concat(old_translate[i][j][1]))
+         C2 = new Matrix4(C2.concat(circle))
+         // console.log(C2.elements[0])
+         let circle_one = applyMatrix(base,C1)
+         let circle_two = applyMatrix(base,C2)
+         console.log(circle_one)
+         let full = circle_one.concat(circle_two)
+         c_p[i][j] = full
     }
   }   
-
+   console.log(c_p) 
   // apply the changes
-  // oldc_points = c_p
+   oldc_points = c_p
 }
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
@@ -591,7 +586,7 @@ function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   let degreeToRotate = Math.atan2(deltaY,deltaX)
   degreeToRotate = ((2* Math.PI)-degreeToRotate)
  
-  individual_angles.push(degreeToRotate)
+  individual_angles.push((degreeToRotate * 180) / Math.PI)
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
   let unrotated = []
@@ -922,26 +917,23 @@ function drag(ev, gl, canvas, a_Position){
    let deltaX = xP - previousX
    let deltaY = yP - previousY
    let deltaZ = 0
-   let translation = ([
-    1.0 , 0.0 , 0.0 , deltaX,
-    0.0 , 1.0 , 0.0 , deltaY,
-    0.0 , 0.0 , 1.0 , deltaZ,
-    0.0 , 0.0 , 0.0 , 1.0
-    ])
+   let tm = []
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (tr[i].length < 1){
-         tr[i] = translation
+       if (transl[i].length < 1){
+         transl[i].push(deltaX)
+         transl[i].push(deltaY)
+         transl[i].push(deltaZ)
        }
        else {
-         tr[i][3] = tr[i][3] + translation [3]
-         tr[i][7] = tr[i][7] + translation [7]
-         tr[i][11] = tr[i][11] + translation [11]
+         transl[i][0] = transl[i][0] + deltaX
+         transl[i][1] = transl[i][1] + deltaY
+         transl[i][2] = transl[i][2] + deltaZ
        }
      }
    }
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
    previousX = xP
    previousY = yP
 }
@@ -971,13 +963,6 @@ function scaleradius(ev, gl, canvas, a_Position){
   }
   for (var i =0 ; i < highlighted.length;i++){
     if (highlighted[i]==1){
-      let scaleM = ([
-      scale , 0.0 , 0.0 , 0,
-      0.0 , scale , 0.0 , 0,
-      0.0 , 0.0 , scale , 0,
-      0.0 , 0.0 , 0.0 , 1.0
-      ])
-        console.log(sc[i])
       if (sc[i] == 0){
         sc[i] = scale
       }
@@ -1002,7 +987,7 @@ function dragR(ev, gl, canvas, a_Position){
   let deltaXr = x - previousXr
   let deltaYr = y - previousYr  
   let scalar = 1
-  let angle = (Math.PI / 4)
+  let angle = 45
   // rotate X
   if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
    // push translation matrix
@@ -1222,10 +1207,24 @@ function drawcylinderC(gl,canvas,a_Position,cylinder_points,cylindernormals,s,nu
 // output : transformed points
 function applyMatrix (c_point,matrix){
   let newC = []
+  // for (let i = 0 ; i < c_point.length ; i+=3){
+  //   newC.push( (c_point[i] * matrix.elements[0]) + (c_point[i+1] * matrix.elements[1]) + (c_point[i+2] * matrix.elements[2]) +(1 * matrix.elements[3]) )
+  //   newC.push( (c_point[i] * matrix.elements[4]) + (c_point[i+1] * matrix.elements[5]) + (c_point[i+2] * matrix.elements[6]) +(1 * matrix.elements[7]) )
+  //   newC.push( (c_point[i] * matrix.elements[8]) + (c_point[i+1] * matrix.elements[9]) + (c_point[i+2] * matrix.elements[10]) +(1 * matrix.elements[11]) )
+  // }
+    let t = []  
   for (let i = 0 ; i < c_point.length ; i+=3){
-    newC.push( (c_point[i] * matrix [0]) + (c_point[i+1] * matrix [1]) + (c_point[i+2] * matrix [2]) +(1 * matrix [3]) )
-    newC.push( (c_point[i] * matrix [4]) + (c_point[i+1] * matrix [5]) + (c_point[i+2] * matrix [6]) +(1 * matrix [7]) )
-    newC.push( (c_point[i] * matrix [8]) + (c_point[i+1] * matrix [9]) + (c_point[i+2] * matrix [10]) +(1 * matrix [11]) )
+    t=[]
+    t.push(c_point[i])
+    t.push(c_point[i+1])
+    t.push(c_point[i+2])
+    t.push(1.0)
+    let vec = new Float32Array(t)
+    vec = new Vector4(t)
+    let topush = matrix.multiplyVector4(vec) 
+    newC.push(topush.elements[0])
+    newC.push(topush.elements[1])
+    newC.push(topush.elements[2])
   }
   return newC
 }
@@ -1281,23 +1280,4 @@ for (var i =0 ; i < highlighted.length;i++){
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-}
-// convert 4x4 matrix so we can actually use math.js lol
-function convertM4(M){
-  let temp = []
-  let MC = []
-  for (var i =0 ; i < M.length ; i+=4){
-    temp.push(M[i]) 
-    temp.push(M[i+1]) 
-    temp.push(M[i+2]) 
-    temp.push(M[i+3]) 
-    MC.push(temp)
-    temp = []
-  }
-  return MC
-}
-
-function transpose(a){
-  a => a[0].map((col, c) => a.map((row, r) => a[r][c]))
-  return a
 }
