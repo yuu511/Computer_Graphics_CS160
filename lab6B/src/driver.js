@@ -129,12 +129,12 @@ function start(gl) {
    init.push(0)
    init.push(-0.5)
    init.push(0)
- //  init.push(-0.5)
- //  init.push(-1)
- //  init.push(0.5)
- //  init.push(-1)
- //  init.push(0.4)
- //  init.push(-0.5)
+   init.push(-0.5)
+   init.push(-1)
+   init.push(0.5)
+   init.push(-1)
+   init.push(0.4)
+   init.push(-0.5)
    oldlines.push(init)
 
   //generalized cylinder 2
@@ -149,8 +149,8 @@ function start(gl) {
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
-    roX.push(0)
-    roY.push(0)
+    roX.push([0.0,0.0])
+    roY.push([0.0,0.0])
     sc.push(0)
     transl.push([])
   }
@@ -450,21 +450,20 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   } 
   // rotate
   for (var j=0 ; j < roX.length ; j++){
-    if(roX[j] == 0){
+    if(roX[j][0] == 0){
       roXMatrices.push(identitym)
     }
     else {
-      let rotateX = new Matrix4().rotate(roX[j],1,0,0)
+      let rotateX = new Matrix4().rotate(roX[j][0],1,0,0)
       roXMatrices.push(rotateX)
     }
   }
-
   for (var k=0 ; k < roY.length ; k++){
-    if(roY[k] == 0){
+    if(roY[k][1] == 0){
       roYMatrices.push(identitym)
     }
     else {
-      let rotateY = new Matrix4().rotate(roY[k],0,1,0)
+      let rotateY = new Matrix4().rotate(roY[k][1],0,1,0)
       roYMatrices.push(rotateY)
     }
   }
@@ -519,51 +518,32 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let initRotate = []
   let test = []
   for (var i = 0 ; i < cylinder_points.length ; i++){
-    for (var j = 0 ; j < cylinder_points[i].length ; j++){
-     // let circle_one = applyMatrix(base,scMatrices[i])
-     // let circle_two = applyMatrix(base,scMatrices[i])
-
-     // circle_one = applyMatrix(circle_one,old_rotate[i][j])
-     // circle_two = applyMatrix(circle_two,old_rotate[i][j])
-
-     // circle_one = applyMatrix(circle_one,roXMatrices[i])
-     // circle_two = applyMatrix(circle_two,roXMatrices[i])
-
-     // circle_one = applyMatrix(circle_one,roYMatrices[i])
-     // circle_two = applyMatrix(circle_two,roYMatrices[i])
-
-     // circle_one = applyMatrix(circle_one,old_translate[i][j][0])
-     // circle_two = applyMatrix(circle_two,old_translate[i][j][1])
-
-     // circle_one = applyMatrix(circle_one,trMatrices[i])
-     // circle_two = applyMatrix(circle_two,trMatrices[i])
-
-     // let full = circle_one.concat(circle_two)
-     // c_p[i][j] = full
+    for (var j = 0 ; j < cylinder_points[i].length  ; j++){
      let circle= new Matrix4()
          circle.set(scMatrices[i])
+         //circle = new Matrix4(circle.concat(roXMatrices[i]))
+         //circle = new Matrix4(circle.concat(roYMatrices[i]))
          circle = new Matrix4(circle.concat(old_rotate[i][j]))
-         circle = new Matrix4(circle.concat(roXMatrices[i]))
-         circle = new Matrix4(circle.concat(roYMatrices[i]))
          let C1 = new Matrix4()
          C1.set(trMatrices[i])
+         C1 = new Matrix4(C1.concat(roXMatrices[i]))
+         C1 = new Matrix4(C1.concat(roYMatrices[i]))
          C1 = new Matrix4(C1.concat(old_translate[i][j][0]))
          C1 = new Matrix4(C1.concat(circle))
          let C2 = new Matrix4()
          C2.set(trMatrices[i])
+         C2 = new Matrix4(C2.concat(roXMatrices[i]))
+         C2 = new Matrix4(C2.concat(roYMatrices[i]))
          C2 = new Matrix4(C2.concat(old_translate[i][j][1]))
          C2 = new Matrix4(C2.concat(circle))
-         // console.log(C2.elements[0])
          let circle_one = applyMatrix(base,C1)
          let circle_two = applyMatrix(base,C2)
-         console.log(circle_one)
          let full = circle_one.concat(circle_two)
          c_p[i][j] = full
     }
   }   
-   console.log(c_p) 
   // apply the changes
-   oldc_points = c_p
+  oldc_points = c_p
 }
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
@@ -1002,17 +982,18 @@ function dragR(ev, gl, canvas, a_Position){
     ])
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (roX[i].length < 1){
-         roX[i] = angle
+       if (roX[i][0] == 0){
+         roX[i][0] = angle
        }
        else {
-         roX[i] = angle + roX[i]
+         roX[i][0] = angle + roX[i][0]
        }
      }
     }
   }
   // rotate Y
   else if (Math.abs(deltaXr) >  Math.abs(deltaYr)){ 
+       console.log(roY)
    // push translation matrix
    if (deltaYr > 0)
      scalar = -1
@@ -1025,11 +1006,11 @@ function dragR(ev, gl, canvas, a_Position){
     ])
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (roY[i].length < 1){
-         roY[i] = angle
+       if (roY[i][1] == 0){
+         roY[i][1] = angle
        }
        else {
-         roY[i] = angle + roY[i]
+         roY[i][1] = angle + roY[i][1]
        }
      }
    }
