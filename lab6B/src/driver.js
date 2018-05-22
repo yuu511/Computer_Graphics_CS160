@@ -34,7 +34,7 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 5
+let eyeZ = 6
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -421,7 +421,6 @@ function draw_All(gl,canvas,a_Position,all_cylinder_points,all_cylinder_normals)
 }
 
 // performs all of the appropriate translations
-// also translates the normals
 function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let scMatrices = []
   let trMatrices = []
@@ -515,35 +514,37 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let base = JSON.parse(JSON.stringify(reference))
   // copy the current cylinder_points
   let c_p = JSON.parse(JSON.stringify(cylinder_points))
+  let c_n = JSON.parse(JSON.stringify(cylinder_normals))
   let initRotate = []
   let test = []
   for (var i = 0 ; i < cylinder_points.length ; i++){
     for (var j = 0 ; j < cylinder_points[i].length  ; j++){
-     let circle= new Matrix4()
-         circle.set(scMatrices[i])
-         //circle = new Matrix4(circle.concat(roXMatrices[i]))
-         //circle = new Matrix4(circle.concat(roYMatrices[i]))
-         circle = new Matrix4(circle.concat(old_rotate[i][j]))
-         let C1 = new Matrix4()
-         C1.set(trMatrices[i])
-         C1 = new Matrix4(C1.concat(roXMatrices[i]))
-         C1 = new Matrix4(C1.concat(roYMatrices[i]))
-         C1 = new Matrix4(C1.concat(old_translate[i][j][0]))
-         C1 = new Matrix4(C1.concat(circle))
-         let C2 = new Matrix4()
-         C2.set(trMatrices[i])
-         C2 = new Matrix4(C2.concat(roXMatrices[i]))
-         C2 = new Matrix4(C2.concat(roYMatrices[i]))
-         C2 = new Matrix4(C2.concat(old_translate[i][j][1]))
-         C2 = new Matrix4(C2.concat(circle))
-         let circle_one = applyMatrix(base,C1)
-         let circle_two = applyMatrix(base,C2)
-         let full = circle_one.concat(circle_two)
-         c_p[i][j] = full
+      let circle= new Matrix4()
+      circle.set(scMatrices[i])
+      circle = new Matrix4(circle.concat(old_rotate[i][j]))
+      let C1 = new Matrix4()
+      C1.set(trMatrices[i])
+      C1 = new Matrix4(C1.concat(roXMatrices[i]))
+      C1 = new Matrix4(C1.concat(roYMatrices[i]))
+      C1 = new Matrix4(C1.concat(old_translate[i][j][0]))
+      C1 = new Matrix4(C1.concat(circle))
+      let C2 = new Matrix4()
+      C2.set(trMatrices[i])
+      C2 = new Matrix4(C2.concat(roXMatrices[i]))
+      C2 = new Matrix4(C2.concat(roYMatrices[i]))
+      C2 = new Matrix4(C2.concat(old_translate[i][j][1]))
+      C2 = new Matrix4(C2.concat(circle))
+      let circle_one = applyMatrix(base,C1)
+      let circle_two = applyMatrix(base,C2)
+      let full = circle_one.concat(circle_two)
+      c_p[i][j] = full
+      let cylindernormals = calcnormals(gl,canvas,a_Position,sides,c_p[i][j]) 
+      c_n[i][j] = cylindernormals
     }
   }   
   // apply the changes
   oldc_points = c_p
+  oldc_normals = c_n
 }
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
@@ -566,7 +567,7 @@ function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   let degreeToRotate = Math.atan2(deltaY,deltaX)
   degreeToRotate = ((2* Math.PI)-degreeToRotate)
  
-  individual_angles.push((degreeToRotate * 180) / Math.PI)
+  individual_angles.push(-1 * ((degreeToRotate * 180) / Math.PI))
   // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
   // by the angle we found previously so the circle fits around the axis formed by the line segment
   let unrotated = []
@@ -981,6 +982,7 @@ function dragR(ev, gl, canvas, a_Position){
     0.0 , 0.0 ,            0.0 ,                    1.0
     ])
    for (var i =0 ; i < highlighted.length;i++){
+     console.log("rotate X!")
      if (highlighted[i]==1){
        if (roX[i][0] == 0){
          roX[i][0] = angle
@@ -993,8 +995,8 @@ function dragR(ev, gl, canvas, a_Position){
   }
   // rotate Y
   else if (Math.abs(deltaXr) >  Math.abs(deltaYr)){ 
-       console.log(roY)
    // push translation matrix
+     console.log("rotate Y!")
    if (deltaYr > 0)
      scalar = -1
    angle = scalar * angle
