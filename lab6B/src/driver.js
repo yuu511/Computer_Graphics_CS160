@@ -546,22 +546,10 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       let circle_two = applyMatrix(base,C2,1)
       let full = circle_one.concat(circle_two)
       c_p[i][j] = full
-      
-      let m2 = new Matrix4()
-      m2.set(scMatrices[i])
-      C2 = new Matrix4(C2.concat(roXMatrices[i]))
-      C2 = new Matrix4(C2.concat(roYMatrices[i]))
-      C2 = new Matrix4(C2.concat(trMatrices[i]))
-      let inverse = new Matrix4(m2.invert())
-      let transpose = new Matrix4(inverse.transpose())
-      let cylindernormals = applyMatrix(c_n[i][j],inverse,0.0)
-      c_n[i][j] = cylindernormals
-       
     }
   }   
   // apply the changes
   oldc_points = c_p
-  oldc_normals = c_n
 }
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
