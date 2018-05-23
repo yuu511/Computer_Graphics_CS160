@@ -29,7 +29,7 @@ let currentspecularG = 1
 let currentspecularB = 1
 let glossiness = 100.0
 
-//lab5 stuff (projection + selection)
+// lab5 stuff (projection + selection)
 let highlighted = []
 let thinking = []
 let eyeX = 0
@@ -42,7 +42,7 @@ let rotDeg = 0
 let rotX = 0
 let rotY= 0
 let rotZ = 1
-let nP = 3
+let nP = 5
 let orthomode = -1
 let ANGLE_STEP = 0.0
 
@@ -72,6 +72,8 @@ let reference = []
 let tickB = 0
 let all_old_angles = []
 let individual_angles = []
+let twst = []
+let shr = []
 
 // called when page is loaded
 function main() {
@@ -129,12 +131,6 @@ function start(gl) {
    init.push(0)
    init.push(-0.5)
    init.push(0)
-   init.push(-0.5)
-   init.push(-1)
-   init.push(0.5)
-   init.push(-1)
-   init.push(0.4)
-   init.push(-0.5)
    oldlines.push(init)
 
   //generalized cylinder 2
@@ -153,6 +149,8 @@ function start(gl) {
     roY.push([0.0,0.0])
     sc.push(0)
     transl.push([])
+    twst.push(0.0)
+    shr.push(0.0)
   }
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
@@ -235,7 +233,7 @@ function keypress(ev, gl, canvas, a_Position){
       if (FALLDOWN == -1){
         eyeX = 0
         eyeY = 0
-        eyeZ = 5
+        eyeZ = 6
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
       }
@@ -428,12 +426,6 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let roYMatrices = []
   let old_rotate = []
   let old_translate = []
-  let identity = ([
-  1.0 , 0.0 , 0.0 , 0.0,
-  0.0 , 1.0 , 0.0 , 0.0,
-  0.0 , 0.0 , 1.0 , 0.0,
-  0.0 , 0.0 , 0.0 , 1.0
-  ])
   let identitym = new Matrix4().setIdentity() 
   
   
@@ -477,7 +469,7 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       trMatrices.push(toTr)
     }
   } 
-  // init rotate angle along z 
+  // initial rotate angle along z 
   for (var i = 0 ; i < all_old_angles.length ; i++){
     let t = []
     for (var j = 0 ; j < all_old_angles[i].length ; j++){
@@ -488,7 +480,7 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   }
  
 
-  // init  old translate
+  // initial old translate
   // 3d array : (polyline) (cylinder #) (1st or second circle)
   for (var i =0 ; i < oldlines.length ; i++){       
     let allc_o =[]
@@ -502,6 +494,21 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
     }
     old_translate.push(allc_o)
   }  
+  
+  //    //twisting ( rotate 1 circle more than the other)
+  //    if (twst[i]!=0){
+  //      let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
+  //      C1 = new Matrix4(C1.concat(twistM))
+  //    }
+
+//      //shearing
+//      if (shr[i]!=0){
+//        let shrM = new Matrix4()
+//        shrM.setIdentity()
+//        shrM.elements[8]=shrM.elements[8] + (shr[i])
+//        full = applyMatrix(full,shrM)
+//      }
+  // translated
   // let scMatrices = []
   // let trMatrices = []
   // let roXMatrices = []
@@ -519,27 +526,37 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let test = []
   for (var i = 0 ; i < cylinder_points.length ; i++){
     for (var j = 0 ; j < cylinder_points[i].length  ; j++){
-      let circle= new Matrix4()
-      circle.set(scMatrices[i])
-      circle = new Matrix4(circle.concat(old_rotate[i][j]))
       let C1 = new Matrix4()
-      C1.set(trMatrices[i])
-      C1 = new Matrix4(C1.concat(roXMatrices[i]))
+      C1.set(old_translate[i][j][0])
+      C1 = new Matrix4(C1.concat(trMatrices[i]))
       C1 = new Matrix4(C1.concat(roYMatrices[i]))
-      C1 = new Matrix4(C1.concat(old_translate[i][j][0]))
-      C1 = new Matrix4(C1.concat(circle))
+      C1 = new Matrix4(C1.concat(roXMatrices[i]))
+      C1 = new Matrix4(C1.concat(old_rotate[i][j]))
+      C1 = new Matrix4(C1.concat(scMatrices[i]))
+
       let C2 = new Matrix4()
-      C2.set(trMatrices[i])
-      C2 = new Matrix4(C2.concat(roXMatrices[i]))
+
+      C2.set(old_translate[i][j][1])
+      C2 = new Matrix4(C2.concat(trMatrices[i]))
       C2 = new Matrix4(C2.concat(roYMatrices[i]))
-      C2 = new Matrix4(C2.concat(old_translate[i][j][1]))
-      C2 = new Matrix4(C2.concat(circle))
-      let circle_one = applyMatrix(base,C1)
-      let circle_two = applyMatrix(base,C2)
+      C2 = new Matrix4(C2.concat(roXMatrices[i]))
+      C2 = new Matrix4(C2.concat(old_rotate[i][j]))
+      C2 = new Matrix4(C2.concat(scMatrices[i]))
+      let circle_one = applyMatrix(base,C1,1)
+      let circle_two = applyMatrix(base,C2,1)
       let full = circle_one.concat(circle_two)
       c_p[i][j] = full
-      let cylindernormals = calcnormals(gl,canvas,a_Position,sides,c_p[i][j]) 
+      
+      let m2 = new Matrix4()
+      m2.set(scMatrices[i])
+      C2 = new Matrix4(C2.concat(roXMatrices[i]))
+      C2 = new Matrix4(C2.concat(roYMatrices[i]))
+      C2 = new Matrix4(C2.concat(trMatrices[i]))
+      let inverse = new Matrix4(m2.invert())
+      let transpose = new Matrix4(inverse.transpose())
+      let cylindernormals = applyMatrix(c_n[i][j],inverse,0.0)
       c_n[i][j] = cylindernormals
+       
     }
   }   
   // apply the changes
@@ -929,10 +946,10 @@ function reset(ev, gl, canvas, a_Position){
 function scaleradius(ev, gl, canvas, a_Position){
   let scale = 1.0
   if (ev.which == "v".charCodeAt(0)){
-    scale = 0.5  
+    scale = 0.9  
   }
   if (ev.which == "b".charCodeAt(0)){
-    scale = 1.5
+    scale = 1.1
   }
   // SCROLL : UP
   if(ev.deltaY > 0){
@@ -968,7 +985,7 @@ function dragR(ev, gl, canvas, a_Position){
   let deltaXr = x - previousXr
   let deltaYr = y - previousYr  
   let scalar = 1
-  let angle = 45
+  let angle = 30
   // rotate X
   if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
    // push translation matrix
@@ -1080,30 +1097,6 @@ function dragM(ev, gl, canvas, a_Position){
   previousYm = y
 }
 
-function shear(ev, gl, canvas, a_Position){
-  console.log("Y SHEAR") 
-  let shearY_matrix = 
-([ 1.0 , 0.0 , 0.0 , 0.0,
-  0.5 , 1.0 , 0.0 , 0.0,
-  0.0 , 0.0 , 1.0 , 0.0,
-  0.0 , 0.0 , 0.0 , 1.0
-  ])
-  let count = 0 
-  for (var i =0 ; i < highlighted.length;i++){
-    if (highlighted[i]==1){
-    count = 1
-      for (var j = 0 ; j < oldc_points[i].length ; j++){
-           oldc_points[i][j] = applyMatrix (oldc_points[i][j],shearY_matrix)
-        }
-    }
-  }
- if (count == 0 ){
-   console.log("please highlight a cylinder to SHEAR.")
- }
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-}
 // Main function to deal with Rotating already existing cylinder points.
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 // same as drawcylinder, except this time works off of cylinder points rather than a polyline
@@ -1186,9 +1179,10 @@ function drawcylinderC(gl,canvas,a_Position,cylinder_points,cylindernormals,s,nu
 }
 
 // expected input : c_point set , length % 3 = 0 (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
+// factor = value of the 4th element (used for converting vec4 ->vec3 
 // transformation matrix to apply (in the format of an length 16 array, each 4 items in the array representing a row in a matrix)
 // output : transformed points
-function applyMatrix (c_point,matrix){
+function applyMatrix (c_point,matrix,factor){
   let newC = []
   // for (let i = 0 ; i < c_point.length ; i+=3){
   //   newC.push( (c_point[i] * matrix.elements[0]) + (c_point[i+1] * matrix.elements[1]) + (c_point[i+2] * matrix.elements[2]) +(1 * matrix.elements[3]) )
@@ -1201,7 +1195,7 @@ function applyMatrix (c_point,matrix){
     t.push(c_point[i])
     t.push(c_point[i+1])
     t.push(c_point[i+2])
-    t.push(1.0)
+    t.push(factor)
     let vec = new Float32Array(t)
     vec = new Vector4(t)
     let topush = matrix.multiplyVector4(vec) 
@@ -1212,54 +1206,23 @@ function applyMatrix (c_point,matrix){
   return newC
 }
 
-
 function twist(ev, gl, canvas, a_Position){
-for (var i =0 ; i < highlighted.length;i++){
-   for (var j = 0 ; j < oldc_points[i].length ; j++){
+   for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-        let arrayc1 = oldc_points[i][j]
-        let arrayc2 = arrayc1.splice(oldc_points[i][j].length/2,oldc_points[i][j].length)
-        let circle1x = oldlines[i][2*j]
-        let circle1y = oldlines[i][2*j+1]
-        let circle2x = oldlines[i][2*j+2]
-        let circle2y = oldlines[i][2*j+3]
-        let untranslate1 = ([
-        1.0 , 0.0 , 0.0 , -1 * circle1x,
-        0.0 , 1.0 , 0.0 , -1 * circle1y,
-        0.0 , 0.0 , 1.0 , 0,
-        0.0 , 0.0 , 0.0 , 1.0
-        ])
-        let untranslate2 = ([
-        1.0 , 0.0 , 0.0 , -1 * circle2x,
-        0.0 , 1.0 , 0.0 , -1 * circle2y,
-        0.0 , 0.0 , 1.0 , 0,
-        0.0 , 0.0 , 0.0 , 1.0
-        ])
-        arrayc1 = applyMatrix (arrayc1,untranslate1)
-        arrayc2 = applyMatrix (arrayc2,untranslate2)
-        let untranslatedA = arrayc1.concat(arrayc2)
-        arrayc1 = untranslatedA
-        arrayc2 = arrayc1.splice(untranslatedA.length/2,untranslatedA.length)
-        let angle = Math.PI / 3
-        let translate1 = ([
-         1.0 , 0.0 ,            0.0 ,                    0.0,
-         0.0 , Math.cos(angle), Math.sin(angle),  0.0,
-         0.0 , (-1 * Math.sin(angle)), Math.cos(angle),         0.0,
-         0.0 , 0.0 ,            0.0 ,                    1.0
-         ])
-        let translate2 = ([
-         1.0 , 0.0 ,            0.0 ,                    circle2x,
-         0.0 , Math.cos(-1 * angle), Math.sin(-1 * angle),  circle2y,
-         0.0 , (Math.sin(angle)), Math.cos(-1 * angle),         0.0,
-         0.0 , 0.0 ,            0.0 ,                    1.0
-         ])
-         arrayc1 = applyMatrix (arrayc1,translate1)
-         arrayc2 = applyMatrix (arrayc2,translate2)
-         let translatedA = arrayc1.concat(arrayc2)
-         oldc_points[i][j] = translatedA
-      }
-    }
-  }
+       twst[i] = twst[i] + 1
+     }
+   }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+function shear(ev, gl, canvas, a_Position){
+   for (var i =0 ; i < highlighted.length;i++){
+     if (highlighted[i]==1){
+       shr[i] = shr[i] + 1
+     }
+   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
