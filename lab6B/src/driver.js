@@ -64,8 +64,10 @@ let previousYm = null
 let g_last = Date.now()
 let sc = []
 let transl = []
+let transz = []
 let roX = []
 let roY = []
+let roZ = []
 let CUBEMODE = 0
 let FALLDOWN = -1
 let reference = []
@@ -145,10 +147,12 @@ function start(gl) {
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
-    roX.push([0.0,0.0])
-    roY.push([0.0,0.0])
+    roX.push(0.0)
+    roY.push(0.0)
+    roZ.push(0.0)
     sc.push(0)
-    transl.push([])
+    transl.push([0.0,0.0])
+    transz.push(0.0)
     twst.push(0.0)
     shr.push(0.0)
   }
@@ -424,10 +428,11 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let trMatrices = []
   let roXMatrices = []
   let roYMatrices = []
+  let roZMatrices = []
   let old_rotate = []
   let old_translate = []
   let identitym = new Matrix4().setIdentity() 
-  
+ 
   
   //scale
   for (var s=0 ; s < sc.length ; s++){
@@ -441,34 +446,39 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   } 
   // rotate
   for (var j=0 ; j < roX.length ; j++){
-    if(roX[j][0] == 0){
+    if(roX[j] == 0){
       roXMatrices.push(identitym)
     }
     else {
-      let rotateX = new Matrix4().rotate(roX[j][0],1,0,0)
+      let rotateX = new Matrix4().rotate(roX[j],1,0,0)
       roXMatrices.push(rotateX)
     }
   }
   for (var k=0 ; k < roY.length ; k++){
-    if(roY[k][1] == 0){
+    if(roY[k] == 0){
       roYMatrices.push(identitym)
     }
     else {
-      let rotateY = new Matrix4().rotate(roY[k][1],0,1,0)
+      let rotateY = new Matrix4().rotate(roY[k],0,1,0)
       roYMatrices.push(rotateY)
+    }
+  }
+  for (var k=0 ; k < roZ.length ; k++){
+    if(roZ[k] == 0){
+      roZMatrices.push(identitym)
+    }
+    else {
+      let rotateZ = new Matrix4().rotate(roZ[k],0,0,1)
+      roZMatrices.push(rotateZ)
     }
   }
 
   // translate 
   for (var i=0; i < transl.length; i++){
-    if (transl[i].length < 1){
-      trMatrices.push(identitym)
-    }
-    else{
-      let toTr = new Matrix4().translate(transl[i][0],transl[i][1],transl[i][2])
-      trMatrices.push(toTr)
-    }
+    let toTr = new Matrix4().translate(transl[i][0],transl[i][1],transz[i])
+    trMatrices.push(toTr)
   } 
+
   // initial rotate angle along z 
   for (var i = 0 ; i < all_old_angles.length ; i++){
     let t = []
@@ -495,19 +505,7 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
     old_translate.push(allc_o)
   }  
   
-  //    //twisting ( rotate 1 circle more than the other)
-  //    if (twst[i]!=0){
-  //      let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
-  //      C1 = new Matrix4(C1.concat(twistM))
-  //    }
 
-//      //shearing
-//      if (shr[i]!=0){
-//        let shrM = new Matrix4()
-//        shrM.setIdentity()
-//        shrM.elements[8]=shrM.elements[8] + (shr[i])
-//        full = applyMatrix(full,shrM)
-//      }
   // translated
   // let scMatrices = []
   // let trMatrices = []
@@ -529,22 +527,50 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       let C1 = new Matrix4()
       C1.set(old_translate[i][j][0])
       C1 = new Matrix4(C1.concat(trMatrices[i]))
+      //twisting ( rotate 1 circle more than the other)
+      if (twst[i]!=0){
+        let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
+        C1 = new Matrix4(C1.concat(twistM))
+      }
+      C1 = new Matrix4(C1.concat(roZMatrices[i]))
       C1 = new Matrix4(C1.concat(roYMatrices[i]))
       C1 = new Matrix4(C1.concat(roXMatrices[i]))
       C1 = new Matrix4(C1.concat(old_rotate[i][j]))
       C1 = new Matrix4(C1.concat(scMatrices[i]))
+      if (shr[i]!=0){
+        let shrM = new Matrix4()
+        shrM.setIdentity()
+        console.log(shrM)
+        shrM.elements[4]=shrM.elements[4]+ (shr[i])
+        shrM.elements[8]=shrM.elements[8]+ (shr[i])
+	//console.log(shrM)
+        //full = applyMatrix(full,shrM,1.0)
+        C1= new Matrix4(C1.concat(shrM))
+      }
 
       let C2 = new Matrix4()
 
       C2.set(old_translate[i][j][1])
       C2 = new Matrix4(C2.concat(trMatrices[i]))
+      C2 = new Matrix4(C2.concat(roZMatrices[i]))
       C2 = new Matrix4(C2.concat(roYMatrices[i]))
       C2 = new Matrix4(C2.concat(roXMatrices[i]))
       C2 = new Matrix4(C2.concat(old_rotate[i][j]))
       C2 = new Matrix4(C2.concat(scMatrices[i]))
+      if (shr[i]!=0){
+        let shrM = new Matrix4()
+        shrM.setIdentity()
+        console.log(shrM)
+        shrM.elements[4]=shrM.elements[4]+ (shr[i])
+        shrM.elements[8]=shrM.elements[8]+ (shr[i])
+	//console.log(shrM)
+        //full = applyMatrix(full,shrM,1.0)
+        C2= new Matrix4(C2.concat(shrM))
+      }
       let circle_one = applyMatrix(base,C1,1)
       let circle_two = applyMatrix(base,C2,1)
       let full = circle_one.concat(circle_two)
+      //shearing
       c_p[i][j] = full
     }
   }   
@@ -906,16 +932,9 @@ function drag(ev, gl, canvas, a_Position){
    let tm = []
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (transl[i].length < 1){
-         transl[i].push(deltaX)
-         transl[i].push(deltaY)
-         transl[i].push(deltaZ)
-       }
-       else {
-         transl[i][0] = transl[i][0] + deltaX
-         transl[i][1] = transl[i][1] + deltaY
-         transl[i][2] = transl[i][2] + deltaZ
-       }
+       transl[i][0] = transl[i][0] + deltaX
+       transl[i][1] = transl[i][1] + deltaY
+       transl[i][2] = transl[i][2] + deltaZ
      }
    }
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -980,20 +999,14 @@ function dragR(ev, gl, canvas, a_Position){
    if (deltaXr > 0)
      scalar = -1
    angle = scalar * angle
-   let rotateX = ([
-    1.0 , 0.0 ,            0.0 ,                    0.0,
-    0.0 , Math.cos(angle), (-1 *Math.sin(angle)),  0.0,
-    0.0 , Math.sin(angle), Math.cos(angle),         0.0,
-    0.0 , 0.0 ,            0.0 ,                    1.0
-    ])
    for (var i =0 ; i < highlighted.length;i++){
      console.log("rotate X!")
      if (highlighted[i]==1){
-       if (roX[i][0] == 0){
-         roX[i][0] = angle
+       if (roX[i] == 0){
+         roX[i] = angle
        }
        else {
-         roX[i][0] = angle + roX[i][0]
+         roX[i] = angle + roX[i]
        }
      }
     }
@@ -1005,19 +1018,13 @@ function dragR(ev, gl, canvas, a_Position){
    if (deltaYr > 0)
      scalar = -1
    angle = scalar * angle
-   let rotateY = ([
-    Math.cos(angle),        0.0, Math.sin(angle), 0.0,
-    0.0,                    1.0, 0.0,             0.0,
-    (-1 * Math.sin(angle)), 0.0, Math.cos(angle), 0.0,
-    0.0,                    0.0, 0.0,             1.0
-    ])
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       if (roY[i][1] == 0){
-         roY[i][1] = angle
+       if (roY[i] == 0){
+         roY[i] = angle
        }
        else {
-         roY[i][1] = angle + roY[i][1]
+         roY[i] = angle + roY[i]
        }
      }
    }
@@ -1038,43 +1045,31 @@ function dragM(ev, gl, canvas, a_Position){
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   let deltaXm = x - previousXm  
   let deltaYm = y - previousYm 
-  let angle = (Math.PI / 6)
+  let angle = 15
   let scalar = 1
   // rotate Z
   if (Math.abs(deltaXm) > Math.abs(deltaYm)){
     if (deltaXm < 0) 
       scalar = -1
     angle = scalar * angle
-    let rotateZ = ([
-    Math.cos(angle), (-1 * Math.sin(angle)),  0.0, 0.0,
-    Math.sin(angle), Math.cos(angle),         0.0, 0.0,
-    0.0,             0.0,                     1.0, 0.0,
-    0.0,             0.0,                     0.0, 1.0
-    ])
-    for (var i =0 ; i < highlighted.length;i++){
-      if (highlighted[i]==1){
-      for (var j = 0 ; j < oldc_points[i].length ; j++){
-           oldc_points[i][j] = applyMatrix (oldc_points[i][j],rotateZ)
-        }
-      }
-    }
+   for (var i =0 ; i < highlighted.length;i++){
+     console.log("rotate Z!")
+     if (highlighted[i]==1){
+       if (roZ[i] == 0){
+         roZ[i] = angle
+       }
+       else {
+         roZ[i] = angle + roZ[i]
+       }
+     }
+   }
   }
   // translate Z
   else {
-   let deltaX = 0
-   let deltaY = 0
-   let deltaZ = deltaYm * 5 
-   let translation = ([
-   1.0 , 0.0 , 0.0 , deltaX,
-   0.0 , 1.0 , 0.0 , deltaY,
-   0.0 , 0.0 , 1.0 , deltaZ,
-   0.0 , 0.0 , 0.0 , 1.0
-   ])
+   let deltaZ = deltaYm * 5
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-     for (var j = 0 ; j < oldc_points[i].length ; j++){
-          oldc_points[i][j] = applyMatrix (oldc_points[i][j],translation)
-       }
+       transz[i] = transz[i] + deltaZ
      }
    }
   }
@@ -1197,7 +1192,7 @@ function applyMatrix (c_point,matrix,factor){
 function twist(ev, gl, canvas, a_Position){
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
-       twst[i] = twst[i] + 1
+       twst[i] = twst[i] + 2
      }
    }
   // Clear color and depth buffer
