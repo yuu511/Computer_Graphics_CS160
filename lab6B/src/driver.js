@@ -34,7 +34,7 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 6
+let eyeZ = 5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -42,7 +42,7 @@ let rotDeg = 0
 let rotX = 0
 let rotY= 0
 let rotZ = 1
-let nP = 5
+let nP = 3
 let orthomode = -1
 let ANGLE_STEP = 0.0
 
@@ -71,7 +71,7 @@ let roZ = []
 let CUBEMODE = 0
 let FALLDOWN = -1
 let reference = []
-let tickB = 0
+let tickB = 1
 let all_old_angles = []
 let individual_angles = []
 let twst = []
@@ -128,23 +128,24 @@ function start(gl) {
   canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
   window.onkeypress = function(ev){ keypress(ev, gl, canvas, a_Position); };
 
-   // generalized cylinder 1 
-   let init = []
-   init.push(0.5)
-   init.push(-0.5)
-   init.push(-0.5)
-   init.push(-0.5)
-   oldlines.push(init)
+  //generalized cylinder 1
+  let init = []
+  init.push (-0.9)
+  init.push (0.2)
+  init.push (0.5)
+  init.push (0.7)
+  init.push (0.1)
+  init.push (0.0)
+  oldlines.push(init)
 
-  //generalized cylinder 2
+  // generalized cylinder 2 
   let init2 = []
-  init2.push (-0.9)
-  init2.push (0.5)
-  init2.push (-0.9)
-  init2.push (0.9)
- // init2.push (-0.1)
-//  init2.push (0.9)
+  init2.push(0.5)
+  init2.push(-0.5)
+  init2.push(0.5)
+  init2.push(0.0)
   oldlines.push(init2)
+
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
@@ -157,7 +158,6 @@ function start(gl) {
     twst.push(0.0)
     shr.push(0.0)
   }
-
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
   // specify the color for clearing <canvas>
@@ -165,7 +165,7 @@ function start(gl) {
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-  if (tickB==1){
+  if (tickB==0){
   var currentAngle = 0.0
       var tick = function (){
         if (FALLDOWN == 1){
@@ -182,7 +182,6 @@ function start(gl) {
       tick()
       var g_last = Date.now()
   }
-  console.log(oldc_points)
 }
 
 function animate(angle) {
@@ -400,10 +399,10 @@ function initAllCylinders(gl,canvas,a_Position){
     individual_angles = []
     convertednormals.push([])
     if (oldlines[i].length >= 4){
-     var loop = (((oldlines[i].length/2)-1)*2)
-     for (var j =0; j < loop;j+=2){    
-       convertednormals[i].push([])
-      initcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
+     var loop = ((oldlines[i].length/2)-1)
+     for (var j =0; j < loop;j++){    
+      convertednormals[i].push([])
+      initcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][2*j],oldlines[i][2*j+1],oldlines[i][2*j+2],oldlines[i][2*j+3],i)
      }
      all_old_angles.push(individual_angles)
      oldc_points.push(oldc_line)
@@ -521,72 +520,81 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let test = []
   for (var i = 0 ; i < cylinder_points.length ; i++){
     for (var j = 0 ; j < cylinder_points[i].length  ; j++){
+      let origin = new Matrix4()
+      origin.setInverseOf(old_translate[i][0][0])
       let C1 = new Matrix4()
-      C1.set(old_translate[i][j][0])
       C1 = new Matrix4(C1.concat(trMatrices[i]))
+      C1 = new Matrix4(C1.concat(old_translate[i][0][0]))
+      C1 = new Matrix4(C1.concat(roZMatrices[i]))
+      C1 = new Matrix4(C1.concat(roYMatrices[i]))
+      C1 = new Matrix4(C1.concat(roXMatrices[i]))
+      C1 = new Matrix4(C1.concat(origin))
+      C1 = new Matrix4(C1.concat(old_translate[i][j][0]))
+      C1 = new Matrix4(C1.concat(old_rotate[i][j]))
+      C1 = new Matrix4(C1.concat(scMatrices[i]))
+
 
       //twisting ( rotate 1 circle more than the other)
       if (twst[i]!=0){
         let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
         C1 = new Matrix4(C1.concat(twistM))
       }
-      C1 = new Matrix4(C1.concat(roYMatrices[i]))
-      C1 = new Matrix4(C1.concat(roXMatrices[i]))
-      C1 = new Matrix4(C1.concat(roZMatrices[i]))
-      C1 = new Matrix4(C1.concat(old_rotate[i][j]))
-      C1 = new Matrix4(C1.concat(scMatrices[i]))
       if (shr[i]!=0){
         let shrM = new Matrix4()
         shrM.setIdentity()
         console.log(shrM)
         shrM.elements[4]=shrM.elements[4]+ (shr[i])
         shrM.elements[8]=shrM.elements[8]+ (shr[i])
-	//console.log(shrM)
-        //full = applyMatrix(full,shrM,1.0)
         C1= new Matrix4(C1.concat(shrM))
       }
 
       let C2 = new Matrix4()
-
-      C2.set(old_translate[i][j][1])
       C2 = new Matrix4(C2.concat(trMatrices[i]))
+      C2 = new Matrix4(C2.concat(old_translate[i][0][0]))
+      C2 = new Matrix4(C2.concat(roZMatrices[i]))
       C2 = new Matrix4(C2.concat(roYMatrices[i]))
       C2 = new Matrix4(C2.concat(roXMatrices[i]))
-      C2 = new Matrix4(C2.concat(roZMatrices[i]))
+      C2 = new Matrix4(C2.concat(origin))
+      C2 = new Matrix4(C2.concat(old_translate[i][j][1]))
       C2 = new Matrix4(C2.concat(old_rotate[i][j]))
       C2 = new Matrix4(C2.concat(scMatrices[i]))
+
       if (shr[i]!=0){
         let shrM = new Matrix4()
         shrM.setIdentity()
         console.log(shrM)
         shrM.elements[4]=shrM.elements[4]+ (shr[i])
         shrM.elements[8]=shrM.elements[8]+ (shr[i])
-	//console.log(shrM)
-        //full = applyMatrix(full,shrM,1.0)
         C2= new Matrix4(C2.concat(shrM))
       }
 
-      let M2 = new Matrix4
-          M2.set (trMatrices[i])
-          M2 = new Matrix4(M2.concat(roYMatrices[i]))
-          M2 = new Matrix4(M2.concat(roXMatrices[i]))
-          M2 = new Matrix4(M2.concat(roZMatrices[i]))
-          M2 = new Matrix4(M2.concat(scMatrices[i]))
       let circle_one = applyMatrix(base,C1,1)
       let circle_two = applyMatrix(base,C2,1)
       let full = circle_one.concat(circle_two)
-      M2.setInverseOf(M2)
-      M2.transpose(M2)
-      convertednormals[i][j] = applyMatrix(oldc_normals[i][j],M2,0.0)
+
+
       c_p[i][j] = full
+      //CALCULATE NEW NORMALS USING INVERSE TRANSPOSE
+      let M2 = new Matrix4
+          M2.set (trMatrices[i])
+         // M2 = new Matrix4(M2.concat(old_translate[i][0][0]))
+          M2 = new Matrix4(M2.concat(roZMatrices[i]))
+          M2 = new Matrix4(M2.concat(roYMatrices[i]))
+          M2 = new Matrix4(M2.concat(roXMatrices[i]))
+          M2 = new Matrix4(M2.concat(origin))
+          // M2 = new Matrix4(M2.concat(scMatrices[i]))
+      let Invert = new Matrix4()
+      Invert.setInverseOf(M2)
+      Invert.transpose()
+      convertednormals[i][j] = applyMatrix(cylinder_normals[i][j],Invert,0.0)
     }
   }   
   // apply the changes
   oldc_points = c_p
   return convertednormals 
 }
-// Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
+// initialize all cylinder
 // INPUT : x1,x2 y1,y2 : coordinates of line segment to draw on
 // r: value of radius
 // s: number of sides
@@ -622,7 +630,6 @@ function initcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,numpolyline){
   } 
   
    let cylinder_points = []     
-   let raw_points = []
    let indices = []
    let colors = []
    let normie = []
@@ -836,6 +843,7 @@ function initAttrib(gl,canvas,numpolyline) {
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
+    normalMatrix.set(modelMatrix)
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
     // Pass the model matrix to u_ModelMatrix
@@ -983,7 +991,6 @@ function scaleradius(ev, gl, canvas, a_Position){
       }
     }
   }
-
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
@@ -1003,7 +1010,7 @@ function dragR(ev, gl, canvas, a_Position){
   // rotate X
   if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
    // push translation matrix
-   if (deltaXr > 0)
+   if (deltaYr > 0)
      scalar = -1
    angle = scalar * angle
    for (var i =0 ; i < highlighted.length;i++){
@@ -1022,7 +1029,7 @@ function dragR(ev, gl, canvas, a_Position){
   else if (Math.abs(deltaXr) >  Math.abs(deltaYr)){ 
    // push translation matrix
      console.log("rotate Y!")
-   if (deltaYr > 0)
+   if (deltaXr > 0)
      scalar = -1
    angle = scalar * angle
    for (var i =0 ; i < highlighted.length;i++){
@@ -1041,6 +1048,10 @@ function dragR(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
   previousXr = x
   previousYr = y
+  console.log("\nOLD NORMALS:")
+  console.log(oldc_normals)
+  console.log("NEW NORMALS:")
+  console.log(convertednormals)
 }
 
 // using translation matrix to translate on z axis 
@@ -1085,24 +1096,28 @@ function dragM(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
   previousXm = x
   previousYm = y
+  console.log("\nOLD NORMALS:")
+  console.log(oldc_normals)
+  console.log("NEW NORMALS:")
+  console.log(convertednormals)
 }
 
-// Main function to deal with Rotating already existing cylinder points.
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 // same as drawcylinder, except this time works off of cylinder points rather than a polyline
 // r = radius 
 // s = sides
 // expects an input of n cylinder points (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
 // initAllcylinders should be called before calling this
-function drawcylinderC(gl,canvas,a_Position,cylinder_points,c_normal,s,numcylinder){
+function drawcylinderC(gl,canvas,a_Position,cylinder_points,cylindernormals,s,numcylinder){
   Acolor = 1 - (numcylinder/255)  
   let convert = Math.PI/180 
   let numsides = 360/s
   let colors = []
   let normie = []
   let indices = []
-  let cylindernormals=c_normal
-   
+
+  // a cylinder with n sides will have n+1 points for each face
+  // so the n+1th point will have the same normals as the 1st point
   normie.push((cylindernormals[0]+cylindernormals[27]) / 2)
   normie.push((cylindernormals[1]+cylindernormals[28]) / 2)
   normie.push((cylindernormals[2]+cylindernormals[29]) / 2)
