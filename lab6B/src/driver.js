@@ -71,11 +71,12 @@ let roZ = []
 let CUBEMODE = 0
 let FALLDOWN = -1
 let reference = []
-let tickB = 1
+let tickB = 0
 let all_old_angles = []
 let individual_angles = []
 let twst = []
 let shr = []
+let convertednormals = []
 
 // called when page is loaded
 function main() {
@@ -130,9 +131,9 @@ function start(gl) {
    // generalized cylinder 1 
    let init = []
    init.push(0.5)
-   init.push(0)
    init.push(-0.5)
-   init.push(0)
+   init.push(-0.5)
+   init.push(-0.5)
    oldlines.push(init)
 
   //generalized cylinder 2
@@ -142,7 +143,7 @@ function start(gl) {
   init2.push (-0.9)
   init2.push (0.9)
  // init2.push (-0.1)
- // init2.push (0.9)
+//  init2.push (0.9)
   oldlines.push(init2)
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -156,6 +157,7 @@ function start(gl) {
     twst.push(0.0)
     shr.push(0.0)
   }
+
   // init all finished cylinder 
   initAllCylinders(gl,canvas,a_Position)
   // specify the color for clearing <canvas>
@@ -180,6 +182,7 @@ function start(gl) {
       tick()
       var g_last = Date.now()
   }
+  console.log(oldc_points)
 }
 
 function animate(angle) {
@@ -392,11 +395,14 @@ function initAllCylinders(gl,canvas,a_Position){
   oldc_normals = []
   originalc_points = []
   all_old_angles = []
+  convertednormals=[]
   for (var i =0 ; i < oldlines.length ; i++){       
     individual_angles = []
+    convertednormals.push([])
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
+       convertednormals[i].push([])
       initcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],i)
      }
      all_old_angles.push(individual_angles)
@@ -412,11 +418,11 @@ function initAllCylinders(gl,canvas,a_Position){
 
 function draw_All(gl,canvas,a_Position,all_cylinder_points,all_cylinder_normals){
   // performs all of the necessary operations
-  translate_All(gl,canvas,a_Position,all_cylinder_points,all_cylinder_normals)
+  c_normal = translate_All(gl,canvas,a_Position,all_cylinder_points,all_cylinder_normals)
   for (var i =0 ; i < oldc_points.length ; i++){       
      if (oldc_points[i].length >= 1){
        for (var j =0; j < oldc_points[i].length ; j++){
-         drawcylinderC(gl,canvas,a_Position,oldc_points[i][j],oldc_normals[i][j],sides,i)
+         drawcylinderC(gl,canvas,a_Position,oldc_points[i][j],c_normal[i][j],sides,i)
        }
      }
   }  
@@ -504,15 +510,6 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
     }
     old_translate.push(allc_o)
   }  
-  
-
-  // translated
-  // let scMatrices = []
-  // let trMatrices = []
-  // let roXMatrices = []
-  // let roYMatrices = []
-  // let old_rotate = []
-  // let old_translate = []
 
   // init transformation
   // copy the original circle rotated around x (center 0,0 , rot x)
@@ -527,14 +524,15 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       let C1 = new Matrix4()
       C1.set(old_translate[i][j][0])
       C1 = new Matrix4(C1.concat(trMatrices[i]))
+
       //twisting ( rotate 1 circle more than the other)
       if (twst[i]!=0){
         let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
         C1 = new Matrix4(C1.concat(twistM))
       }
-      C1 = new Matrix4(C1.concat(roZMatrices[i]))
       C1 = new Matrix4(C1.concat(roYMatrices[i]))
       C1 = new Matrix4(C1.concat(roXMatrices[i]))
+      C1 = new Matrix4(C1.concat(roZMatrices[i]))
       C1 = new Matrix4(C1.concat(old_rotate[i][j]))
       C1 = new Matrix4(C1.concat(scMatrices[i]))
       if (shr[i]!=0){
@@ -552,9 +550,9 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
 
       C2.set(old_translate[i][j][1])
       C2 = new Matrix4(C2.concat(trMatrices[i]))
-      C2 = new Matrix4(C2.concat(roZMatrices[i]))
       C2 = new Matrix4(C2.concat(roYMatrices[i]))
       C2 = new Matrix4(C2.concat(roXMatrices[i]))
+      C2 = new Matrix4(C2.concat(roZMatrices[i]))
       C2 = new Matrix4(C2.concat(old_rotate[i][j]))
       C2 = new Matrix4(C2.concat(scMatrices[i]))
       if (shr[i]!=0){
@@ -567,15 +565,25 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
         //full = applyMatrix(full,shrM,1.0)
         C2= new Matrix4(C2.concat(shrM))
       }
+
+      let M2 = new Matrix4
+          M2.set (trMatrices[i])
+          M2 = new Matrix4(M2.concat(roYMatrices[i]))
+          M2 = new Matrix4(M2.concat(roXMatrices[i]))
+          M2 = new Matrix4(M2.concat(roZMatrices[i]))
+          M2 = new Matrix4(M2.concat(scMatrices[i]))
       let circle_one = applyMatrix(base,C1,1)
       let circle_two = applyMatrix(base,C2,1)
       let full = circle_one.concat(circle_two)
-      //shearing
+      M2.setInverseOf(M2)
+      M2.transpose(M2)
+      convertednormals[i][j] = applyMatrix(oldc_normals[i][j],M2,0.0)
       c_p[i][j] = full
     }
   }   
   // apply the changes
   oldc_points = c_p
+  return convertednormals 
 }
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
 
@@ -830,7 +838,6 @@ function initAttrib(gl,canvas,numpolyline) {
     // Calculate the matrix to transform the normal based on the model matrix
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
@@ -992,7 +999,7 @@ function dragR(ev, gl, canvas, a_Position){
   let deltaXr = x - previousXr
   let deltaYr = y - previousYr  
   let scalar = 1
-  let angle = 30
+  let angle = 45
   // rotate X
   if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
    // push translation matrix
@@ -1087,13 +1094,15 @@ function dragM(ev, gl, canvas, a_Position){
 // s = sides
 // expects an input of n cylinder points (66 points by default, (3 points per line* (10 sides + 1) * 2 circles))
 // initAllcylinders should be called before calling this
-function drawcylinderC(gl,canvas,a_Position,cylinder_points,cylindernormals,s,numcylinder){
+function drawcylinderC(gl,canvas,a_Position,cylinder_points,c_normal,s,numcylinder){
   Acolor = 1 - (numcylinder/255)  
   let convert = Math.PI/180 
   let numsides = 360/s
   let colors = []
   let normie = []
   let indices = []
+  let cylindernormals=c_normal
+   
   normie.push((cylindernormals[0]+cylindernormals[27]) / 2)
   normie.push((cylindernormals[1]+cylindernormals[28]) / 2)
   normie.push((cylindernormals[2]+cylindernormals[29]) / 2)
@@ -1167,12 +1176,7 @@ function drawcylinderC(gl,canvas,a_Position,cylinder_points,cylindernormals,s,nu
 // output : transformed points
 function applyMatrix (c_point,matrix,factor){
   let newC = []
-  // for (let i = 0 ; i < c_point.length ; i+=3){
-  //   newC.push( (c_point[i] * matrix.elements[0]) + (c_point[i+1] * matrix.elements[1]) + (c_point[i+2] * matrix.elements[2]) +(1 * matrix.elements[3]) )
-  //   newC.push( (c_point[i] * matrix.elements[4]) + (c_point[i+1] * matrix.elements[5]) + (c_point[i+2] * matrix.elements[6]) +(1 * matrix.elements[7]) )
-  //   newC.push( (c_point[i] * matrix.elements[8]) + (c_point[i+1] * matrix.elements[9]) + (c_point[i+2] * matrix.elements[10]) +(1 * matrix.elements[11]) )
-  // }
-    let t = []  
+  let t = []  
   for (let i = 0 ; i < c_point.length ; i+=3){
     t=[]
     t.push(c_point[i])
