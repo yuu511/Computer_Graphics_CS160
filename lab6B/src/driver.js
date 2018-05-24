@@ -134,16 +134,16 @@ function start(gl) {
   init.push (0.2)
   init.push (0.5)
   init.push (0.7)
-  init.push (0.1)
-  init.push (0.0)
+  init.push (0.3)
+  init.push (-1.0)
   oldlines.push(init)
 
   // generalized cylinder 2 
   let init2 = []
-  init2.push(0.5)
-  init2.push(-0.5)
-  init2.push(0.5)
+  init2.push(-0.2)
   init2.push(0.0)
+  init2.push(-0.5)
+  init2.push(-0.9)
   oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
@@ -523,6 +523,18 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       let origin = new Matrix4()
       origin.setInverseOf(old_translate[i][0][0])
       let C1 = new Matrix4()
+
+      // shearing
+      if (shr[i]!=0){
+        let shrM = new Matrix4()
+        shrM.setIdentity()
+        console.log(shrM)
+        shrM.elements[4]=shrM.elements[4]+ (shr[i])
+        shrM.elements[8]=shrM.elements[8]+ (shr[i])
+        C1= new Matrix4(C1.concat(shrM))
+      }
+
+      //main translations
       C1 = new Matrix4(C1.concat(trMatrices[i]))
       C1 = new Matrix4(C1.concat(old_translate[i][0][0]))
       C1 = new Matrix4(C1.concat(roZMatrices[i]))
@@ -539,16 +551,17 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
         let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
         C1 = new Matrix4(C1.concat(twistM))
       }
+
+      let C2 = new Matrix4()
+      // main translations
       if (shr[i]!=0){
         let shrM = new Matrix4()
         shrM.setIdentity()
         console.log(shrM)
         shrM.elements[4]=shrM.elements[4]+ (shr[i])
         shrM.elements[8]=shrM.elements[8]+ (shr[i])
-        C1= new Matrix4(C1.concat(shrM))
+        C2= new Matrix4(C2.concat(shrM))
       }
-
-      let C2 = new Matrix4()
       C2 = new Matrix4(C2.concat(trMatrices[i]))
       C2 = new Matrix4(C2.concat(old_translate[i][0][0]))
       C2 = new Matrix4(C2.concat(roZMatrices[i]))
@@ -559,14 +572,6 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       C2 = new Matrix4(C2.concat(old_rotate[i][j]))
       C2 = new Matrix4(C2.concat(scMatrices[i]))
 
-      if (shr[i]!=0){
-        let shrM = new Matrix4()
-        shrM.setIdentity()
-        console.log(shrM)
-        shrM.elements[4]=shrM.elements[4]+ (shr[i])
-        shrM.elements[8]=shrM.elements[8]+ (shr[i])
-        C2= new Matrix4(C2.concat(shrM))
-      }
 
       let circle_one = applyMatrix(base,C1,1)
       let circle_two = applyMatrix(base,C2,1)
@@ -582,6 +587,20 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
           M2 = new Matrix4(M2.concat(roYMatrices[i]))
           M2 = new Matrix4(M2.concat(roXMatrices[i]))
           M2 = new Matrix4(M2.concat(origin))
+
+      //twisting ( rotate 1 circle more than the other)
+      if (twst[i]!=0){
+        let twistM = new Matrix4().rotate(twst[i]*60,1,0,0)
+        C1 = new Matrix4(C1.concat(twistM))
+      }
+      if (shr[i]!=0){
+        let shrM = new Matrix4()
+        shrM.setIdentity()
+        console.log(shrM)
+        shrM.elements[4]=shrM.elements[4]+ (shr[i])
+        shrM.elements[8]=shrM.elements[8]+ (shr[i])
+        C1= new Matrix4(C1.concat(shrM))
+      }
           // M2 = new Matrix4(M2.concat(scMatrices[i]))
       let Invert = new Matrix4()
       Invert.setInverseOf(M2)
@@ -1006,7 +1025,7 @@ function dragR(ev, gl, canvas, a_Position){
   let deltaXr = x - previousXr
   let deltaYr = y - previousYr  
   let scalar = 1
-  let angle = 45
+  let angle = 15
   // rotate X
   if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
    // push translation matrix
