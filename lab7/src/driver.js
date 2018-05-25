@@ -24,17 +24,17 @@ let mode = 2
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
-let currentspecularR = 1
-let currentspecularG = 1
-let currentspecularB = 1
-let glossiness = 1.0
+let currentspecularR = 0.0
+let currentspecularG = 0.5
+let currentspecularB = 0.0
+let glossiness = 15.0
 
 // lab5 stuff (projection + selection)
 let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 5
+let eyeZ = 4.5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -129,20 +129,27 @@ function start(gl) {
 
   //generalized cylinder 1
   let init = []
-  init.push (-0.9)
+  // init.push (-0.9)
+  // init.push (0.2)
+  // init.push (0.5)
+  // init.push (0.7)
+  // init.push (0.3)
+  // init.push (-1.0)
+
+  init.push (-0.5)
   init.push (0.2)
-  init.push (0.5)
+  init.push (0.9)
   init.push (0.7)
-  init.push (0.3)
+  init.push (0.7)
   init.push (-1.0)
   oldlines.push(init)
 
   // generalized cylinder 2 
   let init2 = []
-  init2.push(0.9)
-  init2.push(0.7)
-  init2.push(0.5)
-  init2.push(0.7)
+  init2.push(-0.3)
+  init2.push(-0.2)
+  init2.push(0.2)
+  init2.push(-0.9)
   oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
@@ -734,9 +741,9 @@ function calcnormals(gl,canvas,a_Position,s,cylinder_points){
      cylindernormals.push(cross[2])
   }
   // push the n+1th normal ( we have n+1 sides to make drawing easier)
-  cylindernormals.push(cylindernormals[3])
-  cylindernormals.push(cylindernormals[4])
-  cylindernormals.push(cylindernormals[5])
+  cylindernormals.push(cylindernormals[0])
+  cylindernormals.push(cylindernormals[1])
+  cylindernormals.push(cylindernormals[2])
   return cylindernormals
 }
 
