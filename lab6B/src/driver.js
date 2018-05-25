@@ -1,8 +1,14 @@
 // elijah cordova 1425119
 var VSHADER_SOURCE = null; // vertex shader program
 var FSHADER_SOURCE = null; // fragment shader program
-// old polyline, use it to initialize cylinders
+
+// All line segments, use it to initialize cylinders
+// array of arrays ex: oldlines[0] = line segment 0 
+// inside of oldlines[0]: [(x,y) (x,y) (x,y)] -> 2 cylinders
+// A line segment = a "cluster" of cylinders
 let oldlines = [] // all previous completed lines
+
+// Defaul color of object
 // (x)Color = current color setting, oldcolors = all old colors (an array of arrays)
 let Rcolor = 1
 let Gcolor = 0
@@ -14,68 +20,111 @@ let Acolor = 1
 let cylinder_points = []
 let sides = 10
 let radius = 0.20 
-//lab4 stuff (shading)
+
+//Position of light 1
 let light1X = 1.0
 let light1Y = 1.0
 let light1Z = 1.0
 // mode ( deprecated )
 // 2 = phong 3 = rim 4 = toon 5 = depth
 let mode = 2
+
+// ambient / specular color settings
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
 let currentspecularR = 0.0
 let currentspecularG = 0.5
 let currentspecularB = 0.0
+// glossiness of specular highlights
 let glossiness = 8.0
 
 // lab5 stuff (projection + selection)
+// highlighted[i]= 1  -> cylinder cluster i is selected
 let highlighted = []
+// thinking[i]= 1  -> cylinder cluster i is being hovered on 
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 4.5
+let eyeZ = 5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
-let rotDeg = 0
-let rotX = 0
-let rotY= 0
-let rotZ = 1
 let nP = 3
 let orthomode = -1
 let ANGLE_STEP = 0.0
 
 //lab6 stuff (translations)
 // oldc_points = all current cylinder points, arranged in array of arrays
-// e.x. oldc_points [0][1] = cluster(polyline) 0 , cylinder 1
+// e.x. oldc_points [i][j] = cluster (group of cylinders in a single line segment) i , cylinder j  of cluster i
+// Initial cylinder points (oldc_points) and normals (oldc_normals)
 let oldc_line = []
 let oldc_points = []
 let oldc_normals_line = []
 let oldc_normals = []
-let originalc_points = []
+
 // refrence for left drag
 let previousX = null
 let previousY = null 
-let g_last = Date.now()
+
+
+// scale, translate, translate(z), rotate X, rotate Y, rotate Z matrices
+
+// scale matrices: stored as an array, holds a single number representing how much a cluster is scaled. 
+// ex: sc[i] = 1.1 -> cluster i is scaled by 1.1
 let sc = []
+
+// holds how much a cluster is translated by x,y. Same as scale, but extra paramaters to represent x,y. 
+// ex: transl[i][0]= 20,transl[i][1] = 10-> shift cluster i by x +20 and y +10 
 let transl = []
+
+// same as above, except for z. holds a single value ( no extra parameters) 
+// ex: transz[i]= - 1 -> translate cluster i by z -1 
 let transz = []
+
+// rotate X,Y,Z matrices: holds a single number to represent how much a cluster is rotated
+// ex : roX [i] = 20 -> rotate cluster i by 20
 let roX = []
 let roY = []
 let roZ = []
-let CUBEMODE = 0
-let FALLDOWN = -1
-let reference = []
-let tickB = 1
-let all_old_angles = []
-let individual_angles = []
+
+// similar to above, stores how much to twist / shear a specific cluster
 let twst = []
 let shr = []
+
+// Toggle variables. 1 = true
+// CUBEMODE = cube movement
+let CUBEMODE = 0
+// FALLDOWN = falling down movement 
+let FALLDOWN = -1
+// toggle animation (continuous drawing of canvas) 
+let tickB = 1
+// reference for last time animation is called
+let g_last = Date.now()
+
+// refrence = the base circle : a circle at center 0,0 rotate around the X axis. All cylinders are built off of this circle
+let reference = []
+
+// all_old_angles : how much a cylinder is rotated during the initialization process.
+// ex: a completely vertical cylinder with faces at center(0,0) -> (0,1) is requested.
+// our initial faces (reference) are circles with center 0,0 rotated around the x axis
+// we need to rotate the cylinder along the z axis 90 degrees that the circles allign with the y axis.
+// stored as an array of an arrays. ex:all_old_angles[i][j] = 90 -> cylinder j of 
+// cylinder cluster i is rotated 90 degrees along the z axis relative to the base circle (which is rotated along the x axis)
+let all_old_angles = []
+let individual_angles = []
+
+// convertednormals = normals for each individual cylinder AFTER applying all transfromation matrices
+// stored as an array of arrays
 let convertednormals = []
+// model_matrices = the appropriate transformation matrices, stored in an array of arrays
 let model_matrices = []
 
 //lab7 stuff (Camera rotations)
+let rotDeg = 0
+let rotX = 0
+let rotY= 0
+let rotZ = 1
 
 // called when page is loaded
 function main() {
@@ -127,7 +176,7 @@ function start(gl) {
   canvas.onwheel = function(ev){ scaleradius(ev, gl, canvas, a_Position); };
   window.onkeypress = function(ev){ keypress(ev, gl, canvas, a_Position); };
 
-  //generalized cylinder 1
+  // generalized cylinder cluster 1
   let init = []
   init.push (-0.7)
   init.push (-0.2)
@@ -135,16 +184,9 @@ function start(gl) {
   init.push (-0.7)
   init.push (0.5)
   init.push (1.0)
-
-  // init.push (-0.5)
-  // init.push (0.2)
-  // init.push (0.9)
-  // init.push (0.7)
-  // init.push (0.7)
-  // init.push (-1.0)
   oldlines.push(init)
 
-  // generalized cylinder 2 
+  // generalized cylinder cluster 2 
   let init2 = []
   init2.push(-0.3)
   init2.push(0.2)
@@ -152,6 +194,7 @@ function start(gl) {
   init2.push(0.8)
   oldlines.push(init2)
 
+  // initialize translation matrices / highlighting arrays
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
     thinking.push(0)
@@ -192,6 +235,7 @@ function start(gl) {
 }
 
 function animate(angle) {
+  // square movement
   if (CUBEMODE == 1){
     // Calculate the elapsed time
     var now = Date.now();
@@ -321,6 +365,7 @@ function click(ev, gl, canvas, a_Position) {
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
 
+// our main function for handling the right click event (translation)
 function rightclick (ev,gl,canvas,a_Position){   
   let x = ev.clientX; // x coordinate of a mouse pointer
   let y = ev.clientY; // y coordinate of a mouse pointer
@@ -352,6 +397,7 @@ function midclick(ev, gl, canvas, a_Position){
   }
 }
 
+// our main function for implementing highlighting
 function move (ev,gl,canvas,a_Position){   
    // if right click 
    if (ev.button == 2)
@@ -396,7 +442,6 @@ function initAllCylinders(gl,canvas,a_Position){
   // draw all finished cylinder 
   oldc_points = []
   oldc_normals = []
-  originalc_points = []
   all_old_angles = []
   convertednormals=[]
   for (var i =0 ; i < oldlines.length ; i++){       
@@ -411,7 +456,6 @@ function initAllCylinders(gl,canvas,a_Position){
      all_old_angles.push(individual_angles)
      oldc_points.push(oldc_line)
      oldc_normals.push(oldc_normals_line) 
-     originalc_points.push(oldc_line)
      oldc_line = []
      oldc_normals_line = []
     }
@@ -432,7 +476,8 @@ function draw_All(gl,canvas,a_Position,all_cylinder_points,all_cylinder_normals)
 }
 
 // calculates a translation matrix
-// applies the transformation matrix to cylinder_points
+// applies the transformation matrix to all cylinder points
+// returns the normals of translated cylinder points
 function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let scMatrices = []
   let trMatrices = []
@@ -863,7 +908,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 10);
+    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 20);
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
@@ -988,7 +1033,6 @@ function reset(ev, gl, canvas, a_Position){
 
 
 // scales the radius by applying the appropriate matrix
-// must untranslate - > scale - > translate
 function scaleradius(ev, gl, canvas, a_Position){
   let scale = 1.0
   // SCROLL : UP
@@ -1064,7 +1108,7 @@ function dragR(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
 
-// using translation matrix to translate on z axis 
+// accumulate how much to rotate z, translate z
 function dragM(ev, gl, canvas, a_Position){
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
@@ -1214,6 +1258,7 @@ function applyMatrix (c_point,matrix,factor){
   return newC
 }
 
+// Accumulate how much to twist a specific cylinder cluster
 function twist(ev, gl, canvas, a_Position){
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
@@ -1225,6 +1270,7 @@ function twist(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
 
+// Accumulate how much to shear a specific cylinder cluster
 function shear(ev, gl, canvas, a_Position){
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
@@ -1238,14 +1284,13 @@ function shear(ev, gl, canvas, a_Position){
 
 // rotate around XY
 function rotCamXY(ev, gl, canvas, a_Position){
-  let angle = 15
-  let rotateZ = new Matrix4().rotate(angle,0,1,0)
-  let temp =[]
-  temp.push(eyeX)
-  temp.push(eyeY)
-  temp.push(eyeZ)
-  let rotated = applyMatrix(temp,rotateZ,1.0)
-  eyeX = rotated[0]
-  eyeY = rotated[1]
-  eyeZ = rotated[2]
+  console.log(rotDeg)
+  let angle = 30
+  rotX = 0
+  rotY = 1
+  rotZ = 0
+  rotDeg = rotDeg + angle
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
