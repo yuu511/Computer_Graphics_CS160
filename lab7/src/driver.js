@@ -130,11 +130,11 @@ function start(gl) {
   //generalized cylinder 1
   let init = []
   init.push (-0.7)
-  init.push (0.2)
+  init.push (-0.2)
   init.push (0.7)
-  init.push (0.7)
+  init.push (-0.7)
   init.push (0.5)
-  init.push (-1.0)
+  init.push (1.0)
 
   // init.push (-0.5)
   // init.push (0.2)
@@ -147,9 +147,9 @@ function start(gl) {
   // generalized cylinder 2 
   let init2 = []
   init2.push(-0.1)
-  init2.push(0.1)
+  init2.push(0.8)
   init2.push(-0.1)
-  init2.push(-0.7)
+  init2.push(-0.1)
   oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
