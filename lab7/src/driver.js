@@ -24,10 +24,10 @@ let mode = 2
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
-let currentspecularR = 0.0
+let currentspecularR = 0.5
 let currentspecularG = 0.5
-let currentspecularB = 0.0
-let glossiness = 15.0
+let currentspecularB = 0.5
+let glossiness = 5.0
 
 // lab5 stuff (projection + selection)
 let highlighted = []
@@ -129,27 +129,27 @@ function start(gl) {
 
   //generalized cylinder 1
   let init = []
-  // init.push (-0.9)
-  // init.push (0.2)
-  // init.push (0.5)
-  // init.push (0.7)
-  // init.push (0.3)
-  // init.push (-1.0)
-
-  init.push (-0.5)
+  init.push (-0.7)
   init.push (0.2)
-  init.push (0.9)
   init.push (0.7)
   init.push (0.7)
+  init.push (0.5)
   init.push (-1.0)
+
+  // init.push (-0.5)
+  // init.push (0.2)
+  // init.push (0.9)
+  // init.push (0.7)
+  // init.push (0.7)
+  // init.push (-1.0)
   oldlines.push(init)
 
   // generalized cylinder 2 
   let init2 = []
-  init2.push(-0.3)
-  init2.push(-0.2)
-  init2.push(0.2)
-  init2.push(-0.9)
+  init2.push(-0.1)
+  init2.push(0.1)
+  init2.push(-0.1)
+  init2.push(-0.7)
   oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
