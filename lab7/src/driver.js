@@ -19,7 +19,7 @@ let Acolor = 1
 // cylinder_points = currently drawing cylinder points
 // sides = number of size the cylinder will have , radius = defualt radius
 let cylinder_points = []
-let sides = 10
+let sides = 20
 let radius = 0.30 
 
 //Position of light 1, default 1,1,1
@@ -38,7 +38,7 @@ let currentspecularR = 0.0
 let currentspecularG = 0.8
 let currentspecularB = 0.0
 // glossiness of specular highlights
-let glossiness = 3.0
+let glossiness = 10.0
 
 // lab5 stuff (projection + selection)
 // highlighted[i]= 1  -> cylinder cluster i is selected
@@ -187,14 +187,18 @@ function start(gl) {
   // init.push (-0.7)
   // init.push (0.5)
   // init.push (1.0)
-  init.push (-0.5)
-  init.push (1.0)
   init.push (0.5)
   init.push (-1.0)
   init.push (0.5)
   init.push (1.0)
-  oldlines.push(init)
-
+  oldlines.push(init) 
+  
+  let init2=[]
+  init2.push (-0.5)
+  init2.push (-1.0)
+  init2.push (-0.7)
+  init2.push (1.0)
+  oldlines.push(init2)
   // initialize translation matrices / highlighting arrays
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -1286,6 +1290,14 @@ function shear(ev, gl, canvas, a_Position){
 }
 
 //rotate camera along xy
+// eyeX = 0
+// eyeY = 0
+// eyeZ = 2
+// centerX = 0
+// centerY = 0
+// centerZ = 0
+// nP = 1
+// mvpMatrix.setPerspective(60, canvas.width/canvas.height, nP, 10)
 function rotXY(ev, gl, canvas, a_Position){
   rotX = 0
   rotY = 1
