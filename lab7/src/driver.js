@@ -34,7 +34,7 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 4.5
+let eyeZ = 5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -863,7 +863,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 10);
+    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 20);
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
@@ -1238,7 +1238,7 @@ function shear(ev, gl, canvas, a_Position){
 
 // rotate around XY
 function rotCamXY(ev, gl, canvas, a_Position){
-  let angle = 15
+  let angle = 30
   let rotateZ = new Matrix4().rotate(angle,0,1,0)
   let temp =[]
   temp.push(eyeX)
@@ -1248,4 +1248,7 @@ function rotCamXY(ev, gl, canvas, a_Position){
   eyeX = rotated[0]
   eyeY = rotated[1]
   eyeZ = rotated[2]
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
