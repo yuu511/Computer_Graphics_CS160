@@ -24,9 +24,9 @@ let mode = 2
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
-let currentspecularR = 0.5
+let currentspecularR = 0.0
 let currentspecularG = 0.5
-let currentspecularB = 0.5
+let currentspecularB = 0.0
 let glossiness = 5.0
 
 // lab5 stuff (projection + selection)
