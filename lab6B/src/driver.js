@@ -24,17 +24,17 @@ let mode = 2
 let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
-let currentspecularR = 1
-let currentspecularG = 1
-let currentspecularB = 1
-let glossiness = 120.0
+let currentspecularR = 0.0
+let currentspecularG = 0.5
+let currentspecularB = 0.0
+let glossiness = 8.0
 
 // lab5 stuff (projection + selection)
 let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 5
+let eyeZ = 4.5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -57,10 +57,6 @@ let originalc_points = []
 // refrence for left drag
 let previousX = null
 let previousY = null 
-let previousXr = null
-let previousYr = null 
-let previousXm = null
-let previousYm = null 
 let g_last = Date.now()
 let sc = []
 let transl = []
@@ -78,6 +74,8 @@ let twst = []
 let shr = []
 let convertednormals = []
 let model_matrices = []
+
+//lab7 stuff (Camera rotations)
 
 // called when page is loaded
 function main() {
@@ -131,20 +129,27 @@ function start(gl) {
 
   //generalized cylinder 1
   let init = []
-  init.push (-0.9)
-  init.push (0.2)
-  init.push (0.5)
+  init.push (-0.7)
+  init.push (-0.2)
   init.push (0.7)
-  init.push (0.3)
-  init.push (-1.0)
+  init.push (-0.7)
+  init.push (0.5)
+  init.push (1.0)
+
+  // init.push (-0.5)
+  // init.push (0.2)
+  // init.push (0.9)
+  // init.push (0.7)
+  // init.push (0.7)
+  // init.push (-1.0)
   oldlines.push(init)
 
   // generalized cylinder 2 
   let init2 = []
+  init2.push(-0.3)
+  init2.push(0.2)
   init2.push(-0.2)
-  init2.push(0.0)
-  init2.push(-0.5)
-  init2.push(-0.9)
+  init2.push(0.8)
   oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
@@ -246,11 +251,8 @@ function keypress(ev, gl, canvas, a_Position){
         draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
       }
   }
-  if (ev.which == "v".charCodeAt(0)){
-    scaleradius(ev, gl, canvas, a_Position)
-  }
-  if (ev.which == "b".charCodeAt(0)){
-    scaleradius(ev, gl, canvas, a_Position)
+  if (ev.which == "p".charCodeAt(0)){
+    rotCamXY(ev, gl, canvas, a_Position)
   }
 }
 
@@ -326,8 +328,6 @@ function rightclick (ev,gl,canvas,a_Position){
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   console.log(x + " " + y + " right click\n")
-  previousXr = x
-  previousYr = y
   for (var i =0 ; i < highlighted.length;i++){
     if (highlighted[i]==1){
       canvas.onmousemove = function(ev){ dragR(ev, gl, canvas, a_Position); }
@@ -712,27 +712,26 @@ function calcnormals(gl,canvas,a_Position,s,cylinder_points){
      let trianglecenter = []
      let indices = []
 
+     Q.push(cylinder_points[3*i])
+     Q.push(cylinder_points[3*i+1])
+     Q.push(cylinder_points[3*i+2])
 
-     S.push(cylinder_points[3*i])
-     S.push(cylinder_points[3*i+1])
-     S.push(cylinder_points[3*i+2])
+     R.push(cylinder_points[3*i+3])
+     R.push(cylinder_points[3*i+4])
+     R.push(cylinder_points[3*i+5])
 
-     R.push(cylinder_points[3*i+(cylinder_points.length/2)])
-     R.push(cylinder_points[3*i+(cylinder_points.length/2)+1])
-     R.push(cylinder_points[3*i+(cylinder_points.length/2)+2]) 
+     S.push(cylinder_points[3*i+(cylinder_points.length/2)])
+     S.push(cylinder_points[3*i+(cylinder_points.length/2)+1])
+     S.push(cylinder_points[3*i+(cylinder_points.length/2)+2]) 
      
-     Q.push(cylinder_points[3*i+3])
-     Q.push(cylinder_points[3*i+4])
-     Q.push(cylinder_points[3*i+5])
 
-     QR.push(R[0]-Q[0]) 
-     QR.push(R[1]-Q[1]) 
-     QR.push(R[2]-Q[2])
+     QR.push(Q[0]-R[0]) 
+     QR.push(Q[1]-R[1]) 
+     QR.push(Q[2]-R[2])
 
-
-     QS.push(S[0]-Q[0]) 
-     QS.push(S[1]-Q[1]) 
-     QS.push(S[2]-Q[2])
+     QS.push(Q[0]-S[0]) 
+     QS.push(Q[1]-S[1]) 
+     QS.push(Q[2]-S[2])
 
      // the surface normal vector is calculated by QR x QS which is perpendicular to the plane
      // use normalize to find the unit vector
@@ -992,12 +991,6 @@ function reset(ev, gl, canvas, a_Position){
 // must untranslate - > scale - > translate
 function scaleradius(ev, gl, canvas, a_Position){
   let scale = 1.0
-  if (ev.which == "v".charCodeAt(0)){
-    scale = 0.9  
-  }
-  if (ev.which == "b".charCodeAt(0)){
-    scale = 1.1
-  }
   // SCROLL : UP
   if(ev.deltaY > 0){
     scale = 0.9  
@@ -1028,14 +1021,12 @@ function dragR(ev, gl, canvas, a_Position){
   var rect = ev.target.getBoundingClientRect() ;
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  let deltaXr = x - previousXr
-  let deltaYr = y - previousYr  
   let scalar = 1
-  let angle = 15
+  let angle = 5
   // rotate X
-  if (Math.abs(deltaXr) <  Math.abs(deltaYr)){
+  if (Math.abs(ev.movementX) < Math.abs(ev.movementY) || ev.movementX == undefined){
    // push translation matrix
-   if (deltaYr > 0)
+   if (ev.movementY < 0)
      scalar = -1
    angle = scalar * angle
    for (var i =0 ; i < highlighted.length;i++){
@@ -1051,10 +1042,10 @@ function dragR(ev, gl, canvas, a_Position){
     }
   }
   // rotate Y
-  else if (Math.abs(deltaXr) >  Math.abs(deltaYr)){ 
+  else if (Math.abs(ev.movementX) > Math.abs(ev.movementY) || ev.movementY == undefined) { 
    // push translation matrix
      console.log("rotate Y!")
-   if (deltaXr > 0)
+   if (ev.movementX < 0)
      scalar = -1
    angle = scalar * angle
    for (var i =0 ; i < highlighted.length;i++){
@@ -1071,8 +1062,6 @@ function dragR(ev, gl, canvas, a_Position){
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-  previousXr = x
-  previousYr = y
 }
 
 // using translation matrix to translate on z axis 
@@ -1082,13 +1071,11 @@ function dragM(ev, gl, canvas, a_Position){
   var rect = ev.target.getBoundingClientRect() ;
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  let deltaXm = x - previousXm  
-  let deltaYm = y - previousYm 
   let angle = 15
   let scalar = 1
   // rotate Z
-  if (Math.abs(deltaXm) > Math.abs(deltaYm)){
-    if (deltaXm < 0) 
+  if (Math.abs(ev.movementX) > Math.abs(ev.movementY) || ev.movementY == undefined){
+    if (ev.movementX > 0) 
       scalar = -1
     angle = scalar * angle
    for (var i =0 ; i < highlighted.length;i++){
@@ -1104,8 +1091,9 @@ function dragM(ev, gl, canvas, a_Position){
    }
   }
   // translate Z
-  else {
-   let deltaZ = deltaYm * 5
+  else if (Math.abs(ev.movementX) < Math.abs(ev.movementY) || ev.movementX == undefined) {
+   console.log("Translate Z!")
+   let deltaZ = ev.movementY * 0.1 
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
        transz[i] = transz[i] + deltaZ
@@ -1115,8 +1103,6 @@ function dragM(ev, gl, canvas, a_Position){
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-  previousXm = x
-  previousYm = y
 }
 
 // Draws Cylinders, CAPs between cylinders, and calls a function to draw surface normals if applicable!!
@@ -1248,4 +1234,18 @@ function shear(ev, gl, canvas, a_Position){
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+// rotate around XY
+function rotCamXY(ev, gl, canvas, a_Position){
+  let angle = 15
+  let rotateZ = new Matrix4().rotate(angle,0,1,0)
+  let temp =[]
+  temp.push(eyeX)
+  temp.push(eyeY)
+  temp.push(eyeZ)
+  let rotated = applyMatrix(temp,rotateZ,1.0)
+  eyeX = rotated[0]
+  eyeY = rotated[1]
+  eyeZ = rotated[2]
 }

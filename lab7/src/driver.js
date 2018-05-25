@@ -27,7 +27,7 @@ let ambientB = 0.2
 let currentspecularR = 0.0
 let currentspecularG = 0.5
 let currentspecularB = 0.0
-let glossiness = 10.0
+let glossiness = 8.0
 
 // lab5 stuff (projection + selection)
 let highlighted = []
@@ -146,10 +146,10 @@ function start(gl) {
 
   // generalized cylinder 2 
   let init2 = []
-  init2.push(-0.1)
+  init2.push(-0.3)
+  init2.push(0.2)
+  init2.push(-0.2)
   init2.push(0.8)
-  init2.push(-0.1)
-  init2.push(-0.1)
   oldlines.push(init2)
 
   for (var i =0 ; i < oldlines.length; i++){
@@ -1040,7 +1040,6 @@ function dragR(ev, gl, canvas, a_Position){
        }
      }
     }
-    console.log(oldc_normals)
   }
   // rotate Y
   else if (Math.abs(ev.movementX) > Math.abs(ev.movementY) || ev.movementY == undefined) { 

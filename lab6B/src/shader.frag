@@ -25,7 +25,7 @@ void main() {
   // specular 
   float specular = 0.0;
   float exponent = u_exponent;
-  vec3 viewVec = normalize(v_Position);
+  vec3 viewVec = normalize(v_Normal);
   vec3 lightDir = normalize(vec3(u_LightPositionF)-vec3(v_Position));
   vec3 reflectVec = reflect(-lightDir,v_Normal);
   specular = pow(max(dot(reflectVec, viewVec), 0.0), exponent);
