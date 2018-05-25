@@ -2,13 +2,14 @@
 var VSHADER_SOURCE = null; // vertex shader program
 var FSHADER_SOURCE = null; // fragment shader program
 
-// All line segments, use it to initialize cylinders
+// All line segments, used to initialize cylinders
 // array of arrays ex: oldlines[0] = line segment 0 
-// inside of oldlines[0]: [(x,y) (x,y) (x,y)] -> 2 cylinders
-// A line segment = a "cluster" of cylinders
+// inside of oldlines[0]: [x1,y1 ,x2,y2, x3,y3] -> 2 cylinders, 
+// cylinder 1 has faces with center x1y1 x2y2 and cylinder 2 has faces with center x2y2 x3y3
+// A line segment = a cluster of cylinders
 let oldlines = [] // all previous completed lines
 
-// Defaul color of object
+// Defaul color of object (red)
 // (x)Color = current color setting, oldcolors = all old colors (an array of arrays)
 let Rcolor = 1
 let Gcolor = 0
@@ -21,7 +22,7 @@ let cylinder_points = []
 let sides = 10
 let radius = 0.20 
 
-//Position of light 1
+//Position of light 1, default 1,1,1
 let light1X = 1.0
 let light1Y = 1.0
 let light1Z = 1.0
@@ -294,9 +295,6 @@ function keypress(ev, gl, canvas, a_Position){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
       }
-  }
-  if (ev.which == "p".charCodeAt(0)){
-    rotCamXY(ev, gl, canvas, a_Position)
   }
 }
 
@@ -1066,7 +1064,7 @@ function dragR(ev, gl, canvas, a_Position){
   x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
   y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
   let scalar = 1
-  let angle = 5
+  let angle = 15
   // rotate X
   if (Math.abs(ev.movementX) < Math.abs(ev.movementY) || ev.movementX == undefined){
    // push translation matrix
@@ -1137,7 +1135,7 @@ function dragM(ev, gl, canvas, a_Position){
   // translate Z
   else if (Math.abs(ev.movementX) < Math.abs(ev.movementY) || ev.movementX == undefined) {
    console.log("Translate Z!")
-   let deltaZ = ev.movementY * 0.1 
+   let deltaZ = ev.movementY * 0.08
    for (var i =0 ; i < highlighted.length;i++){
      if (highlighted[i]==1){
        transz[i] = transz[i] + deltaZ
@@ -1277,19 +1275,6 @@ function shear(ev, gl, canvas, a_Position){
        shr[i] = shr[i] + 1
      }
    }
-  // Clear color and depth buffer
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-}
-
-// rotate around XY
-function rotCamXY(ev, gl, canvas, a_Position){
-  console.log(rotDeg)
-  let angle = 30
-  rotX = 0
-  rotY = 1
-  rotZ = 0
-  rotDeg = rotDeg + angle
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
