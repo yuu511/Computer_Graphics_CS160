@@ -47,11 +47,11 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 2
+let eyeZ = 5
 let centerX = 0
 let centerY = 0
 let centerZ = 0
-let nP = 1
+let nP = 3
 let orthomode = -1
 let ANGLE_STEP = 0.0
 
@@ -124,10 +124,18 @@ let convertednormals = []
 let model_matrices = []
 
 //lab7 stuff (Camera rotations)
+let viewM = new Matrix4()
 let rotDeg = 0
 let rotX = 0
 let rotY= 0
 let rotZ = 1
+let upX = 0
+let upY = 1.0
+let upZ = 0
+let xpan = 0
+let ypan = 0
+let forwb = 0
+let FOV = 30
 
 // called when page is loaded
 function main() {
@@ -188,14 +196,14 @@ function start(gl) {
   // init.push (0.5)
   // init.push (1.0)
   init.push (0.5)
-  init.push (-1.0)
+  init.push (-0.6)
   init.push (0.5)
   init.push (1.0)
   oldlines.push(init) 
   
   let init2=[]
   init2.push (-0.5)
-  init2.push (-1.0)
+  init2.push (-0.6)
   init2.push (-0.7)
   init2.push (1.0)
   oldlines.push(init2)
@@ -300,8 +308,39 @@ function keypress(ev, gl, canvas, a_Position){
         draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
       }
   }
+  // lab7
   if (ev.which == "p".charCodeAt(0)){
     rotXY(ev, gl, canvas, a_Position)
+  }
+
+  //pan
+  if (ev.which == "h".charCodeAt(0)){
+    pan(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "j".charCodeAt(0)){
+    pan(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "k".charCodeAt(0)){
+    pan(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "l".charCodeAt(0)){
+    pan(ev, gl, canvas, a_Position)
+  }
+
+  // forward back
+  if (ev.which == "y".charCodeAt(0)){
+    forwardback(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "u".charCodeAt(0)){
+    forwardback(ev, gl, canvas, a_Position)
+  }
+ 
+  //zoom
+  if (ev.which == "i".charCodeAt(0)){
+    zoom(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "o".charCodeAt(0)){
+    zoom(ev, gl, canvas, a_Position)
   }
 }
 
@@ -631,9 +670,9 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       let circle_one = applyMatrix(base,C1,1)
       let circle_two = applyMatrix(base,C2,1)
       let full = circle_one.concat(circle_two)
-
-
       c_p[i][j] = full
+       
+
       //CALCULATE NEW NORMALS USING INVERSE TRANSPOSE
       let M2 = new Matrix4
           M2.set (trMatrices[i])
@@ -660,6 +699,8 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       Invert.setInverseOf(M2)
       Invert.transpose()
       convertednormals[i][j] = applyMatrix(cylinder_normals[i][j],Invert,0.0)
+      let viewM = new Matrix4().translate(xpan,ypan,forwb)
+      c_p[i][j]= applyMatrix(c_p[i][j],viewM,1.0)
     }
   }   
   // apply the changes
@@ -908,20 +949,23 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
       console.log(u_NormalMatrix)
       return;
     } 
-  var modelMatrix = new Matrix4();  // Model matrix
-  var mvpMatrix = new Matrix4();    // Model view projection matrix
-  var normalMatrix = new Matrix4(); // Transformation matrix for normals
+    var modelMatrix = new Matrix4();  // Model matrix
+    var mvpMatrix = new Matrix4();    // Model view projection matrix
+    var normalMatrix = new Matrix4(); // Transformation matrix for normals
 
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
+
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(60, canvas.width/canvas.height, nP, 10)
-    mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0)
+    mvpMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
+    mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
+
     normalMatrix.set(modelMatrix)
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
+
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
@@ -1302,8 +1346,63 @@ function rotXY(ev, gl, canvas, a_Position){
   rotX = 0
   rotY = 1
   rotZ = 0
-  rotDeg= (rotDeg % 360) + 5
+  rotDeg= (rotDeg % 360) - 5
   console.log(rotDeg)
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+function rotXY(ev, gl, canvas, a_Position){
+  rotX = 0
+  rotY = 1
+  rotZ = 0
+  rotDeg= (rotDeg % 360) - 5
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+// pan camera
+function pan(ev, gl, canvas, a_Position){
+  // move left
+  if (ev.key=='h'){
+    xpan = xpan - 0.1
+  }
+  if (ev.key=='j'){
+    ypan = ypan - 0.1
+  }
+  if (ev.key=='k'){
+    ypan = ypan + 0.1
+  }
+  if (ev.key=='l'){
+    xpan = xpan + 0.1
+  }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+function forwardback(ev, gl, canvas, a_Position){
+  if (ev.key=='y'){
+    forwb = forwb - 0.1
+  }
+  if (ev.key=='u'){
+    forwb = forwb + 0.1
+  }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+// zoom camera
+function zoom(ev, gl, canvas, a_Position){
+  if (ev.key=='i'){
+    FOV = FOV + 1
+  }
+  if (ev.key=='o'){
+    FOV = FOV - 1
+  }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
