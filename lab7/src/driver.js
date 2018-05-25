@@ -4,12 +4,12 @@ var FSHADER_SOURCE = null; // fragment shader program
 
 // All line segments, used to initialize cylinders
 // array of arrays ex: oldlines[0] = line segment 0 
-// inside of oldlines[0]: [x1,y1 ,x2,y2, x3,y3] -> 2 cylinders, 
-// cylinder 1 has faces with center x1y1 x2y2 and cylinder 2 has faces with center x2y2 x3y3
 // A line segment = a cluster of cylinders
-let oldlines = [] // all previous completed lines
+// ex: inside of oldlines[0]: [x1,y1 ,x2,y2, x3,y3] -> 2 cylinders: 
+// cylinder 1 has faces with center x1y1 x2y2 and cylinder 2 has faces with center x2y2 x3y3
+let oldlines = [] 
 
-// Defaul color of object (red)
+// Defaul color of object specified in R,G,B,A(red)
 // (x)Color = current color setting, oldcolors = all old colors (an array of arrays)
 let Rcolor = 1
 let Gcolor = 0
@@ -20,7 +20,7 @@ let Acolor = 1
 // sides = number of size the cylinder will have , radius = defualt radius
 let cylinder_points = []
 let sides = 10
-let radius = 0.20 
+let radius = 0.30 
 
 //Position of light 1, default 1,1,1
 let light1X = 1.0
@@ -35,10 +35,10 @@ let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
 let currentspecularR = 0.0
-let currentspecularG = 0.5
+let currentspecularG = 0.8
 let currentspecularB = 0.0
 // glossiness of specular highlights
-let glossiness = 8.0
+let glossiness = 3.0
 
 // lab5 stuff (projection + selection)
 // highlighted[i]= 1  -> cylinder cluster i is selected
@@ -47,39 +47,41 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 5
+let eyeZ = 2
 let centerX = 0
 let centerY = 0
 let centerZ = 0
-let nP = 3
+let nP = 1
 let orthomode = -1
 let ANGLE_STEP = 0.0
 
 //lab6 stuff (translations)
 // oldc_points = all current cylinder points, arranged in array of arrays
 // e.x. oldc_points [i][j] = cluster (group of cylinders in a single line segment) i , cylinder j  of cluster i
-// Initial cylinder points (oldc_points) and normals (oldc_normals)
-let oldc_line = []
+
+// all initial cylinder points (oldc_points) and normals (oldc_normals)
 let oldc_points = []
-let oldc_normals_line = []
 let oldc_normals = []
+// temp arrays to store individual lines/points
+let oldc_line = []
+let oldc_normals_line = []
 
 // refrence for left drag
 let previousX = null
 let previousY = null 
 
 
-// scale, translate, translate(z), rotate X, rotate Y, rotate Z matrices
+// scale, translate, translate(z), rotate X, rotate Y, rotate Z values
 
-// scale matrices: stored as an array, holds a single number representing how much a cluster is scaled. 
+// scale matrices: stored as an array, holds a single number representing how much a cluster of cylinders is scaled. 
 // ex: sc[i] = 1.1 -> cluster i is scaled by 1.1
 let sc = []
 
-// holds how much a cluster is translated by x,y. Same as scale, but extra paramaters to represent x,y. 
+// holds how much a cluster is translated by x,y. Same as scale, but extra paramaters to represent x,y.
 // ex: transl[i][0]= 20,transl[i][1] = 10-> shift cluster i by x +20 and y +10 
 let transl = []
 
-// same as above, except for z. holds a single value ( no extra parameters) 
+// same as above, except for z. holds a single value (no extra parameters) 
 // ex: transz[i]= - 1 -> translate cluster i by z -1 
 let transz = []
 
@@ -99,7 +101,7 @@ let CUBEMODE = 0
 // FALLDOWN = falling down movement 
 let FALLDOWN = -1
 // toggle animation (continuous drawing of canvas) 
-let tickB = 1
+let tickB = 0
 // reference for last time animation is called
 let g_last = Date.now()
 
@@ -179,21 +181,19 @@ function start(gl) {
 
   // generalized cylinder cluster 1
   let init = []
-  init.push (-0.7)
-  init.push (-0.2)
-  init.push (0.7)
-  init.push (-0.7)
+  // init.push (-0.7)
+  // init.push (-0.2)
+  // init.push (0.7)
+  // init.push (-0.7)
+  // init.push (0.5)
+  // init.push (1.0)
+  init.push (-0.5)
+  init.push (1.0)
+  init.push (0.5)
+  init.push (-1.0)
   init.push (0.5)
   init.push (1.0)
   oldlines.push(init)
-
-  // generalized cylinder cluster 2 
-  let init2 = []
-  init2.push(-0.3)
-  init2.push(0.2)
-  init2.push(-0.2)
-  init2.push(0.8)
-  oldlines.push(init2)
 
   // initialize translation matrices / highlighting arrays
   for (var i =0 ; i < oldlines.length; i++){
@@ -295,6 +295,9 @@ function keypress(ev, gl, canvas, a_Position){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
       }
+  }
+  if (ev.which == "p".charCodeAt(0)){
+    rotXY(ev, gl, canvas, a_Position)
   }
 }
 
@@ -473,8 +476,8 @@ function draw_All(gl,canvas,a_Position,all_cylinder_points,all_cylinder_normals)
   }  
 }
 
-// calculates a translation matrix
-// applies the transformation matrix to all cylinder points
+// calculates a transformation matrix
+// applies the transformation matrix to all of the cylinder points
 // returns the normals of translated cylinder points
 function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
   let scMatrices = []
@@ -532,6 +535,7 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
     trMatrices.push(toTr)
   } 
 
+  // old translations,(what we did to the cylinder initially) 
   // initial rotate angle along z 
   for (var i = 0 ; i < all_old_angles.length ; i++){
     let t = []
@@ -558,14 +562,15 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
     old_translate.push(allc_o)
   }  
 
-  // init transformation
   // copy the original circle rotated around x (center 0,0 , rot x)
   let base = JSON.parse(JSON.stringify(reference))
-  // copy the current cylinder_points
+  // copy the current cylinder_points / cylinder normals
   let c_p = JSON.parse(JSON.stringify(cylinder_points))
   let c_n = JSON.parse(JSON.stringify(cylinder_normals))
   let initRotate = []
   let test = []
+
+  // apply matrices
   for (var i = 0 ; i < cylinder_points.length ; i++){
     for (var j = 0 ; j < cylinder_points[i].length  ; j++){
       let origin = new Matrix4()
@@ -904,10 +909,10 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
   var normalMatrix = new Matrix4(); // Transformation matrix for normals
 
     // Calculate the model matrix
-    modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ); // Rotate around the y-axis
+    modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(30, canvas.width/canvas.height, nP, 20);
-    mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0);
+    mvpMatrix.setPerspective(60, canvas.width/canvas.height, nP, 10)
+    mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, 0, 1, 0)
     mvpMatrix.multiply(modelMatrix);
     // Calculate the matrix to transform the normal based on the model matrix
     normalMatrix.set(modelMatrix)
@@ -1275,6 +1280,18 @@ function shear(ev, gl, canvas, a_Position){
        shr[i] = shr[i] + 1
      }
    }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+//rotate camera along xy
+function rotXY(ev, gl, canvas, a_Position){
+  rotX = 0
+  rotY = 1
+  rotZ = 0
+  rotDeg= (rotDeg % 360) + 5
+  console.log(rotDeg)
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
