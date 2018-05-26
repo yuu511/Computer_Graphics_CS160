@@ -25,7 +25,6 @@ varying mat4 v_MvpMatrix;
 varying mat4 v_ModelMatrix;
 varying mat4 v_NormalMatrix;
 
-
 void main() {
   gl_Position = a_Position * u_MvpMatrix;
   v_Position = vec3(a_Position * u_ModelMatrix);  

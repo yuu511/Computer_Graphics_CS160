@@ -699,8 +699,8 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       Invert.setInverseOf(M2)
       Invert.transpose()
       convertednormals[i][j] = applyMatrix(cylinder_normals[i][j],Invert,0.0)
-      let viewM = new Matrix4().translate(xpan,ypan,forwb)
-      c_p[i][j]= applyMatrix(c_p[i][j],viewM,1.0)
+      // let viewM = new Matrix4().translate(xpan,ypan,forwb)
+      // c_p[i][j]= applyMatrix(c_p[i][j],viewM,1.0)
     }
   }   
   // apply the changes
@@ -933,8 +933,8 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
     var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+    var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');
     var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
-    var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');  
     var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
     if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ModelMatrix || !u_MvpMatrix || !u_NormalMatrix) { 
       console.log('Failed to get the storage location');
@@ -946,34 +946,36 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
       console.log(u_exponent)
       console.log(u_ModelMatrix)
       console.log(u_MvpMatrix)
-      console.log(u_NormalMatrix)
       return;
     } 
+
+
     var modelMatrix = new Matrix4();  // Model matrix
     var mvpMatrix = new Matrix4();    // Model view projection matrix
     var normalMatrix = new Matrix4(); // Transformation matrix for normals
-
+    var viewMatrix = new Matrix4()
+    var projMatrix = new Matrix4()
+    // let viewM = new Matrix4().translate(xpan,ypan,forwb)
     // Calculate the model matrix
     modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
 
     // Calculate the view projection matrix
-    mvpMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
-    mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
-    mvpMatrix.multiply(modelMatrix);
-    // Calculate the matrix to transform the normal based on the model matrix
+    projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
+    viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
+    mvpMatrix.multiply(projMatrix)
+    mvpMatrix.multiply(viewMatrix)
+    mvpMatrix.multiply(modelMatrix)
 
-    normalMatrix.set(modelMatrix)
-    normalMatrix.setInverseOf(modelMatrix);
-    normalMatrix.transpose();
-
+  
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+
+    // Pass the model matrix to u_ModelMatrix
+    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
 
     // Pass the model view projection matrix to u_mvpMatrix
     gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
 
-    // Pass the transformation matrix for normals to u_NormalMatrix
-    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
     // Set the light color (white)
     gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
     // Set the light Position (in the world coordinate)
@@ -1367,7 +1369,7 @@ function rotXY(ev, gl, canvas, a_Position){
 function pan(ev, gl, canvas, a_Position){
   // move left
   if (ev.key=='h'){
-    xpan = xpan - 0.1
+   eyeX = eyeX - 0.1
   }
   if (ev.key=='j'){
     ypan = ypan - 0.1
@@ -1376,7 +1378,7 @@ function pan(ev, gl, canvas, a_Position){
     ypan = ypan + 0.1
   }
   if (ev.key=='l'){
-    xpan = xpan + 0.1
+    eyeX = eyeX + 0.1
   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -1398,10 +1400,10 @@ function forwardback(ev, gl, canvas, a_Position){
 // zoom camera
 function zoom(ev, gl, canvas, a_Position){
   if (ev.key=='i'){
-    FOV = FOV + 1
+    FOV = FOV - 1
   }
   if (ev.key=='o'){
-    FOV = FOV - 1
+    FOV = FOV + 1
   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

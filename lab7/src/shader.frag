@@ -17,8 +17,6 @@ uniform vec3 u_ViewPositionF;
 uniform vec3 u_HighlightF;
 
 varying mat4 v_MvpMatrix;
-varying mat4 v_ModelMatrix;
-varying mat4 v_NormalMatrix;
 
 
 void main() {
