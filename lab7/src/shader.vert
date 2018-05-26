@@ -19,10 +19,12 @@ varying vec3 v_Position;
 uniform float u_orthomode;
 // viewMatrix
 uniform mat4 u_ViewMatrix;
+//projmatrix
+uniform mat4 u_ProjMatrix;
 
 void main() {
-  gl_Position = u_ViewMatrix * a_Position;
-  v_Position = vec3(u_ViewMatrix * a_Position);  
+  gl_Position = u_ProjMatrix * u_ViewMatrix * a_Position;
+  v_Position = vec3(u_ProjMatrix * u_ViewMatrix * a_Position);  
   v_Normal = normalize(vec3(a_Normal)); 
   v_Color = a_Color;
 

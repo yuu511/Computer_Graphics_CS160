@@ -20,7 +20,7 @@ let Acolor = 1
 // sides = number of size the cylinder will have , radius = defualt radius
 let cylinder_points = []
 let sides = 20
-let radius = 0.10 
+let radius = 0.20 
 
 //Position of light 1, default 1,1,1
 let light1X = 1.0
@@ -47,7 +47,7 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 1
+let eyeZ = 2
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -135,7 +135,7 @@ let upZ = 0
 let xpan = 0
 let ypan = 0
 let forwb = 0
-let FOV = 30
+let FOV = 50
 
 // called when page is loaded
 function main() {
@@ -933,6 +933,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
     var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
     var u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix')
+    var u_ProjMatrix= gl.getUniformLocation(gl.program, 'u_ProjMatrix')
     if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ViewMatrix) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLightF)
@@ -950,13 +951,13 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
    // var mvpMatrix = new Matrix4();    // Model view projection matrix
    // var normalMatrix = new Matrix4(); // Transformation matrix for normals
    var viewMatrix = new Matrix4()
-   // var projMatrix = new Matrix4()
+   var projMatrix = new Matrix4()
    // // let viewM = new Matrix4().translate(xpan,ypan,forwb)
    // // Calculate the model matrix
    // modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
 
    // // Calculate the view projection matrix
-   // projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
+   projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
    viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
    // mvpMatrix.multiply(projMatrix)
    // mvpMatrix.multiply(viewMatrix)
@@ -974,6 +975,8 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
 
     // Set the view matrix
     gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+    // Set the view matrix
+    gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
     // Set the light color (white)
     gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
     // Set the light Position (in the world coordinate)
@@ -1368,14 +1371,18 @@ function pan(ev, gl, canvas, a_Position){
   // move left
   if (ev.key=='h'){
    eyeX = eyeX + 0.1
+   centerX = centerX + 0.1
   }
   if (ev.key=='j'){
-    ypan = ypan - 0.1
+   centerY = centerY + 0.1
+   eyeY = eyeY + 0.1
   }
   if (ev.key=='k'){
-    ypan = ypan + 0.1
+   centerY = centerY - 0.1
+   eyeY = eyeY - 0.1
   }
   if (ev.key=='l'){
+   centerX = centerX - 0.1
     eyeX = eyeX - 0.1
   }
   // Clear color and depth buffer
