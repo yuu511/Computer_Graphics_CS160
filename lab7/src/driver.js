@@ -35,10 +35,10 @@ let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
 let currentspecularR = 0.0
-let currentspecularG = 0.6
+let currentspecularG = 0.9
 let currentspecularB = 0.0
 // glossiness of specular highlights
-let glossiness = 10.0
+let glossiness = 4.0
 
 // lab5 stuff (projection + selection)
 // highlighted[i]= 1  -> cylinder cluster i is selected
@@ -47,7 +47,7 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 2.5
+let eyeZ = 2.0
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -101,7 +101,7 @@ let CUBEMODE = 0
 // FALLDOWN = falling down movement 
 let FALLDOWN = -1
 // toggle animation (continuous drawing of canvas) 
-let tickB = 0
+let tickB = 1
 // reference for last time animation is called
 let g_last = Date.now()
 
@@ -135,6 +135,11 @@ let upZ = 0
 let FOV = 50
 let rot_cam_y = 0
 let rot_cam_z = 0
+let ROTATEAROUNDOBJ = -1.0
+let selectR = 0.2
+let selectG = 0.2
+let selectB = 0.2
+let iterate = 0
 
 // called when page is loaded
 function main() {
@@ -191,18 +196,9 @@ function start(gl) {
   init.push (0.5)
   init.push (-0.1)
   init.push (0.5)
-  init.push (0.9)
+  init.push (0.8)
   oldlines.push(init) 
  
- // gen cylinder cluster 3 
-  let init3=[]
-  init3.push (-0.8)
-  init3.push (-0.5)
-  init3.push (-0.5)
-  init3.push (0.8)
-  init3.push (0.1)
-  init3.push (-0.1)
-  oldlines.push(init3)
   // initialize translation matrices / highlighting arrays
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -225,17 +221,21 @@ function start(gl) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
   if (tickB==1){
-  var currentAngle = 0.0
       var tick = function (){
-        if (FALLDOWN == 1){
-          eyeZ = eyeZ + 1.0
-          eyeY = eyeY + 1.0
-          eyeX = eyeX + 1.0
+        if (ROTATEAROUNDOBJ == 1){
+          for (var i =0 ; i < highlighted.length;i++){
+            if (highlighted[i]==1){
+              rotate_around_obj(gl, canvas, a_Position,i)
+            }
+          }
         }
-        currentAngle = animate(currentAngle)
-        rotDeg = currentAngle
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+        else {
+          selectR = 0.2
+          selectG = 0.2
+          selectB = 0.2
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+        }
         requestAnimationFrame(tick,canvas)
       }
       tick()
@@ -272,28 +272,6 @@ function animate(angle) {
 
 // various keypress functions
 function keypress(ev, gl, canvas, a_Position){
-  if (ev.which == "s".charCodeAt(0)){
-    shear(ev, gl, canvas, a_Position)
-  }
-  if (ev.which == "t".charCodeAt(0)){
-    twist(ev, gl, canvas, a_Position)
-  }
-  if (ev.which == "r".charCodeAt(0)){
-    if (ANGLE_STEP == 0)
-      ANGLE_STEP = 200
-    else 
-      ANGLE_STEP = 0
-  }
-  if (ev.which == "q".charCodeAt(0)){
-    if (ANGLE_STEP == 0){
-      CUBEMODE = 1
-      ANGLE_STEP = 10
-    }
-    else{
-      CUBEMODE = 0 
-      ANGLE_STEP = 0 
-   }
-  }
   if (ev.which == "f".charCodeAt(0)){
       FALLDOWN = FALLDOWN * -1
       if (FALLDOWN == -1){
@@ -343,10 +321,19 @@ function keypress(ev, gl, canvas, a_Position){
   if (ev.which == "a".charCodeAt(0)){
     rotate_cam_Y(ev, gl, canvas, a_Position)
   }
+  // rotate cam around y
+  if (ev.which == "s".charCodeAt(0)){
+    rotate_cam_Y(ev, gl, canvas, a_Position)
+  }
   
   // rotate cam around z
-  if (ev.which == "s".charCodeAt(0)){
+  if (ev.which == "d".charCodeAt(0)){
     rotate_cam_Z(ev, gl, canvas, a_Position)
+  }
+
+  // rotate cam around specific object
+  if (ev.which == "f".charCodeAt(0)){
+    ROTATEAROUNDOBJ = ROTATEAROUNDOBJ * -1
   }
 }
 
@@ -957,7 +944,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
    
    var viewMatrix = new Matrix4() // view matrix
    var projMatrix = new Matrix4() // projection matrix
-   var modelMatrix = new Matrix4();  // Model matrix
+   var modelMatrix = new Matrix4()  // Model matrix
    var normalMatrix = new Matrix4()
 
    // calcualte the view Matrix using lookAt
@@ -966,12 +953,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
    projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
    // Calculate the model matrix
    modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
-
-   // Calculate the matrix to transform the normal based on the model matrix
-   normalMatrix.setInverseOf(modelMatrix);
-   normalMatrix.transpose();
-
-  
+ 
    // // Pass the model matrix to u_ModelMatrix
    // gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
@@ -1006,7 +988,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     console.log(" failed to get location of u_HiglightF!")
   }
   // possible highlights
-  // reserved for buttons only
+  // reserved for buttons only ( button in canvas)
   if (numpolyline == -1.0){
     gl.uniform3f(u_AmbientLight, 0.0, 0.0, 0.0)
     gl.uniform3f(u_HighlightF, 2.0, 2.0, 0.0);
@@ -1020,7 +1002,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     gl.uniform3f(u_HighlightF, 0, 0.5, 0);
   // select highlight (priority 1)
   if (highlighted[numpolyline] == 1)
-    gl.uniform3f(u_HighlightF, 0.2, 0.2, 0.2);
+    gl.uniform3f(u_HighlightF, selectR, selectG, selectB);
 }
 
 // finds cross product between 2 vectors
@@ -1386,12 +1368,12 @@ function pan(ev, gl, canvas, a_Position){
    centerX = centerX + 0.1
   }
   if (ev.key=='j'){
-   centerY = centerY + 0.1
    eyeY = eyeY + 0.1
+   centerY = centerY + 0.1
   }
   if (ev.key=='k'){
-   centerY = centerY - 0.1
    eyeY = eyeY - 0.1
+   centerY = centerY - 0.1
   }
   if (ev.key=='l'){
    centerX = centerX - 0.1
@@ -1432,21 +1414,47 @@ function zoom(ev, gl, canvas, a_Position){
 
 // rot cam around Y
 function rotate_cam_Y(ev, gl, canvas, a_Position){
-  rot_cam_y = (rot_cam_y + 1) % 24
-  let angle = ( Math.PI / 12 ) * rot_cam_y
-  eyeX = 2.5 * Math.sin(angle)
-  eyeZ = 2.5 * Math.cos(angle)
+  if (ev.key=='a'){
+    rotY = -1
+  }
+  if (ev.key=='s'){
+    rotY = 1
+  }
+  rotDeg = 15 + rotDeg
+  rotX = 0
+  rotZ = 0
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
 
-// rot cam around Z
+// rot cam around Z ( spin )
 function rotate_cam_Z(ev, gl, canvas, a_Position){
-  rot_cam_z = rot_cam_z + 1
-  let angle = ( Math.PI / 6 ) * rot_cam_z
-  eyeY = 2.5 * Math.cos(angle)
-  eyeZ = 2.5 * Math.sin(angle)
+  rotDeg = 15 + rotDeg
+  rotY = 0
+  rotX = 0
+  rotZ = 1
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+  // gl.uniform3f(u_HighlightF, 0.2, 0.2, 0.2);
+function rotate_around_obj(gl, canvas, a_Position,numobject){
+  iterate = iterate + Math.cos(Math.PI/6)
+  selectR = 0.0
+  selectG = 0.0
+  selectB = 0.0
+  centerX = oldc_points[numobject][0][0]  
+  centerY = oldc_points[numobject][0][0] 
+  centerZ = oldc_points[numobject][0][0] 
+  eyeX = oldc_points[numobject][0][0] + 1.0 
+  eyeY = oldc_points[numobject][0][0] - 0.6 
+  eyeZ = oldc_points[numobject][0][0] + 1.5 
+  rotDeg = 1 + rotDeg
+  rotY = 1
+  rotX = 0
+  rotZ = 0
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
