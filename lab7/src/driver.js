@@ -132,10 +132,9 @@ let rotZ = 1
 let upX = 0
 let upY = 1.0
 let upZ = 0
-let xpan = 0
-let ypan = 0
-let forwb = 0
 let FOV = 50
+let rot_cam_y = 0
+let rot_cam_z = 0
 
 // called when page is loaded
 function main() {
@@ -310,7 +309,7 @@ function keypress(ev, gl, canvas, a_Position){
     rotXY(ev, gl, canvas, a_Position)
   }
 
-  //pan
+  // pan
   if (ev.which == "h".charCodeAt(0)){
     pan(ev, gl, canvas, a_Position)
   }
@@ -332,12 +331,22 @@ function keypress(ev, gl, canvas, a_Position){
     forwardback(ev, gl, canvas, a_Position)
   }
  
-  //zoom
+  // zoom
   if (ev.which == "i".charCodeAt(0)){
     zoom(ev, gl, canvas, a_Position)
   }
   if (ev.which == "o".charCodeAt(0)){
     zoom(ev, gl, canvas, a_Position)
+  }
+ 
+  // rotate cam around y
+  if (ev.which == "a".charCodeAt(0)){
+    rotate_cam_Y(ev, gl, canvas, a_Position)
+  }
+  
+  // rotate cam around z
+  if (ev.which == "s".charCodeAt(0)){
+    rotate_cam_Z(ev, gl, canvas, a_Position)
   }
 }
 
@@ -951,6 +960,7 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
    var modelMatrix = new Matrix4();  // Model matrix
    var normalMatrix = new Matrix4()
 
+   // calcualte the view Matrix using lookAt
    viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
    // // Calculate the view projection matrix
    projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
@@ -1415,6 +1425,28 @@ function zoom(ev, gl, canvas, a_Position){
   if (ev.key=='o'){
     FOV = FOV + 1
   }
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+// rot cam around Y
+function rotate_cam_Y(ev, gl, canvas, a_Position){
+  rot_cam_y = (rot_cam_y + 1) % 24
+  let angle = ( Math.PI / 12 ) * rot_cam_y
+  eyeX = 2.5 * Math.sin(angle)
+  eyeZ = 2.5 * Math.cos(angle)
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+// rot cam around Z
+function rotate_cam_Z(ev, gl, canvas, a_Position){
+  rot_cam_z = rot_cam_z + 1
+  let angle = ( Math.PI / 6 ) * rot_cam_z
+  eyeY = 2.5 * Math.cos(angle)
+  eyeZ = 2.5 * Math.sin(angle)
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
