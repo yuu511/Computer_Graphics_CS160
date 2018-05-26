@@ -13,7 +13,6 @@ uniform vec3 u_DiffuseLightF;
 uniform vec3 u_LightPositionF;
 uniform vec3 u_AmbientLightF;
 uniform vec3 u_SpecularLightF;
-uniform vec3 u_ViewPositionF;
 uniform vec3 u_HighlightF;
 
 varying mat4 v_MvpMatrix;

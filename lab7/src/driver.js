@@ -20,7 +20,7 @@ let Acolor = 1
 // sides = number of size the cylinder will have , radius = defualt radius
 let cylinder_points = []
 let sides = 20
-let radius = 0.30 
+let radius = 0.10 
 
 //Position of light 1, default 1,1,1
 let light1X = 1.0
@@ -47,11 +47,11 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 5
+let eyeZ = 1
 let centerX = 0
 let centerY = 0
 let centerZ = 0
-let nP = 3
+let nP = 1
 let orthomode = -1
 let ANGLE_STEP = 0.0
 
@@ -920,7 +920,6 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
       gl.uniform1f(u_vmode,parseFloat(5))
       gl.uniform1f(u_fmode,parseFloat(5))
     }
-   
     var u_orthomode = gl.getUniformLocation(gl.program, 'u_orthomode')
     if (!u_orthomode){
       console.log("failed to get orthomode!")
@@ -932,11 +931,9 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
     var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
-    var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');
-    var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
     var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
-    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ModelMatrix || !u_MvpMatrix || !u_NormalMatrix) { 
+    var u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix')
+    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ViewMatrix) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLightF)
       console.log(u_LightPositionF)
@@ -944,38 +941,39 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
       console.log(u_SpecularLightF)
       console.log(u_ViewPositionF)
       console.log(u_exponent)
-      console.log(u_ModelMatrix)
-      console.log(u_MvpMatrix)
+      console.log(u_ViewMatrix)
       return;
     } 
 
+   
+   // var modelMatrix = new Matrix4();  // Model matrix
+   // var mvpMatrix = new Matrix4();    // Model view projection matrix
+   // var normalMatrix = new Matrix4(); // Transformation matrix for normals
+   var viewMatrix = new Matrix4()
+   // var projMatrix = new Matrix4()
+   // // let viewM = new Matrix4().translate(xpan,ypan,forwb)
+   // // Calculate the model matrix
+   // modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
 
-    var modelMatrix = new Matrix4();  // Model matrix
-    var mvpMatrix = new Matrix4();    // Model view projection matrix
-    var normalMatrix = new Matrix4(); // Transformation matrix for normals
-    var viewMatrix = new Matrix4()
-    var projMatrix = new Matrix4()
-    // let viewM = new Matrix4().translate(xpan,ypan,forwb)
-    // Calculate the model matrix
-    modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
-
-    // Calculate the view projection matrix
-    projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
-    viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
-    mvpMatrix.multiply(projMatrix)
-    mvpMatrix.multiply(viewMatrix)
-    mvpMatrix.multiply(modelMatrix)
+   // // Calculate the view projection matrix
+   // projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
+   viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
+   // mvpMatrix.multiply(projMatrix)
+   // mvpMatrix.multiply(viewMatrix)
+   // mvpMatrix.multiply(modelMatrix)
 
   
-    // Pass the model matrix to u_ModelMatrix
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+   // // Pass the model matrix to u_ModelMatrix
+   // gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-    // Pass the model matrix to u_ModelMatrix
-    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
+   // // Pass the model matrix to u_ModelMatrix
+   // gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
 
-    // Pass the model view projection matrix to u_mvpMatrix
-    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+   // // Pass the model view projection matrix to u_mvpMatrix
+   // gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
 
+    // Set the view matrix
+    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
     // Set the light color (white)
     gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
     // Set the light Position (in the world coordinate)
@@ -1369,7 +1367,7 @@ function rotXY(ev, gl, canvas, a_Position){
 function pan(ev, gl, canvas, a_Position){
   // move left
   if (ev.key=='h'){
-   eyeX = eyeX - 0.1
+   eyeX = eyeX + 0.1
   }
   if (ev.key=='j'){
     ypan = ypan - 0.1
@@ -1378,7 +1376,7 @@ function pan(ev, gl, canvas, a_Position){
     ypan = ypan + 0.1
   }
   if (ev.key=='l'){
-    eyeX = eyeX + 0.1
+    eyeX = eyeX - 0.1
   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

@@ -16,7 +16,6 @@ uniform vec3 u_SpecularLightF;
 uniform vec3 u_ViewPositionF;
 uniform vec3 u_HighlightF;
 
-varying mat4 v_MvpMatrix;
 
 
 void main() {

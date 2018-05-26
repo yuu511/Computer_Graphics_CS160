@@ -16,23 +16,15 @@ varying vec3 v_Normal;
 varying vec3 v_Position;
 
 // lab 5 perspective
-uniform mat4 u_MvpMatrix;
-uniform mat4 u_ModelMatrix;
-uniform mat4 u_NormalMatrix;
 uniform float u_orthomode;
-
-varying mat4 v_MvpMatrix;
-varying mat4 v_ModelMatrix;
-varying mat4 v_NormalMatrix;
+// viewMatrix
+uniform mat4 u_ViewMatrix;
 
 void main() {
-  gl_Position = a_Position * u_MvpMatrix;
-  v_Position = vec3(a_Position * u_ModelMatrix);  
-  v_Normal = normalize(vec3(a_Normal * u_NormalMatrix)); 
+  gl_Position = u_ViewMatrix * a_Position;
+  v_Position = vec3(u_ViewMatrix * a_Position);  
+  v_Normal = normalize(vec3(a_Normal)); 
   v_Color = a_Color;
-  v_MvpMatrix = u_MvpMatrix;
-  v_ModelMatrix = u_ModelMatrix;
-  v_NormalMatrix = u_NormalMatrix;
 
   if (u_orthomode == 1.0){
     gl_Position = a_Position;

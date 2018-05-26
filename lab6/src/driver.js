@@ -608,12 +608,11 @@ function initAttrib(gl,canvas,numpolyline) {
     var u_LightPositionF= gl.getUniformLocation(gl.program, 'u_LightPositionF')
     var u_AmbientLightF = gl.getUniformLocation(gl.program, 'u_AmbientLightF')
     var u_SpecularLightF = gl.getUniformLocation(gl.program, 'u_SpecularLightF')
-    var u_ViewPositionF = gl.getUniformLocation(gl.program, 'u_ViewPositionF')
     var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
     var u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
     var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');  
     var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
-    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ModelMatrix || !u_MvpMatrix || !u_NormalMatrix) { 
+    if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_exponent || !u_ModelMatrix || !u_MvpMatrix || !u_NormalMatrix) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLightF)
       console.log(u_LightPositionF)
@@ -656,7 +655,6 @@ function initAttrib(gl,canvas,numpolyline) {
     gl.uniform3f(u_AmbientLightF, ambientR, ambientG, ambientB)
     //set the specular light 
     gl.uniform3f(u_SpecularLightF, currentspecularR, currentspecularG, currentspecularB)
-    gl.uniform3f(u_ViewPositionF, 0.0, 0.0, -1.0)
     gl.uniform1f(u_exponent,glossiness)
   }
   // set highlights ( if required!)
