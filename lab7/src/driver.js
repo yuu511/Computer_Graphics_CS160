@@ -699,8 +699,6 @@ function translate_All(gl,canvas,a_Position,cylinder_points,cylinder_normals){
       Invert.setInverseOf(M2)
       Invert.transpose()
       convertednormals[i][j] = applyMatrix(cylinder_normals[i][j],Invert,0.0)
-      // let viewM = new Matrix4().translate(xpan,ypan,forwb)
-      // c_p[i][j]= applyMatrix(c_p[i][j],viewM,1.0)
     }
   }   
   // apply the changes
