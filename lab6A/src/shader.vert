@@ -21,15 +21,11 @@ uniform float u_orthomode;
 uniform mat4 u_ViewMatrix;
 //projmatrix
 uniform mat4 u_ProjMatrix;
-// model matrix
-uniform mat4 u_ModelMatrix;
-// invert transpose of model matrix
-uniform mat4 u_NormalMatrix;
 
 void main() {
-  gl_Position = u_ProjMatrix * u_ModelMatrix * u_ViewMatrix * a_Position;
+  gl_Position = u_ProjMatrix * u_ViewMatrix * a_Position;
   v_Position = vec3(a_Position);  
-  v_Normal = normalize(vec3(u_NormalMatrix * a_Normal)); 
+  v_Normal = normalize(vec3(a_Normal)); 
   v_Color = a_Color;
 
   if (u_orthomode == 1.0){

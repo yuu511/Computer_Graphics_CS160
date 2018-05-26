@@ -35,7 +35,7 @@ let ambientR = 0.0
 let ambientG = 0.0
 let ambientB = 0.2
 let currentspecularR = 0.0
-let currentspecularG = 0.6
+let currentspecularG = 0.8
 let currentspecularB = 0.0
 // glossiness of specular highlights
 let glossiness = 10.0
@@ -47,7 +47,7 @@ let highlighted = []
 let thinking = []
 let eyeX = 0
 let eyeY = 0
-let eyeZ = 2.5
+let eyeZ = 3
 let centerX = 0
 let centerY = 0
 let centerZ = 0
@@ -189,21 +189,24 @@ function start(gl) {
 
   // generalized cylinder cluster 1
   let init = []
+  // init.push (-0.7)
+  // init.push (-0.2)
+  // init.push (0.7)
+  // init.push (-0.7)
+  // init.push (0.5)
+  // init.push (1.0)
   init.push (0.5)
-  init.push (-0.1)
+  init.push (-0.6)
   init.push (0.5)
-  init.push (0.9)
+  init.push (1.0)
   oldlines.push(init) 
- 
- // gen cylinder cluster 3 
-  let init3=[]
-  init3.push (-0.8)
-  init3.push (-0.5)
-  init3.push (-0.5)
-  init3.push (0.8)
-  init3.push (0.1)
-  init3.push (-0.1)
-  oldlines.push(init3)
+  
+  let init2=[]
+  init2.push (-0.5)
+  init2.push (-0.6)
+  init2.push (-0.7)
+  init2.push (1.0)
+  oldlines.push(init2)
   // initialize translation matrices / highlighting arrays
   for (var i =0 ; i < oldlines.length; i++){
     highlighted.push(0)
@@ -929,8 +932,6 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
     var u_exponent = gl.getUniformLocation(gl.program, 'u_exponent')
     var u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix')
     var u_ProjMatrix= gl.getUniformLocation(gl.program, 'u_ProjMatrix')
-    var u_ModelMatrix= gl.getUniformLocation(gl.program, 'u_ModelMatrix')
-    var u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix')
     if (!u_DiffuseLightF || !u_LightPositionF || !u_AmbientLightF || !u_SpecularLightF || !u_ViewPositionF || !u_exponent || !u_ViewMatrix) { 
       console.log('Failed to get the storage location');
       console.log(u_DiffuseLightF)
@@ -940,26 +941,25 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
       console.log(u_ViewPositionF)
       console.log(u_exponent)
       console.log(u_ViewMatrix)
-      console.log(u_ModelMatrix)
-      console.log(u_NormalMatrix)
       return;
     } 
 
    
-   var viewMatrix = new Matrix4() // view matrix
-   var projMatrix = new Matrix4() // projection matrix
-   var modelMatrix = new Matrix4();  // Model matrix
-   var normalMatrix = new Matrix4()
+   // var modelMatrix = new Matrix4();  // Model matrix
+   // var mvpMatrix = new Matrix4();    // Model view projection matrix
+   // var normalMatrix = new Matrix4(); // Transformation matrix for normals
+   var viewMatrix = new Matrix4()
+   var projMatrix = new Matrix4()
+   // // let viewM = new Matrix4().translate(xpan,ypan,forwb)
+   // // Calculate the model matrix
+   // modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
 
-   viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
    // // Calculate the view projection matrix
    projMatrix.setPerspective(FOV, canvas.width/canvas.height, nP, 10)
-   // Calculate the model matrix
-   modelMatrix.setRotate(rotDeg, rotX, rotY, rotZ) // Rotate around the y-axis
-
-   // Calculate the matrix to transform the normal based on the model matrix
-   normalMatrix.setInverseOf(modelMatrix);
-   normalMatrix.transpose();
+   viewMatrix.setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ)
+   // mvpMatrix.multiply(projMatrix)
+   // mvpMatrix.multiply(viewMatrix)
+   // mvpMatrix.multiply(modelMatrix)
 
   
    // // Pass the model matrix to u_ModelMatrix
@@ -973,12 +973,8 @@ function initAttrib(gl,canvas,numpolyline, currmodel) {
 
     // Set the view matrix
     gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
-    // Set the proj matrix
+    // Set the view matrix
     gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
-    //set the model Matrix
-    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
-    // Pass the transformation matrix for normals to u_NormalMatrix
-    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
     // Set the light color (white)
     gl.uniform3f(u_DiffuseLightF, 1.0, 1.0, 1.0);
     // Set the light Position (in the world coordinate)
@@ -1392,15 +1388,14 @@ function pan(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
 
-// move camera forward / back
 function forwardback(ev, gl, canvas, a_Position){
   if (ev.key=='y'){
-   centerZ = centerZ - 0.1
-   eyeZ = eyeZ - 0.1
-  }
-  if (ev.key=='u'){
    centerZ = centerZ + 0.1
    eyeZ = eyeZ + 0.1
+  }
+  if (ev.key=='u'){
+   centerZ = centerZ - 0.1
+   eyeZ = eyeZ - 0.1
   }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
