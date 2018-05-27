@@ -375,16 +375,6 @@ function keypress(ev, gl, canvas, a_Position){
 // else if middleclick do translate/ rotate z,
 // else do highlighting /transformation (left click).
 function click(ev, gl, canvas, a_Position) {  
-   // if mid click
-   if (ev.button == 1){
-     midclick(ev, gl, canvas, a_Position)
-     return
-   }
-   // if right click 
-   if (ev.button == 2){
-     rightclick(ev, gl, canvas, a_Position)
-     return
-   }
    var x = ev.clientX; // x coordinate of a mouse pointer
    var y = ev.clientY; // y coordinate of a mouse pointer
    var rect = ev.target.getBoundingClientRect() ;
@@ -393,11 +383,6 @@ function click(ev, gl, canvas, a_Position) {
    let yP = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
    previousX = xP
    previousY = yP
-   for (var i =0 ; i < highlighted.length;i++){
-     if (highlighted[i]==1){
-       canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position); }
-     }
-   }
    if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
       var x_in_canvas = x - rect.left, y_in_canvas = rect.bottom - y;
       var picked = check(gl, canvas, a_Position,x_in_canvas,y_in_canvas);
@@ -425,47 +410,10 @@ function click(ev, gl, canvas, a_Position) {
       }
    }
    
- for (var i =0 ; i < highlighted.length;i++){
-   if (highlighted[i]==1){
-     canvas.onmousemove = function(ev){ drag(ev, gl, canvas, a_Position); }
-   }
- }
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   // draw all finished cylinder 
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
-}
-
-// our main function for handling the right click event (translation)
-function rightclick (ev,gl,canvas,a_Position){   
-  let x = ev.clientX; // x coordinate of a mouse pointer
-  let y = ev.clientY; // y coordinate of a mouse pointer
-  let rect = ev.target.getBoundingClientRect() ;
-  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  console.log(x + " " + y + " right click\n")
-  for (var i =0 ; i < highlighted.length;i++){
-    if (highlighted[i]==1){
-      canvas.onmousemove = function(ev){ dragR(ev, gl, canvas, a_Position); }
-    }
-  }
-}
-
-// middle click
-function midclick(ev, gl, canvas, a_Position){
-  let x = ev.clientX; // x coordinate of a mouse pointer
-  let y = ev.clientY; // y coordinate of a mouse pointer
-  let rect = ev.target.getBoundingClientRect() ;
-  x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-  y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-  console.log(x + " " + y + " mid click\n")
-  previousXm = x
-  previousYm = y
-  for (var i =0 ; i < highlighted.length;i++){
-    if (highlighted[i]==1){
-      canvas.onmousemove = function(ev){ dragM(ev, gl, canvas, a_Position); }
-    }
-  }
 }
 
 // our main function for implementing highlighting
