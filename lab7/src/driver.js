@@ -244,12 +244,6 @@ function start(gl) {
           selectR = 0.2
           selectG = 0.2
           selectB = 0.2
-          eyeX = 0
-          eyeY = 0
-          eyeZ = 2.5
-          centerX = 0
-          centerY = 0
-          centerZ = 0
           gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
           draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
         }
@@ -351,10 +345,22 @@ function keypress(ev, gl, canvas, a_Position){
   // rotate cam around specific object
   if (ev.which == "f".charCodeAt(0)){
     ROTATEAROUNDOBJ = ROTATEAROUNDOBJ * -1
+    if (ROTATEAROUNDOBJ == -1){
+      reset(ev, gl, canvas, a_Position)
+      for (var i =0 ; i < highlighted.length;i++){
+        highlighted[i] = 0
+      }
+      for (var i =0 ; i < thinking.length;i++){
+        thinking[i] = 0
+      }
+    }
   }
   // shake cam
   if (ev.which == "g".charCodeAt(0)){
     SHAKE = SHAKE * -1
+    if (SHAKE == -1){
+      reset(ev, gl, canvas, a_Position)
+    }
   }
   //plus_minus_aspect
   if (ev.which == "q".charCodeAt(0)){
@@ -1512,3 +1518,17 @@ function plus_minus_aspect(ev, gl, canvas, a_Position){
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
+
+function reset(ev, gl, canvas, a_Position){
+   eyeX = 0
+   eyeY = 0
+   eyeZ = 2.0
+   centerX = 0
+   centerY = 0
+   centerZ = 0
+   rotDeg = 0
+   // Clear color and depth buffer
+   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
