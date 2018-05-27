@@ -140,11 +140,16 @@ let selectR = 0.2
 let selectG = 0.2
 let selectB = 0.2
 let iterate = 0
+let SHAKE = -1.0
+let shake_counter = 0
+let canvas_width = 400
+let canvas_height = 400
 
 // called when page is loaded
 function main() {
     // retrieve <canvas> element
     var canvas = document.getElementById('webgl');
+  
     // get the rendering context for WebGL
     var gl = getWebGLContext(canvas);
     if (!gl) {
@@ -185,6 +190,9 @@ function start(gl) {
   document.addEventListener("contextmenu", function (e) {
          e.preventDefault();
   }, false)
+
+  canvas.width = canvas_width
+  canvas.height = canvas_height
   canvas.onmousedown = function(ev){ click(ev, gl, canvas, a_Position); };
   canvas.onmousemove = function(ev){ move(ev, gl, canvas, a_Position); };
   canvas.onmouseup = function(ev){ reset(ev, gl, canvas, a_Position); };
@@ -229,10 +237,19 @@ function start(gl) {
             }
           }
         }
+        else if (SHAKE == 1){
+          shake_cam(gl, canvas, a_Position)
+        }
         else {
           selectR = 0.2
           selectG = 0.2
           selectB = 0.2
+          eyeX = 0
+          eyeY = 0
+          eyeZ = 2.5
+          centerX = 0
+          centerY = 0
+          centerZ = 0
           gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
           draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
         }
@@ -334,6 +351,17 @@ function keypress(ev, gl, canvas, a_Position){
   // rotate cam around specific object
   if (ev.which == "f".charCodeAt(0)){
     ROTATEAROUNDOBJ = ROTATEAROUNDOBJ * -1
+  }
+  // shake cam
+  if (ev.which == "g".charCodeAt(0)){
+    SHAKE = SHAKE * -1
+  }
+  //plus_minus_aspect
+  if (ev.which == "q".charCodeAt(0)){
+    plus_minus_aspect(ev, gl, canvas, a_Position)
+  }
+  if (ev.which == "w".charCodeAt(0)){
+    plus_minus_aspect(ev, gl, canvas, a_Position)
   }
 }
 
@@ -1439,7 +1467,7 @@ function rotate_cam_Z(ev, gl, canvas, a_Position){
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
 }
 
-  // gl.uniform3f(u_HighlightF, 0.2, 0.2, 0.2);
+// roates around selected object
 function rotate_around_obj(gl, canvas, a_Position,numobject){
   iterate = iterate + Math.cos(Math.PI/6)
   selectR = 0.0
@@ -1455,6 +1483,31 @@ function rotate_around_obj(gl, canvas, a_Position,numobject){
   rotY = 1
   rotX = 0
   rotZ = 0
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+//shakes cam
+function shake_cam(gl, canvas, a_Position){
+  shake_counter = shake_counter + Math.cos(Math.PI/6)
+  centerX = centerX + Math.sin(shake_counter)
+  centerY = centerY + Math.cos(shake_counter)
+  eyeX = eyeX + Math.sin(shake_counter)
+  eyeY = eyeY + Math.cos(shake_counter)
+  // Clear color and depth buffer
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
+}
+
+// adjust aspect ratio
+function plus_minus_aspect(ev, gl, canvas, a_Position){
+  let factor = 5
+  if (ev.key=='w'){
+    factor = factor * - 1
+  }
+  canvas_width = canvas_width + factor
+  canvas.width = canvas_width
   // Clear color and depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   draw_All(gl,canvas,a_Position,oldc_points,oldc_normals)
