@@ -1427,11 +1427,11 @@ function rotate_around_obj(gl, canvas, a_Position,numobject){
   selectR = 0.0
   selectG = 0.0
   selectB = 0.0
-  centerX = oldc_points[numobject][0][0]  
+  centerX = oldc_points[numobject][0][0] 
   centerY = oldc_points[numobject][0][0] 
   centerZ = oldc_points[numobject][0][0] 
   eyeX = oldc_points[numobject][0][0] + 1.0 
-  eyeY = oldc_points[numobject][0][0] - 0.6 
+  eyeY = oldc_points[numobject][0][0] - 0.2 
   eyeZ = oldc_points[numobject][0][0] + 1.5 
   rotDeg = 1 + rotDeg
   rotY = 1
