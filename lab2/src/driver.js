@@ -355,21 +355,21 @@ function drawGeneralizedCylinder (gl,canvas,a_Position,vertices,linewidth,colors
   setVertexBuffer(gl,vertices)
   var indices = []
    // cool traiangles
-   for (var i=0 ; i < len-1; i++){
+  for (var i=0 ; i < len-1; i++){
     indices.push(i)
     indices.push(i+1) 
     indices.push(len+i)
     indices.push(i)
-
-    indices.push(len+i)
-    indices.push(len+i+1) 
+  
     indices.push(i+1)
-    indices.push(len+i)
-
-    indices.push(len+i)
-    indices.push(len+i+1) 
     indices.push(i)
-    indices.push(len+i)
+    indices.push(len+i+1)
+    indices.push(i+1)
+
+    indices.push(len+i+1)
+    indices.push(len+i) 
+    indices.push(i+1)
+    indices.push(len+i+1)
   }
   indices = new Int16Array(indices)
   setIndexBuffer(gl,indices)
@@ -385,8 +385,8 @@ function drawAllCylinders(gl,canvas,a_Position){
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      drawcylinder(gl,canvas,a_Position,cylinderradii[i][j/2],cylindersides[i][j/2],oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],cylindercolors[i][j/2])
       cylinder_points = []
+      drawcylinder(gl,canvas,a_Position,cylinderradii[i][j/2],cylindersides[i][j/2],oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],cylindercolors[i][j/2])
      }
     }
   }  
@@ -500,27 +500,45 @@ function drawcylinder(gl,canvas,a_Position,r,s,x1,y1,x2,y2,colors){
      cylinder_points.push(previousFace[j])    
   }
   previousFace = []
-  if (Math.abs(x2-x1) > Math.abs(y2-y1)){
-    for (var i=0 ; i <=360 ; i+=numsides){ 
-      cylinder_points.push(x2)
-      cylinder_points.push(Math.cos(convert*i) * r + y2)
-      cylinder_points.push(Math.sin(convert*i) * r)
-      previousFace.push(x2)
-      previousFace.push(Math.cos(convert*i) * r + y2)
-      previousFace.push(Math.sin(convert*i) * r)
-    } 
-    cumulativeheight += (Math.abs(x2-x1))
+
+  // get the angle that the line segment forms
+  const deltaX = x2-x1
+  const deltaY = y2-y1 
+  let degreeToRotate = Math.atan2(deltaY,deltaX)
+  degreeToRotate = ((2*Math.PI)-degreeToRotate)
+
+  // first we'll draw a circle by rotating around the x axis, then use a transformation matrix to rotate it
+  // by the angle we found previously so the circle fits around the axis formed by the line segment
+  let unrotated = []
+
+  for (var i=0 ; i <=360; i+=numsides){ 
+    unrotated.push(0)
+    unrotated.push((Math.cos(convert*i))*r)
+    unrotated.push(Math.sin(convert*i)*r)
+  } 
+  for (var i=0 ; i <=360; i+=numsides){ 
+    unrotated.push(0)
+    unrotated.push((Math.cos(convert*i))*r)
+    unrotated.push(Math.sin(convert*i)*r)
+  } 
+  cylinder_points = []
+  cylinder_points.push((unrotated[0] * Math.cos(degreeToRotate)) + (unrotated[1] * Math.sin(degreeToRotate)) +  x1) 
+  cylinder_points.push((unrotated[0] * (-1  * Math.sin(degreeToRotate))) + (unrotated[1] * Math.cos(degreeToRotate)) + y1)
+  cylinder_points.push(unrotated[2])
+
+  for (var i = 1 ; i < s+1; i++){
+   cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x1) 
+   cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y1)
+   cylinder_points.push(unrotated[3*i+2])
   }
-  if (Math.abs(x2-x1) <= Math.abs(y2-y1)){
-    for (var i=0 ; i <=360 ; i+=numsides){ 
-      cylinder_points.push(Math.cos(convert*i) * r + x2)
-      cylinder_points.push(y2)
-      cylinder_points.push(Math.sin(convert*i) * r)
-      previousFace.push(Math.cos(convert*i) * r + x2)
-      previousFace.push(y2)
-      previousFace.push(Math.sin(convert*i) * r)
-    }  
-    cumulativeheight += Math.abs((y2-y1))
+  // second circle
+  cylinder_points.push((unrotated[0] * Math.cos(degreeToRotate)) + (unrotated[1] * Math.sin(degreeToRotate)) +  x2) 
+  cylinder_points.push((unrotated[0] * (-1  * Math.sin(degreeToRotate))) + (unrotated[1] * Math.cos(degreeToRotate)) + y2)
+  cylinder_points.push(unrotated[2])
+  for (var i = 1 ; i < s+1; i++){
+   cylinder_points.push((unrotated[3*i] * Math.cos(degreeToRotate)) + (unrotated[3*i+1] * Math.sin(degreeToRotate)) +  x2) 
+   cylinder_points.push((unrotated[3*i] * (-1  * Math.sin(degreeToRotate))) + (unrotated[3*i+1] * Math.cos(degreeToRotate)) + y2)
+   cylinder_points.push(unrotated[3*i+2])
   }
   var vertices = new Float32Array(cylinder_points)
   // draw currently working line with points
@@ -578,8 +596,8 @@ function updateScreen(ev, gl, canvas, a_Position){
     if (oldlines[i].length >= 4){
      var loop = (((oldlines[i].length/2)-1)*2)
      for (var j =0; j < loop;j+=2){    
-      drawcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],defaultcolor)
       cylinder_points = []
+      drawcylinder(gl,canvas,a_Position,radius,sides,oldlines[i][j],oldlines[i][j+1],oldlines[i][j+2],oldlines[i][j+3],defaultcolor)
      }
     }
   }  
