@@ -20,6 +20,8 @@ function main() {
     f_shaders["sphere"] = "";
     v_shaders["triang"] = "";
     f_shaders["triang"] = "";
+    v_shaders["cubeB"] = "";
+    f_shaders["cubeB"] = "";
 
     // load shader files (calls 'setShader' when done loading)
     loadFile("shaders/cube_shader.vert", function(shader_src) {
@@ -46,6 +48,14 @@ function main() {
 
     loadFile("shaders/triang_shader.frag", function(shader_src) {
         setShader(gl, canvas, "triang", gl.FRAGMENT_SHADER, shader_src);
+    });
+
+    loadFile("shaders/cube_shader.vert", function(shader_src) {
+        setShader(gl, canvas, "cubeB", gl.VERTEX_SHADER, shader_src);
+    });
+
+    loadFile("shaders/cube_shader.frag", function(shader_src) {
+        setShader(gl, canvas, "cubeB", gl.FRAGMENT_SHADER, shader_src);
     });
 }
 
@@ -96,7 +106,8 @@ function start(gl, canvas) {
     cube.setPosition(new Vector3([3,0.0,0.0]));
     cube.setScale(new Vector3([0.75,0.75,0.75]));
     scene.addGeometry(cube);
-
+    
+    // create a triangle
     var triang = new Geometry();
     triang.vertices = [-1, -1, 0.0, 0.0, 1.0, 0.0, 1, -1, 0.0];
     triang.indices = [0, 1, 2];
@@ -114,21 +125,34 @@ function start(gl, canvas) {
     sphere.setPosition(new Vector3([-3,0.0,0.0]));
     scene.addGeometry(sphere);
 
-    scene.draw();
+    // Create a cube ( BG )
+    // var cubeB = new CubeGeometry(1);
+    // cubeB.setVertexShader(v_shaders["cubeB"]);
+    // cubeB.setFragmentShader(f_shaders["cubeB"]);
+    // cubeB.setRotation(new Vector3([0,0,0]));
+    // cubeB.setPosition(new Vector3([0.0,0.0,0.0]));
+    // cubeB.setScale(new Vector3([4,3,3]));
+    // scene.addGeometry(cubeB);
 
+    scene.draw();
+    console.log(triang)
+    console.log(sphere.vertices)
+    console.log(cube)
     var tex2 = new Texture2D(gl, 'img/beach/posz.jpg', function(tex) {
         console.log(tex);
         triang.addUniform("u_tex", "t2", tex);
         scene.draw();
     });
 
+
+
     var tex = new Texture3D(gl, [
         'img/beach/negx.jpg',
-        'img/beach/posx.jpg',
-        'img/beach/negy.jpg',
-        'img/beach/posy.jpg',
-        'img/beach/negz.jpg',
-        'img/beach/posz.jpg'
+        'img/beach/negx.jpg',
+        'img/beach/negx.jpg',
+        'img/beach/negx.jpg',
+        'img/beach/negx.jpg',
+        'img/beach/negx.jpg'
     ], function(tex) {
         cube.addUniform("u_cubeTex", "t3", tex);
         scene.draw();
