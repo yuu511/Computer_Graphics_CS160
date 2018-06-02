@@ -1,7 +1,12 @@
 
 v_shaders = {}
 f_shaders = {}
-
+let degX = 0 
+let degY = 0 
+let degZ = 0 
+let rotX = 0
+let rotY = 0
+let rotZ = 0
 // called when page is loaded
 function main() {
     // retrieve <canvas> element
@@ -50,11 +55,11 @@ function main() {
         setShader(gl, canvas, "triang", gl.FRAGMENT_SHADER, shader_src);
     });
 
-    loadFile("shaders/cube_shader.vert", function(shader_src) {
+    loadFile("shaders/cubeB_shader.vert", function(shader_src) {
         setShader(gl, canvas, "cubeB", gl.VERTEX_SHADER, shader_src);
     });
 
-    loadFile("shaders/cube_shader.frag", function(shader_src) {
+    loadFile("shaders/cubeB_shader.frag", function(shader_src) {
         setShader(gl, canvas, "cubeB", gl.FRAGMENT_SHADER, shader_src);
     });
 }
@@ -98,6 +103,15 @@ function start(gl, canvas) {
     // Create scene
     var scene = new Scene(gl, camera);
 
+    // Create a cube ( BG )
+    var cubeB = new CubeGeometry(1);
+    cubeB.setVertexShader(v_shaders["cubeB"]);
+    cubeB.setFragmentShader(f_shaders["cubeB"]);
+    cubeB.setRotation(new Vector3([0,0,0]));
+    cubeB.setPosition(new Vector3([0.0,0.0,0.0]));
+    cubeB.setScale(new Vector3([50,50,50]));
+    scene.addGeometry(cubeB);
+
     // Create a cube
     var cube = new CubeGeometry(1);
     cube.setVertexShader(v_shaders["cube"]);
@@ -125,36 +139,75 @@ function start(gl, canvas) {
     sphere.setPosition(new Vector3([-3,0.0,0.0]));
     scene.addGeometry(sphere);
 
-    // Create a cube ( BG )
-    // var cubeB = new CubeGeometry(1);
-    // cubeB.setVertexShader(v_shaders["cubeB"]);
-    // cubeB.setFragmentShader(f_shaders["cubeB"]);
-    // cubeB.setRotation(new Vector3([0,0,0]));
-    // cubeB.setPosition(new Vector3([0.0,0.0,0.0]));
-    // cubeB.setScale(new Vector3([4,3,3]));
-    // scene.addGeometry(cubeB);
 
     scene.draw();
-    console.log(triang)
-    console.log(sphere.vertices)
-    console.log(cube)
     var tex2 = new Texture2D(gl, 'img/beach/posz.jpg', function(tex) {
         console.log(tex);
         triang.addUniform("u_tex", "t2", tex);
-        scene.draw();
+        scene.drak();
     });
 
 
 
     var tex = new Texture3D(gl, [
-        'img/beach/negx.jpg',
-        'img/beach/negx.jpg',
-        'img/beach/negx.jpg',
-        'img/beach/negx.jpg',
-        'img/beach/negx.jpg',
-        'img/beach/negx.jpg'
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg'
     ], function(tex) {
         cube.addUniform("u_cubeTex", "t3", tex);
         scene.draw();
     });
+
+    var tex3 = new Texture3D(gl, [
+        'img/beach/posz.jpg',
+        'img/beach/posy.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/negx.jpg',
+        'img/beach/negy.jpg',
+        'img/beach/negz.jpg'
+    ], function(tex) {
+        cubeB.addUniform("u_cubeTex", "t3", tex);
+        scene.draw();
+    });
+    window.onkeypress = function(ev){ keypress(ev, gl,camera,scene); };
+}
+
+
+// various keypress functions
+function keypress(ev, gl,camera,scene){
+  if (ev.which == "h".charCodeAt(0)){
+    rotate(ev,gl,camera,scene)
+  }
+  if (ev.which == "j".charCodeAt(0)){
+    rotate(ev,gl,camera,scene)
+  }
+  if (ev.which == "k".charCodeAt(0)){
+    rotate(ev,gl,camera,scene)
+  }
+  if (ev.which == "l".charCodeAt(0)){
+    rotate(ev,gl,camera,scene)
+  }
+}
+
+function rotate(ev,gl,camera,scene){
+  if (ev.key == 'h'){
+    camera.rotate(1,1,0,0);
+    scene.draw();
+  }
+  if (ev.key == 'j'){
+    camera.rotate(1,0,1,0);
+    scene.draw();
+  }
+  if (ev.key == 'k'){
+    camera.rotate(1,0,1,0);
+    scene.draw();
+  }
+  if (ev.key == 'l'){
+    camera.rotate(1,1,0,0);
+    scene.draw();
+  }
+  
 }
