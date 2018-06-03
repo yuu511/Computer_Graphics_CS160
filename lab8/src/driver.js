@@ -128,14 +128,15 @@ function start(gl, canvas) {
     cube.setScale(new Vector3([0.75,0.75,0.75]));
     scene.addGeometry(cube);
     
-    // triang.vertices = [-3, 0, 0.0,   -3, 1,0.0,  -2,1,0,  -2,0,0   ];
-    // triang.indices = [0, 1, 2 , 2 , 3 , 0];
-    // var uvs = [-4.0, 0.0, 0.0,  -4.0, 1.0, 0.0,  -2.0, 1.0, 0.0,   -2.0, -0.0, 0.0];
+
+    // triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0,  -3,-1,0, -2,-1,0 ];
+    // triang.indices = [0, 1, 2 , 2,3,1,  2,3,4, 4,5,3 ];
+    // var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0, -4.0,-1.0,0.0, -2.0,-1.0,0.0];
     // triang.addAttribute("a_uv", uvs);
 
-    triang.vertices = [-3, 0, 0.0,   -3, 1,0.0,  -2,1,0,  -2,0,0, -3,-1,0, -2,-1,0 ];
-    triang.indices = [0, 1, 2 , 2 , 3 , 0 , 1,3,4, 3,4,5];
-    var uvs = [-4.0, 0.0, 0.0,  -4.0, 1.0, 0.0,  -2.0, 1.0, 0.0,   -2.0, -0.0, 0.0, -4.0,-1.0,0.0, -2.0,-1.0,0.0];
+    triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0];
+    triang.indices = [0, 1, 2 , 1,2,3];
+    var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0];
     triang.addAttribute("a_uv", uvs);
 
     triang.setVertexShader(v_shaders["triang"]);
@@ -327,17 +328,52 @@ function newSkybox(ev,gl,camera,scene){
  });
 }
 
+    // triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0,  -3,-1,0, -2,-1,0 ];
+    // triang.indices = [0, 1, 2 , 2,3,1,  2,3,4, 4,5,3 ];
+    // var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0, -4.0,-1.0,0.0, -2.0,-1.0,0.0];
+    // triang.addAttribute("a_uv", uvs);
+
+    // triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0];
+    // triang.indices = [0, 1, 2 , 2,3,1];
+    // var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0];
+    // triang.addAttribute("a_uv", uvs);
 function plane_change(ev,gl,camera,scene){
   if (ev.key == '1'){
     currentTriang = currentTriang + 1
   }
   if (ev.key == '2'){
-    if (currentTriang > 1 ){
+    if (currentTriang > 0 ){
       currentTriang = currentTriang - 1
     }
   }
-  console.log(triang.vertices)
-  console.log(triang.indices)
-  console.log(currentTriang)
-  
+  let newV =([-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0])
+  let newI =([0, 1, 2 , 1,2,3]) 
+  let newUV =([-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0])
+  for (var i=1 ; i < currentTriang ; i++){
+    newV.push(-3)
+    newV.push(-i)
+    newV.push(0)
+    newV.push(-2)
+    newV.push(-i)
+    newV.push(0)
+    newI.push(2*i)
+    newI.push(2*i+1)
+    newI.push(2*i+2)
+    newI.push(2*i+1)
+    newI.push(2*i+2)
+    newI.push(2*i+3)
+    newUV.push(-4)
+    newUV.push(-i)
+    newUV.push(0)
+    newUV.push(-2)
+    newUV.push(-i)
+    newUV.push(0)
+  }
+  triang.vertices = newV
+  triang.indices = newI
+  triang.addAttribute("a_uv",newUV)
+  triang.setVertexShader(v_shaders["triang"]);
+  triang.setFragmentShader(f_shaders["triang"]);
+  scene.addGeometry(triang);
+  scene.draw();
 }
