@@ -122,9 +122,9 @@ function start(gl, canvas) {
     
     // create a triangle
     var triang = new Geometry();
-    triang.vertices = [-1, -1, 0.0, 0.0, 1.0, 0.0, 1, -1, 0.0];
-    triang.indices = [0, 1, 2];
-    var uvs = [0.0, 0.0, 0.0, 0.5, 1.0, 0.0, 1.0, 0.0, 0.0];
+    triang.vertices = [-1, -1, 0.0,   -1, 1,0.0,  1,1,0,  1,-1,0   ];
+    triang.indices = [0, 1, 2 , 2 , 3 , 0];
+    var uvs = [-1.0, -1.0, 0.0,  -1.0, 1.0, 0.0,  1.0, 1.0, 0.0,   1.0, -1.0, 0.0];
     triang.addAttribute("a_uv", uvs);
 
     triang.setVertexShader(v_shaders["triang"]);
@@ -142,13 +142,26 @@ function start(gl, canvas) {
     scene.draw();
     var tex2 = new Texture2D(gl, 'img/beach/posz.jpg', function(tex) {
         console.log(tex);
-        triang.addUniform("u_tex", "t2", tex);
-        scene.drak();
+	triang.addUniform("u_tex", "t2", tex);
+        scene.draw();
     });
 
+    // var tex2 = new Texture3D(gl, [
+    //     'img/beach/posx.jpg',
+    //     'img/beach/posx.jpg',
+    //     'img/beach/posx.jpg',
+    //     'img/beach/posx.jpg',
+    //     'img/beach/posx.jpg',
+    //     'img/beach/posx.jpg',
+    //     'img/beach/posx.jpg'
+    // ], function(tex) {
+    //     cube.addUniform("u_tex", "t2", tex);
+    //     scene.draw();
+    // });
 
 
     var tex = new Texture3D(gl, [
+        'img/beach/posx.jpg',
         'img/beach/posx.jpg',
         'img/beach/posx.jpg',
         'img/beach/posx.jpg',
@@ -189,6 +202,24 @@ function keypress(ev, gl,camera,scene){
   if (ev.which == "l".charCodeAt(0)){
     rotate(ev,gl,camera,scene)
   }
+  if (ev.which == "i".charCodeAt(0)){
+    zoom(ev,gl,camera,scene)
+  }
+  if (ev.which == "o".charCodeAt(0)){
+    zoom(ev,gl,camera,scene)
+  }
+  if (ev.which == "a".charCodeAt(0)){
+    move(ev,gl,camera,scene)
+  }
+  if (ev.which == "s".charCodeAt(0)){
+    move(ev,gl,camera,scene)
+  }
+  if (ev.which == "d".charCodeAt(0)){
+    move(ev,gl,camera,scene)
+  }
+  if (ev.which == "f".charCodeAt(0)){
+    move(ev,gl,camera,scene)
+  }
 }
 
 function rotate(ev,gl,camera,scene){
@@ -208,5 +239,32 @@ function rotate(ev,gl,camera,scene){
     camera.rotate(-15,0,1,0);
     scene.draw();
   }
-  
+}
+function zoom(ev,gl,camera,scene){
+  if (ev.key == 'i'){
+    camera.move(-2,0,0,1);
+    scene.draw();
+  }
+  if (ev.key == 'o'){
+    camera.move(2,0,0,1);
+    scene.draw();
+  }
+}
+function move(ev,gl,camera,scene){
+  if (ev.key == 'a'){
+    camera.move(-2,1,0,0);
+    scene.draw();
+  }
+  if (ev.key == 's'){
+    camera.move(2,0,1,0);
+    scene.draw();
+  }
+  if (ev.key == 'd'){
+    camera.move(-2,0,1,0);
+    scene.draw();
+  }
+  if (ev.key == 'f'){
+    camera.move(2,1,0,0);
+    scene.draw();
+  }
 }
