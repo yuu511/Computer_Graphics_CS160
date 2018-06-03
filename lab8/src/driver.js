@@ -146,20 +146,7 @@ function start(gl, canvas) {
         scene.draw();
     });
 
-    // var tex2 = new Texture3D(gl, [
-    //     'img/beach/posx.jpg',
-    //     'img/beach/posx.jpg',
-    //     'img/beach/posx.jpg',
-    //     'img/beach/posx.jpg',
-    //     'img/beach/posx.jpg',
-    //     'img/beach/posx.jpg',
-    //     'img/beach/posx.jpg'
-    // ], function(tex) {
-    //     cube.addUniform("u_tex", "t2", tex);
-    //     scene.draw();
-    // });
-
-
+    
     var tex = new Texture3D(gl, [
         'img/beach/posx.jpg',
         'img/beach/posx.jpg',
@@ -173,6 +160,7 @@ function start(gl, canvas) {
         scene.draw();
     });
 
+    // skybox
     var tex3 = new Texture3D(gl, [
         'img/beach/negx.jpg',
         'img/beach/posx.jpg',
@@ -184,6 +172,20 @@ function start(gl, canvas) {
         cubeB.addUniform("u_cubeTex", "t3", tex);
         scene.draw();
     });
+
+    // ssphere
+    var tex4 = new Texture3D(gl, [
+        'img/beach/negx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/negy.jpg',
+        'img/beach/posy.jpg',
+        'img/beach/negz.jpg',
+        'img/beach/posz.jpg'
+    ], function(tex) {
+        sphere.addUniform("u_sphereTex", "t3", tex);
+        scene.draw();
+    });
+
     window.onkeypress = function(ev){ keypress(ev, gl,camera,scene); };
 }
 
