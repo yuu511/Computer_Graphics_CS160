@@ -122,9 +122,9 @@ function start(gl, canvas) {
     
     // create a triangle
     var triang = new Geometry();
-    triang.vertices = [-1, -1, 0.0,   -1, 1,0.0,  1,1,0,  1,-1,0   ];
+    triang.vertices = [-4, -1, 0.0,   -4, 1,0.0,  -2,1,0,  -2,-1,0   ];
     triang.indices = [0, 1, 2 , 2 , 3 , 0];
-    var uvs = [-1.0, -1.0, 0.0,  -1.0, 1.0, 0.0,  1.0, 1.0, 0.0,   1.0, -1.0, 0.0];
+    var uvs = [-4.0, -1.0, 0.0,  -4.0, 1.0, 0.0,  -3.0, 1.0, 0.0,   -3.0, -1.0, 0.0];
     triang.addAttribute("a_uv", uvs);
 
     triang.setVertexShader(v_shaders["triang"]);
@@ -135,7 +135,7 @@ function start(gl, canvas) {
     var sphere = new SphereGeometry(1, 32, 8);
     sphere.v_shader = v_shaders["sphere"];
     sphere.f_shader = f_shaders["sphere"];
-    sphere.setPosition(new Vector3([-3,0.0,0.0]));
+    sphere.setPosition(new Vector3([0.0,0.0,0.0]));
     scene.addGeometry(sphere);
 
 
