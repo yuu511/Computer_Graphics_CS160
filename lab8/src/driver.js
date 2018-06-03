@@ -107,7 +107,6 @@ function start(gl, canvas) {
     var cubeB = new CubeGeometry(1);
     cubeB.setVertexShader(v_shaders["cubeB"]);
     cubeB.setFragmentShader(f_shaders["cubeB"]);
-    cubeB.setRotation(new Vector3([0,0,0]));
     cubeB.setPosition(new Vector3([0.0,0.0,0.0]));
     cubeB.setScale(new Vector3([50,50,50]));
     scene.addGeometry(cubeB);
@@ -162,12 +161,12 @@ function start(gl, canvas) {
     });
 
     var tex3 = new Texture3D(gl, [
-        'img/beach/posz.jpg',
-        'img/beach/posy.jpg',
-        'img/beach/posx.jpg',
         'img/beach/negx.jpg',
+        'img/beach/posx.jpg',
         'img/beach/negy.jpg',
-        'img/beach/negz.jpg'
+        'img/beach/posy.jpg',
+        'img/beach/negz.jpg',
+        'img/beach/posz.jpg'
     ], function(tex) {
         cubeB.addUniform("u_cubeTex", "t3", tex);
         scene.draw();
@@ -194,19 +193,19 @@ function keypress(ev, gl,camera,scene){
 
 function rotate(ev,gl,camera,scene){
   if (ev.key == 'h'){
-    camera.rotate(1,1,0,0);
+    camera.rotate(15,0,1,0);
     scene.draw();
   }
   if (ev.key == 'j'){
-    camera.rotate(1,0,1,0);
+    camera.rotate(-15,1,0,0);
     scene.draw();
   }
   if (ev.key == 'k'){
-    camera.rotate(1,0,1,0);
+    camera.rotate(15,1,0,0);
     scene.draw();
   }
   if (ev.key == 'l'){
-    camera.rotate(1,1,0,0);
+    camera.rotate(-15,0,1,0);
     scene.draw();
   }
   
