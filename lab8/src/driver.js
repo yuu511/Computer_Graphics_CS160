@@ -128,12 +128,6 @@ function start(gl, canvas) {
     cube.setPosition(new Vector3([3,0.0,0.0]));
     cube.setScale(new Vector3([0.75,0.75,0.75]));
     scene.addGeometry(cube);
-    
-
-    // triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0,  -3,-1,0, -2,-1,0 ];
-    // triang.indices = [0, 1, 2 , 2,3,1,  2,3,4, 4,5,3 ];
-    // var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0, -4.0,-1.0,0.0, -2.0,-1.0,0.0];
-    // triang.addAttribute("a_uv", uvs);
 
     triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0];
     triang.indices = [0, 1, 2 , 1,2,3];
@@ -199,7 +193,9 @@ function start(gl, canvas) {
 
     window.onkeypress = function(ev){ keypress(ev, gl,camera,scene); };
     const sky_box = document.getElementById('sky_box')
+    const shift_textures = document.getElementById('shift_textures')
     sky_box.onclick = function(ev){newSkybox(ev, gl,camera,scene); };
+    shift_textures.onclick = function(ev){shift(ev, gl,camera,scene); };
 }
 
 
@@ -385,4 +381,46 @@ function plane_change(ev,gl,camera,scene){
   triang.setVertexShader(v_shaders["triang"]);
   triang.setFragmentShader(f_shaders["triang"]);
   scene.draw();
+}
+
+function shift(ev,gl,camera,scene){
+
+    var tex = new Texture3D(gl, [
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg',
+        'img/beach/posx.jpg'
+    ], function(tex) {
+        cube.addUniform("u_cubeTex", "t3", tex);
+        scene.draw();
+    });
+
+    // skybox
+    var tex3 = new Texture3D(gl, [
+        'img/beach/posz.jpg',
+        'img/beach/negz.jpg',
+        'img/beach/posy.jpg',
+        'img/beach/negy.jpg',
+        'img/beach/posy.jpg',
+        'img/beach/negx.jpg'
+    ], function(tex) {
+        cubeB.addUniform("u_cubeTex", "t3", tex);
+        scene.draw();
+    });
+
+    // sphere
+    var tex4 = new Texture3D(gl, [
+        'img/beach/posz.jpg',
+        'img/beach/negz.jpg',
+        'img/beach/posy.jpg',
+        'img/beach/negy.jpg',
+        'img/beach/posy.jpg',
+        'img/beach/negx.jpg'
+    ], function(tex) {
+        sphere.addUniform("u_sphereTex", "t3", tex);
+        scene.draw();
+    });
 }
