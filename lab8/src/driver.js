@@ -1,8 +1,11 @@
 
 v_shaders = {}
 f_shaders = {}
-// create a plane
+// our shapes
+var sphere = new SphereGeometry(1, 32, 8);
 var triang = new Geometry();
+var cubeB = new CubeGeometry(1);
+var cube = new CubeGeometry(1);
 
 let new_sky_box = []
 let currentTriang = 1
@@ -112,7 +115,6 @@ function start(gl, canvas) {
     var scene = new Scene(gl, camera);
 
     // Create a cube ( BG )
-    var cubeB = new CubeGeometry(1);
     cubeB.setVertexShader(v_shaders["cubeB"]);
     cubeB.setFragmentShader(f_shaders["cubeB"]);
     cubeB.setPosition(new Vector3([0.0,0.0,0.0]));
@@ -120,7 +122,6 @@ function start(gl, canvas) {
     scene.addGeometry(cubeB);
 
     // Create a cube
-    var cube = new CubeGeometry(1);
     cube.setVertexShader(v_shaders["cube"]);
     cube.setFragmentShader(f_shaders["cube"]);
     cube.setRotation(new Vector3([1,45,45]));
@@ -144,21 +145,12 @@ function start(gl, canvas) {
     scene.addGeometry(triang);
 
     // Create a Sphere
-    var sphere = new SphereGeometry(1, 32, 8);
     sphere.v_shader = v_shaders["sphere"];
     sphere.f_shader = f_shaders["sphere"];
     sphere.setPosition(new Vector3([0.0,0.0,0.0]));
     scene.addGeometry(sphere);
     scene.draw();
 
-   // Create a Pyramid 
-   var pyramid = new Geometry();
-   pyramid.vertices = [-5.0,0.0,0.0, -5.0,0.0,1.0, -4.0,0.0,0.0, -4.0,0.0,1.0, -4.5,1.0,0.5] 
-   pyramid.indices = [0,1,2, 1,2,3, 2,3,4, 1,2,4, 1,3,4, 0,3,4]
-   pyramid.v_shader = v_shaders["pyramid"];
-   pyramid.f_shader = f_shaders["pyramid"];
-   scene.addGeometry(pyramid);
-   scene.draw();
     
     var tex2 = new Texture2D(gl, 'img/beach/posz.jpg', function(tex) {
         console.log(tex);
@@ -205,18 +197,6 @@ function start(gl, canvas) {
         scene.draw();
     });
 
-    // pyramid
-    var tex5 = new Texture3D(gl, [
-        'img/beach/negx.jpg',
-        'img/beach/posx.jpg',
-        'img/beach/negy.jpg',
-        'img/beach/posy.jpg',
-        'img/beach/negz.jpg',
-        'img/beach/posz.jpg'
-    ], function(tex) {
-        pyramid.addUniform("u_pyramidTex", "t3", tex);
-        scene.draw();
-    });
     window.onkeypress = function(ev){ keypress(ev, gl,camera,scene); };
     const sky_box = document.getElementById('sky_box')
     sky_box.onclick = function(ev){newSkybox(ev, gl,camera,scene); };
@@ -313,30 +293,60 @@ function move(ev,gl,camera,scene){
 function newSkybox(ev,gl,camera,scene){
  var x = document.getElementById("newskybox").files;
  // skybox
- console.log(x)
  var reader = new FileReader()
+ let urls = []
+ for (var i = 0 ; i < x.length; i++){
+   urls.push(URL.createObjectURL(x[i]))
+ }
+ if (urls.length != 6 ){
+   alert("PLEASE SELECT 6 SQUARE IMAGES!")
+   return
+ }
+ var tex = new Texture3D(gl, [
+    urls[0],
+    urls[0],
+    urls[0],
+    urls[0],
+    urls[0],
+    urls[0]
+ ], function(tex) {
+     cube.addUniform("u_cubeTex", "t3", tex);
+     scene.draw();
+ });
+
+ // skybox
  var tex3 = new Texture3D(gl, [
-  x[0],
-  x[1],
-  x[2],
-  x[3],
-  x[4],
-  x[5]
+    urls[0],
+    urls[1],
+    urls[2],
+    urls[3],
+    urls[4],
+    urls[5]
  ], function(tex) {
      cubeB.addUniform("u_cubeTex", "t3", tex);
      scene.draw();
  });
+
+ // sphere
+ var tex4 = new Texture3D(gl, [
+    urls[0],
+    urls[1],
+    urls[2],
+    urls[3],
+    urls[4],
+    urls[5]
+ ], function(tex) {
+     sphere.addUniform("u_sphereTex", "t3", tex);
+     scene.draw();
+ });
+
+ var tex2 = new Texture2D(gl, urls[1], function(tex) {
+     console.log(tex);
+     triang.addUniform("u_tex", "t2", tex);
+     scene.draw();
+ });
 }
 
-    // triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0,  -3,-1,0, -2,-1,0 ];
-    // triang.indices = [0, 1, 2 , 2,3,1,  2,3,4, 4,5,3 ];
-    // var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0, -4.0,-1.0,0.0, -2.0,-1.0,0.0];
-    // triang.addAttribute("a_uv", uvs);
-
-    // triang.vertices = [-3, 1,0.0,  -2,1,0,  -3, 0, 0.0,  -2,0,0];
-    // triang.indices = [0, 1, 2 , 2,3,1];
-    // var uvs = [-4.0, 1.0, 0.0,  -2.0, 1.0, 0.0, -4.0, 0.0, 0.0,  -2.0, -0.0, 0.0];
-    // triang.addAttribute("a_uv", uvs);
 function plane_change(ev,gl,camera,scene){
   if (ev.key == '1'){
     currentTriang = currentTriang + 1
@@ -374,6 +384,5 @@ function plane_change(ev,gl,camera,scene){
   triang.addAttribute("a_uv",newUV)
   triang.setVertexShader(v_shaders["triang"]);
   triang.setFragmentShader(f_shaders["triang"]);
-  scene.addGeometry(triang);
   scene.draw();
 }
