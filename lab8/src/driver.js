@@ -145,7 +145,6 @@ function start(gl, canvas) {
     scene.addGeometry(sphere);
     scene.draw();
 
-    
     var tex2 = new Texture2D(gl, 'img/beach/posz.jpg', function(tex) {
         console.log(tex);
 	triang.addUniform("u_tex", "t2", tex);
